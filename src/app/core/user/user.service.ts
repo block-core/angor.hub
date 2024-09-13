@@ -31,7 +31,7 @@ export class UserService {
     // -----------------------------------------------------------------------------------------------------
 
     /**
-     * Get the current signed-in user data
+     * Get the current login user data
      */
     get(): Observable<User> {
         return this._httpClient.get<User>('api/common/user').pipe(

@@ -59,23 +59,18 @@ export class UserComponent implements OnInit, OnDestroy {
 
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
     /**
      * On init
      */
     ngOnInit(): void {
         // Subscribe to user changes
-        this._userService.user$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((user: User) => {
-                this.user = user;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
-            });
+        this.user = {
+            id: '1',
+            name: 'Test User',
+            email: 'testuser@example.com',
+            avatar: '/images/avatars/male-06.jpg',
+            status: 'online'
+        };
 
             this._angorConfigService.config$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -94,10 +89,6 @@ export class UserComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
 
     /**
      * Update the user status
@@ -123,7 +114,7 @@ export class UserComponent implements OnInit, OnDestroy {
      * Sign out
      */
     signOut(): void {
-        this._router.navigate(['/sign-out']);
+        this._router.navigate(['/logout']);
     }
 
         /**

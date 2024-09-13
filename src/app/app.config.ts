@@ -12,7 +12,6 @@ import {
 import { provideAngor } from '@angor';
 import { TranslocoService, provideTransloco } from '@ngneat/transloco';
 import { appRoutes } from 'app/app.routes';
-import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { mockApiServices } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
@@ -81,7 +80,6 @@ export const appConfig: ApplicationConfig = {
         },
 
         // Angor Configuration
-        provideAuth(),
         provideIcons(),
         provideAngor({
             mockApi: {

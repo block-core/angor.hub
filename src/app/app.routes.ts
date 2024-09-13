@@ -1,8 +1,7 @@
 import { Route } from '@angular/router';
 import { initialDataResolver } from 'app/app.resolvers';
-import { AuthGuard } from 'app/core/auth/guards/auth.guard';
-import { NoAuthGuard } from 'app/core/auth/guards/noAuth.guard';
-import { LayoutComponent } from 'app/layout/layout.component';
+ import { LayoutComponent } from 'app/layout/layout.component';
+import { authGuard } from './core/auth/auth.guard';
 
 /**
  * Application routes configuration
@@ -13,12 +12,12 @@ export const appRoutes: Route[] = [
     {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'explore'
+        redirectTo: 'home'
     },
 
-    // Redirect signed-in user to '/explore'
+    // Redirect login user to '/explore'
     {
-        path: 'signed-in-redirect',
+        path: 'login-redirect',
         pathMatch: 'full',
         redirectTo: 'explore'
     },
@@ -26,30 +25,16 @@ export const appRoutes: Route[] = [
     // Routes for guests
     {
         path: '',
-        canActivate: [NoAuthGuard],
-        canActivateChild: [NoAuthGuard],
         component: LayoutComponent,
         data: { layout: 'empty' },
         children: [
             {
-                path: 'confirmation-required',
-                loadChildren: () => import('app/components/auth/confirmation-required/confirmation-required.routes')
+                path: 'login',
+                loadChildren: () => import('app/components/auth/login/login.routes')
             },
             {
-                path: 'forgot-password',
-                loadChildren: () => import('app/components/auth/forgot-password/forgot-password.routes')
-            },
-            {
-                path: 'reset-password',
-                loadChildren: () => import('app/components/auth/reset-password/reset-password.routes')
-            },
-            {
-                path: 'sign-in',
-                loadChildren: () => import('app/components/auth/sign-in/sign-in.routes')
-            },
-            {
-                path: 'sign-up',
-                loadChildren: () => import('app/components/auth/sign-up/sign-up.routes')
+                path: 'register',
+                loadChildren: () => import('app/components/auth/register/register.routes')
             }
         ]
     },
@@ -57,18 +42,14 @@ export const appRoutes: Route[] = [
     // Routes for authenticated users
     {
         path: '',
-        canActivate: [AuthGuard],
-        canActivateChild: [AuthGuard],
+        canActivate: [authGuard],
+        canActivateChild: [authGuard],
         component: LayoutComponent,
         data: { layout: 'empty' },
         children: [
             {
-                path: 'sign-out',
-                loadChildren: () => import('app/components/auth/sign-out/sign-out.routes')
-            },
-            {
-                path: 'unlock-session',
-                loadChildren: () => import('app/components/auth/unlock-session/unlock-session.routes')
+                path: 'logout',
+                loadChildren: () => import('app/components/auth/logout/logout.routes')
             }
         ]
     },
@@ -78,8 +59,8 @@ export const appRoutes: Route[] = [
     // Authenticated routes for Angor
     {
         path: '',
-        canActivate: [AuthGuard],
-        canActivateChild: [AuthGuard],
+        canActivate: [authGuard],
+        canActivateChild: [authGuard],
         component: LayoutComponent,
         resolve: { initialData: initialDataResolver },
         children: [

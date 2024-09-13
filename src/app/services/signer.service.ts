@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { UnsignedEvent, nip19, getPublicKey, nip04, Event } from 'nostr-tools';
+import { Buffer } from 'buffer';
 
 
 @Injectable({
@@ -38,13 +39,14 @@ export class SignerService {
     }
 
     nsec() {
-        if (this.usingPrivateKey()) {
-            let privateKey = this.getPrivateKey();
-            const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
-            return nip19.nsecEncode(privateKeyUint8Array);
-        }
-        return "";
-    }
+      if (this.usingPrivateKey()) {
+          let privateKey = this.getPrivateKey();
+          const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
+          return nip19.nsecEncode(privateKeyUint8Array);
+      }
+      return "";
+  }
+
 
     pubkey(npub: string) {
         return nip19.decode(npub).data.toString();
@@ -123,12 +125,8 @@ export class SignerService {
         if (relays.length === 0 || relays[0] === "") {
             relays = [
                 "wss://relay.damus.io/",
-                "wss://nostr.fmt.wiz.biz/",
-                "wss://relay.nostr.band/",
-                "wss://relay.snort.social/",
-                "wss://nostr.mom",
-                "wss://relayable.org",
-                "wss://purplepag.es",
+                "wss://relay.angor.io/",
+                "wss://relay2.angor.io/"
            ]
         }
         return relays
@@ -214,22 +212,28 @@ export class SignerService {
     }
 
     handleLoginWithNsec(nsec: string) {
-        let privateKey: string;
-        try {
-            privateKey = nip19.decode(nsec).data.toString();
-        } catch (e) {
-            return false;
-        }
+      let privateKey: string;
+      try {
+          privateKey = nip19.decode(nsec).data as string;
 
-        // Assuming the private key is stored in hexadecimal format
-        const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
-        let pubkey = getPublicKey(privateKeyUint8Array);
-        this.savePrivateKeyToSession(privateKey);
-        this.savePublicKeyToSession(pubkey);
-        console.log(this.getPublicKey())
-        console.log(this.getPrivateKey())
-        return true;
-    }
+          const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
+
+          let pubkey = getPublicKey(privateKeyUint8Array);
+
+          this.savePrivateKeyToSession(privateKey);
+          this.savePublicKeyToSession(pubkey);
+
+          console.log("Public Key: ", this.getPublicKey());
+          console.log("Private Key: ", this.getPrivateKey());
+
+          return true;
+      } catch (e) {
+          console.error("Error during key handling: ", e);
+          return false;
+      }
+  }
+
+
 
     usingNostrBrowserExtension() {
         if (this.usingPrivateKey()) {
@@ -289,9 +293,19 @@ export class SignerService {
     }
 
     async decryptWithPrivateKey(pubkey: string, ciphertext: string): Promise<string> {
-        let privateKey = this.getPrivateKey()
-        return await nip04.decrypt(privateKey, pubkey, ciphertext).catch((error) => {
-            return "*Failed to Decrypted Content*";
-        });
-    }
+      try {
+          // Get the stored private key in hex format
+          let privateKey = this.getPrivateKey();
+
+          // Ensure the private key is in Uint8Array format
+          const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
+
+          // Decrypt the message using the private key and public key
+          return await nip04.decrypt(privateKeyUint8Array, pubkey, ciphertext);
+      } catch (error) {
+          console.error("Error during decryption: ", error);
+          return "*Failed to Decrypted Content*";
+      }
+  }
+
 }
