@@ -1,0 +1,76 @@
+<div
+    class="bg-card flex h-full flex-auto flex-col overflow-hidden dark:bg-default"
+>
+    <!-- Header -->
+    <div
+        class="-mb-px flex h-18 flex-0 items-center bg-gray-50 px-6 dark:bg-transparent"
+    >
+        <button mat-icon-button (click)="drawer.close()">
+            <mat-icon
+                [svgIcon]="'heroicons_outline:arrow-long-left'"
+            ></mat-icon>
+        </button>
+        <div class="ml-2 text-2xl font-semibold">New chat</div>
+    </div>
+
+    <div class="relative overflow-y-auto">
+        @if (contacts.length) {
+            @for (
+                contact of contacts;
+                track trackByFn(i, contact);
+                let i = $index
+            ) {
+                <!-- Group -->
+                @if (
+                    i === 0 ||
+                    contact.name.charAt(0) !== contacts[i - 1].name.charAt(0)
+                ) {
+                    <div
+                        class="text-secondary sticky top-0 z-10 -mt-px border-b border-t bg-gray-100 px-6 py-1 font-medium uppercase dark:bg-gray-900 md:px-8"
+                    >
+                        {{ contact.name.charAt(0) }}
+                    </div>
+                }
+                <!-- Contact -->
+                <div
+                    class="z-20 flex cursor-pointer items-center border-b px-6 py-4 dark:hover:bg-hover hover:bg-gray-100 md:px-8"
+                >
+                    <div
+                        class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full"
+                    >
+                        @if (contact.avatar) {
+                            <img
+                                class="h-full w-full object-cover"
+                                [src]="contact.avatar"
+                                alt="Contact avatar"
+                            />
+                        }
+                        @if (!contact.avatar) {
+                            <div
+                                class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            >
+                                {{ contact.name.charAt(0) }}
+                            </div>
+                        }
+                    </div>
+                    <div class="ml-4 min-w-0">
+                        <div class="truncate font-medium leading-5">
+                            {{ contact.name }}
+                        </div>
+                        <div class="text-secondary truncate leading-5">
+                            {{ contact.about }}
+                        </div>
+                    </div>
+                </div>
+            }
+        } @else {
+            <div
+                class="border-t p-8 text-center text-4xl font-semibold tracking-tight sm:p-16"
+            >
+                There are no contacts!
+            </div>
+        }
+    </div>
+
+    <!-- No contacts -->
+</div>

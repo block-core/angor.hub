@@ -1,0 +1,25 @@
+<!-- Flippable card -->
+@if (flippable) {
+    <!-- Front -->
+    <div class="angor-card-front">
+        <ng-content select="[angorCardFront]"></ng-content>
+    </div>
+
+    <!-- Back -->
+    <div class="angor-card-back">
+        <ng-content select="[angorCardBack]"></ng-content>
+    </div>
+}
+
+<!-- Normal card -->
+@if (!flippable) {
+    <!-- Content -->
+    <ng-content></ng-content>
+
+    <!-- Expansion -->
+    @if (expanded) {
+        <div class="angor-card-expansion" [@expandCollapse]>
+            <ng-content select="[angorCardExpansion]"></ng-content>
+        </div>
+    }
+}

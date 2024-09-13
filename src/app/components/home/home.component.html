@@ -1,0 +1,28 @@
+<div class="flex h-full w-full flex-col items-center justify-center">
+    <div class="w-full max-w-3xl">
+        <div class="prose prose-sm mx-auto max-w-none">
+            <img class="w-20" src="images/logo/logo.svg" alt="Angor Hub" />
+            <h1>Welcome to Angor Hub</h1>
+            <p>
+                Angor Hub is a decentralized platform designed to connect investors with project founders. Leveraging the power of Nostr, it provides a secure and transparent environment for collaboration. The platform allows you to explore a wide variety of projects, engage with investors, and connect directly with founders.
+            </p>
+            <p>
+                Whether you're an investor looking for the next big opportunity or a project founder seeking support, Angor Hub offers the tools you need to succeed. From secure messaging to group channels, Angor Hub ensures seamless interaction within a decentralized network.
+            </p>
+        </div>
+        <div>
+            <a
+                class="mt-8"
+                mat-flat-button
+                [color]="'primary'"
+                [routerLink]="'/explore'"
+            >
+                <span>Explore Projects</span>
+                <mat-icon
+                    class="ml-2 icon-size-5"
+                    [svgIcon]="'heroicons_mini:arrow-long-right'"
+                ></mat-icon>
+            </a>
+        </div>
+    </div>
+</div>

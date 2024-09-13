@@ -1,0 +1,166 @@
+/* Root navigation specific */
+angor-horizontal-navigation {
+    .angor-horizontal-navigation-wrapper {
+        display: flex;
+        align-items: center;
+
+        /* Basic, Branch */
+        angor-horizontal-navigation-basic-item,
+        angor-horizontal-navigation-branch-item {
+            @screen sm {
+                &:hover {
+                    .angor-horizontal-navigation-item-wrapper {
+                        @apply bg-hover;
+                    }
+                }
+            }
+
+            .angor-horizontal-navigation-item-wrapper {
+                border-radius: 4px;
+                overflow: hidden;
+
+                .angor-horizontal-navigation-item {
+                    padding: 0 16px;
+                    cursor: pointer;
+                    user-select: none;
+
+                    .angor-horizontal-navigation-item-icon {
+                        margin-right: 12px;
+                    }
+                }
+            }
+        }
+
+        /* Basic - When item active (current link) */
+        angor-horizontal-navigation-basic-item {
+            .angor-horizontal-navigation-item-active,
+            .angor-horizontal-navigation-item-active-forced {
+                .angor-horizontal-navigation-item-title {
+                    @apply text-primary #{'!important'};
+                }
+
+                .angor-horizontal-navigation-item-subtitle {
+                    @apply text-primary-400 #{'!important'};
+
+                    .dark & {
+                        @apply text-primary-600 #{'!important'};
+                    }
+                }
+
+                .angor-horizontal-navigation-item-icon {
+                    @apply text-primary #{'!important'};
+                }
+            }
+        }
+
+        /* Branch - When menu open */
+        angor-horizontal-navigation-branch-item {
+            .angor-horizontal-navigation-menu-active,
+            .angor-horizontal-navigation-menu-active-forced {
+                .angor-horizontal-navigation-item-wrapper {
+                    @apply bg-hover;
+                }
+            }
+        }
+
+        /* Spacer */
+        angor-horizontal-navigation-spacer-item {
+            margin: 12px 0;
+        }
+    }
+}
+
+/* Menu panel specific */
+.angor-horizontal-navigation-menu-panel {
+    .angor-horizontal-navigation-menu-item {
+        height: auto;
+        min-height: 0;
+        line-height: normal;
+        white-space: normal;
+
+        /* Basic, Branch */
+        angor-horizontal-navigation-basic-item,
+        angor-horizontal-navigation-branch-item,
+        angor-horizontal-navigation-divider-item {
+            display: flex;
+            flex: 1 1 auto;
+        }
+
+        /* Divider */
+        angor-horizontal-navigation-divider-item {
+            margin: 8px -16px;
+
+            .angor-horizontal-navigation-item-wrapper {
+                height: 1px;
+                box-shadow: 0 1px 0 0;
+            }
+        }
+    }
+}
+
+/* Navigation menu item common */
+.angor-horizontal-navigation-menu-item {
+    /* Basic - When item active (current link) */
+    angor-horizontal-navigation-basic-item {
+        .angor-horizontal-navigation-item-active,
+        .angor-horizontal-navigation-item-active-forced {
+            .angor-horizontal-navigation-item-title {
+                @apply text-primary #{'!important'};
+            }
+
+            .angor-horizontal-navigation-item-subtitle {
+                @apply text-primary-400 #{'!important'};
+
+                .dark & {
+                    @apply text-primary-600 #{'!important'};
+                }
+            }
+
+            .angor-horizontal-navigation-item-icon {
+                @apply text-primary #{'!important'};
+            }
+        }
+    }
+
+    .angor-horizontal-navigation-item-wrapper {
+        width: 100%;
+
+        &.angor-horizontal-navigation-item-has-subtitle {
+            .angor-horizontal-navigation-item {
+                min-height: 56px;
+            }
+        }
+
+        .angor-horizontal-navigation-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 48px;
+            width: 100%;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+
+            .angor-horizontal-navigation-item-title-wrapper {
+                .angor-horizontal-navigation-item-subtitle {
+                    font-size: 12px;
+                }
+            }
+
+            .angor-horizontal-navigation-item-badge {
+                margin-left: auto;
+
+                .angor-horizontal-navigation-item-badge-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10px;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    height: 20px;
+                }
+            }
+        }
+    }
+}

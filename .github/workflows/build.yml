@@ -1,0 +1,30 @@
+name: Build and Publish Web Site
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@master
+      name: Checkout
+
+    - name: Build
+      run: |
+        npm install
+        npm run build
+    - name: Redirect 404 to Index for SPA
+      run: cp dist/index.html dist/404.html
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        cname: hub.angor.io

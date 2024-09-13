@@ -1,0 +1,8 @@
+<ng-content></ng-content>
+
+<!-- prettier-ignore -->
+<ng-template let-highlightedCode="highlightedCode" let-lang="lang">
+<div class="angor-highlight angor-highlight-code-container">
+<pre [ngClass]="'language-' + lang"><code [ngClass]="'language-' + lang" [innerHTML]="highlightedCode"></code></pre>
+</div>
+</ng-template>

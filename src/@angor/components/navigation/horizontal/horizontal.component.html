@@ -1,0 +1,37 @@
+<div class="angor-horizontal-navigation-wrapper">
+    @for (item of navigation; track trackByFn($index, item)) {
+        <!-- Skip the hidden items -->
+        @if ((item.hidden && !item.hidden(item)) || !item.hidden) {
+            <!-- Basic -->
+            @if (item.type === 'basic') {
+                <angor-horizontal-navigation-basic-item
+                    class="angor-horizontal-navigation-menu-item"
+                    [item]="item"
+                    [name]="name"
+                ></angor-horizontal-navigation-basic-item>
+            }
+
+            <!-- Branch: aside, collapsable, group -->
+            @if (
+                item.type === 'aside' ||
+                item.type === 'collapsable' ||
+                item.type === 'group'
+            ) {
+                <angor-horizontal-navigation-branch-item
+                    class="angor-horizontal-navigation-menu-item"
+                    [item]="item"
+                    [name]="name"
+                ></angor-horizontal-navigation-branch-item>
+            }
+
+            <!-- Spacer -->
+            @if (item.type === 'spacer') {
+                <angor-horizontal-navigation-spacer-item
+                    class="angor-horizontal-navigation-menu-item"
+                    [item]="item"
+                    [name]="name"
+                ></angor-horizontal-navigation-spacer-item>
+            }
+        }
+    }
+</div>

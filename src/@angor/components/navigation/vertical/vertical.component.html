@@ -1,0 +1,122 @@
+<div class="angor-vertical-navigation-wrapper">
+    <!-- Header -->
+    <div class="angor-vertical-navigation-header">
+        <ng-content select="[angorVerticalNavigationHeader]"></ng-content>
+    </div>
+
+    <!-- Content -->
+    <div
+        class="angor-vertical-navigation-content"
+        angorScrollbar
+        [angorScrollbarOptions]="{
+            wheelPropagation: inner,
+            suppressScrollX: true,
+        }"
+        #navigationContent
+    >
+        <!-- Content header -->
+        <div class="angor-vertical-navigation-content-header">
+            <ng-content
+                select="[angorVerticalNavigationContentHeader]"
+            ></ng-content>
+        </div>
+
+        <!-- Items -->
+        @for (item of navigation; track trackByFn($index, item)) {
+            <!-- Skip the hidden items -->
+            @if ((item.hidden && !item.hidden(item)) || !item.hidden) {
+                <!-- Aside -->
+                @if (item.type === 'aside') {
+                    <angor-vertical-navigation-aside-item
+                        [item]="item"
+                        [name]="name"
+                        [activeItemId]="activeAsideItemId"
+                        [autoCollapse]="autoCollapse"
+                        [skipChildren]="true"
+                        (click)="toggleAside(item)"
+                    ></angor-vertical-navigation-aside-item>
+                }
+
+                <!-- Basic -->
+                @if (item.type === 'basic') {
+                    <angor-vertical-navigation-basic-item
+                        [item]="item"
+                        [name]="name"
+                    ></angor-vertical-navigation-basic-item>
+                }
+
+                <!-- Collapsable -->
+                @if (item.type === 'collapsable') {
+                    <angor-vertical-navigation-collapsable-item
+                        [item]="item"
+                        [name]="name"
+                        [autoCollapse]="autoCollapse"
+                    ></angor-vertical-navigation-collapsable-item>
+                }
+
+                <!-- Divider -->
+                @if (item.type === 'divider') {
+                    <angor-vertical-navigation-divider-item
+                        [item]="item"
+                        [name]="name"
+                    ></angor-vertical-navigation-divider-item>
+                }
+
+                <!-- Group -->
+                @if (item.type === 'group') {
+                    <angor-vertical-navigation-group-item
+                        [item]="item"
+                        [name]="name"
+                        [autoCollapse]="autoCollapse"
+                    ></angor-vertical-navigation-group-item>
+                }
+
+                <!-- Spacer -->
+                @if (item.type === 'spacer') {
+                    <angor-vertical-navigation-spacer-item
+                        [item]="item"
+                        [name]="name"
+                    ></angor-vertical-navigation-spacer-item>
+                }
+            }
+        }
+
+ 
+    </div>
+
+    <!-- Footer -->
+    <div class="angor-vertical-navigation-footer">
+        <ng-content select="[angorVerticalNavigationFooter]"></ng-content>
+    </div>
+</div>
+
+<!-- Aside -->
+@if (activeAsideItemId) {
+    <div
+        class="angor-vertical-navigation-aside-wrapper"
+        angorScrollbar
+        [angorScrollbarOptions]="{
+            wheelPropagation: false,
+            suppressScrollX: true,
+        }"
+        [@fadeInLeft]="position === 'left'"
+        [@fadeInRight]="position === 'right'"
+        [@fadeOutLeft]="position === 'left'"
+        [@fadeOutRight]="position === 'right'"
+    >
+        <!-- Items -->
+        @for (item of navigation; track trackByFn($index, item)) {
+            <!-- Skip the hidden items -->
+            @if ((item.hidden && !item.hidden(item)) || !item.hidden) {
+                <!-- Aside -->
+                @if (item.type === 'aside' && item.id === activeAsideItemId) {
+                    <angor-vertical-navigation-aside-item
+                        [item]="item"
+                        [name]="name"
+                        [autoCollapse]="autoCollapse"
+                    ></angor-vertical-navigation-aside-item>
+                }
+            }
+        }
+    </div>
+}
