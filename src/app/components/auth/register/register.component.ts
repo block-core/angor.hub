@@ -84,7 +84,7 @@ export class RegisterComponent implements OnInit {
         const password = this.registerForm.get('password')?.value;
 
         // Generate keys using the security service
-        const keys = this._signerService.generateAndStoreKeys();
+        const keys = this._signerService.generateAndStoreKeys(password);
 
         if (!keys) {
             // If key generation failed, enable the form and show an error
@@ -94,7 +94,7 @@ export class RegisterComponent implements OnInit {
             return;
         }
 
-        const { privateKeyHex, publicKey, npub, nsec } = keys;
+        const { secretKey, pubkey, npub, nsec } = keys;
 
         // Simulate saving user metadata along with keys
         const userMetadata = {
@@ -103,7 +103,7 @@ export class RegisterComponent implements OnInit {
             about,
             avatarUrl,
             password,
-            publicKey,
+            pubkey,
             npub,
             nsec,
         };

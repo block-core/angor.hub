@@ -91,7 +91,7 @@ export class LoginComponent implements OnInit {
         this.showSecAlert = false;
 
         try {
-            const success = this._signerService.handleLoginWithKey(secretKey); // Updated method to handle both nsec and hex
+            const success = this._signerService.handleLoginWithKey(secretKey,password); // Updated method to handle both nsec and hex
 
             if (success) {
                 // Successful login
@@ -121,7 +121,7 @@ export class LoginComponent implements OnInit {
         this.loading = true;
         this.showMenemonicAlert = false;
 
-        const success = this._signerService.handleLoginWithMenemonic(menemonic, passphrase);
+        const success = this._signerService.handleLoginWithMenemonic(menemonic, passphrase,password);
 
         if (success) {
             this._router.navigateByUrl('/home');

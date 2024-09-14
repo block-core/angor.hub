@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { UnsignedEvent, nip19, getPublicKey, nip04, Event, generateSecretKey } from 'nostr-tools';
 import { Buffer } from 'buffer';
-import { privateKeyFromSeedWords, accountFromSeedWords } from 'nostr-tools/nip06';
-
+import { privateKeyFromSeedWords } from 'nostr-tools/nip06';
+import { SecurityService } from './security.service';
 
 @Injectable({
     providedIn: 'root'
@@ -14,26 +14,13 @@ export class SignerService {
     localStorageNpubName: string = "npub";
     localStorageNsecName: string = "nsec";
 
-    constructor() { }
-
-    clearKeys() {
-        localStorage.removeItem("nostrWalletConnectURI");
-        localStorage.removeItem("muteList");
-        localStorage.removeItem("currentChip");
-        localStorage.removeItem("following");
-        localStorage.removeItem(`${this.getPublicKey()}_img`);
-        localStorage.removeItem(this.localStorageSecretKeyName);
-        localStorage.removeItem(this.localStoragePublicKeyName);
-        console.log("data cleared")
-        console.log(localStorage.getItem("nostrWalletConnect"))
-    }
+    constructor(private securityService: SecurityService) { }
 
     getUsername(pubkey: string) {
-        // can take a pubkey or npub
         if (pubkey.startsWith("npub")) {
-            pubkey = nip19.decode(pubkey).data.toString()
+            pubkey = nip19.decode(pubkey).data.toString();
         }
-        return `@${(localStorage.getItem(`${pubkey}`) || nip19.npubEncode(pubkey))}`
+        return `@${(localStorage.getItem(`${pubkey}`) || nip19.npubEncode(pubkey))}`;
     }
 
     npub() {
@@ -41,195 +28,72 @@ export class SignerService {
         return nip19.npubEncode(pubkey);
     }
 
-    nsec() {
+    async nsec(password: string) {
         if (this.usingSecretKey()) {
-            let secretKey = this.getSecretKey();
+            let secretKey = await this.getSecretKey(password);
             const secretKeyUint8Array = Uint8Array.from(Buffer.from(secretKey, 'hex'));
             return nip19.nsecEncode(secretKeyUint8Array);
         }
         return "";
     }
 
-
     pubkey(npub: string) {
         return nip19.decode(npub).data.toString();
     }
 
-    encodeNoteAsEvent(note: string): string {
-        let decodedNote = nip19.decode(note).data.toString()
-        let eventP: nip19.EventPointer = { id: decodedNote }
-        return nip19.neventEncode(eventP);
+    //public key===============
+    setPublicKey(publicKey: string): void {
+        const npub = nip19.npubEncode(publicKey);
+        window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
+        window.localStorage.setItem(this.localStorageNpubName, npub);
     }
 
     getPublicKey() {
         return localStorage.getItem(this.localStoragePublicKeyName) || "";
     }
 
-    getSecretKey() {
-        return localStorage.getItem(this.localStorageSecretKeyName) || "";
-    }
-
-    getLoggedInUserImage() {
-        // gets from local storage if we have it
-        return localStorage.getItem(`${this.getPublicKey()}_img`) || "";
-    }
-
-    setLoggedInUserImage(url: string) {
-        // sets user image link in local storage
-        return localStorage.setItem(`${this.getPublicKey()}_img`, url);
-    }
-
-    usingSecretKey() {
-        if (localStorage.getItem(this.localStorageSecretKeyName)) {
-            return true;
-        }
-        return false;
-    }
-
-    getFollowingList() {
-        const followingRaw = localStorage.getItem("following");
-        if (followingRaw === null || followingRaw === "") {
-            return [];
-        }
-        let following = (followingRaw).split(',');
-        return following.filter(value => /[a-f0-9]{64}/.test(value));
-    }
-
-    getMuteList() {
-        return (localStorage.getItem("muteList") || "").split(',');
-    }
-
-    setMuteListFromTags(tags: string[][]): void {
-        let muteList: string[] = []
-        tags.forEach(t => {
-            muteList.push(t[1]);
-        })
-        this.setMuteList(muteList);
-    }
-
-    setMuteList(muteList: string[]) {
-        if (muteList.length === 0) {
-            localStorage.setItem("muteList", "");
-        } else {
-            let muteSet = Array.from(new Set(muteList));
-            localStorage.setItem("muteList", muteSet.filter(s => s).join(','));
-        }
-    }
-
-    getRelay(): string {
-        return localStorage.getItem("relay") || "wss://relay.damus.io/";
-    }
-
-    getRelays(): string[] {
-        const relaysString = localStorage.getItem("relays") || "";
-        let relays = relaysString.split(",").map((item) => {
-            return item.trim();
-        });
-        if (relays.length === 0 || relays[0] === "") {
-            relays = [
-                "wss://relay.damus.io/",
-                "wss://relay.angor.io/",
-                "wss://relay2.angor.io/"
-            ]
-        }
-        return relays
-    }
-
-    setRelay(relay: string): void {
-        localStorage.setItem("relay", relay);
-    }
-
-    setRelays(relays: string[]): void {
-        localStorage.setItem("relays", relays.join(","));
-    }
-
-    getDefaultZap() {
-        return localStorage.getItem("defaultZap") || "5";
-    }
-
-    setDefaultZap(defaultZap: string) {
-        localStorage.setItem("defaultZap", defaultZap)
-    }
-
-    setNostrWalletConnectURI(uri: string) {
-        localStorage.setItem("nostrWalletConnectURI", uri);
-    }
-
-    getNostrWalletConnectURI() {
-        const x = localStorage.getItem("nostrWalletConnectURI") || "";
-        if (x === "") {
-            return null;
-        }
-        return x;
-    }
-
-    getFollowingListAsTags(): string[][] {
-        let following = this.getFollowingList();
-        let tags: string[][] = [];
-        following.forEach(f => {
-            tags.push(["p", f, "wss://relay.damus.io/", localStorage.getItem(`${f}`) || ""]);
-        });
-        return tags;
-    }
-
-    setFollowingListFromTags(tags: string[][]): void {
-        let following: string[] = []
-        tags.forEach(t => {
-            following.push(t[1]);
-        })
-        this.setFollowingList(following);
-    }
-
-    setFollowingList(following: string[]) {
-        let followingSet = Array.from(new Set(following));
-        let newFollowingList = followingSet.filter(s => s).join(',')
-        localStorage.setItem("following", newFollowingList);
-    }
-
-    savePublicKeyToSession(publicKey: string): void {
-        const npub = nip19.npubEncode(publicKey);
-        window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
-        window.localStorage.setItem(this.localStorageNpubName, npub);
+    //npub===============
+    setNpub(npub: string) {
+        localStorage.setItem(this.localStorageNpubName, npub);
     }
 
     getNpub(): string {
         return window.localStorage.getItem(this.localStorageNpubName) || '';
     }
 
-    removePublicKeyToSession() {
-        localStorage.removeItem(this.localStoragePublicKeyName);
+    //seckey===============
+    async setSecretKey(secretKey: string, password: string) {
+        const encryptedSecretKey = await this.securityService.encryptData(secretKey, password);
+        localStorage.setItem(this.localStorageSecretKeyName, encryptedSecretKey);
     }
 
-
-    saveSecretKeyToSession(secretKey: string) {
-        localStorage.setItem(this.localStorageSecretKeyName, secretKey);
+    async getSecretKey(password: string) {
+        const encryptedSecretKey = localStorage.getItem(this.localStorageSecretKeyName);
+        if (!encryptedSecretKey) {
+            return null;
+        }
+        return await this.securityService.decryptData(encryptedSecretKey, password);
     }
 
-    removeSecretKeyToSession() {
-        localStorage.removeItem(this.localStorageSecretKeyName);
+    //nsec===============
+    async setNsec(nsec: string, password: string) {
+        const encryptedNsec = await this.securityService.encryptData(nsec, password);
+        localStorage.setItem(this.localStorageNsecName, encryptedNsec);
+    }
+
+    async getNsec(password: string) {
+        const encryptedNsec = localStorage.getItem(this.localStorageNsecName);
+        if (!encryptedNsec) {
+            return null;
+        }
+        return await this.securityService.decryptData(encryptedNsec, password);
     }
 
     setPublicKeyFromExtension(publicKey: string) {
-        this.savePublicKeyToSession(publicKey);
+        this.setPublicKey(publicKey);
     }
 
-    setBlurImagesIfNotFollowing(blur: boolean) {
-        if (blur) {
-            localStorage.setItem("blur", "true");
-        } else {
-            localStorage.setItem("blur", "false");
-        }
-    }
-
-    getBlurImagesIfNotFollowing() {
-        const blur = localStorage.getItem("blur") || "true";
-        if (blur === "false") {
-            return false;
-        }
-        return true;
-    }
-
-    handleLoginWithKey(key: string): boolean {
+    handleLoginWithKey(key: string, password: string): boolean {
         let secretKey: string;
         let pubkey: string;
         let nsec: string;
@@ -253,13 +117,11 @@ export class SignerService {
             pubkey = getPublicKey(secretKeyUint8Array);
             npub = nip19.npubEncode(pubkey);
             nsec = nip19.nsecEncode(secretKeyUint8Array);
-            this.saveSecretKeyToSession(secretKey);
-            this.savePublicKeyToSession(pubkey);
-            localStorage.setItem(this.localStorageNpubName, npub);
-            localStorage.setItem(this.localStorageNsecName, nsec);
-            console.log("Public Key (npub): ", npub);
-            console.log("Private Key (hex): ", secretKey);
-            console.log("nsec: ", nsec);
+            this.setSecretKey(secretKey, password);
+            this.setNsec(npub, password);
+            this.setPublicKey(pubkey);
+            this.setNpub(npub);
+
             return true;
         } catch (e) {
             console.error("Error during key handling: ", e);
@@ -267,23 +129,20 @@ export class SignerService {
         }
     }
 
-    handleLoginWithMenemonic(mnemonic: string, passphrase: string = ''): boolean {
+    handleLoginWithMenemonic(mnemonic: string, passphrase: string = '', password: string): boolean {
         try {
             const accountIndex = 0;
-            const privateKey = privateKeyFromSeedWords(mnemonic, passphrase, accountIndex);
-            const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
-            const publicKey = getPublicKey(privateKeyUint8Array);
-            const npub = nip19.npubEncode(publicKey);
-            const nsec = nip19.nsecEncode(privateKeyUint8Array);
-            this.saveSecretKeyToSession(privateKey);
-            this.savePublicKeyToSession(publicKey);
-            window.localStorage.setItem(this.localStorageNsecName, nsec);
-            console.log("Login with mnemonic successful!");
-            console.log("Public Key:", publicKey);
-            console.log("Private Key (hex):", privateKey);
-            console.log("npub:", npub);
-            console.log("nsec:", nsec);
+            const secretKey = privateKeyFromSeedWords(mnemonic, passphrase, accountIndex);
+            const secretKeyUint8Array = Uint8Array.from(Buffer.from(secretKey, 'hex'));
+            const pubkey = getPublicKey(secretKeyUint8Array);
+            const npub = nip19.npubEncode(pubkey);
+            const nsec = nip19.nsecEncode(secretKeyUint8Array);
+            this.setSecretKey(secretKey, password);
+            this.setNsec(npub, password);
+            this.setPublicKey(pubkey);
+            this.setNpub(npub);
 
+            window.localStorage.setItem(this.localStorageNsecName, nsec);
             return true;
         } catch (error) {
             console.error("Error during login with mnemonic:", error);
@@ -291,68 +150,49 @@ export class SignerService {
         }
     }
 
-
     logout(): void {
-        // Remove keys from localStorage
         window.localStorage.removeItem(this.localStorageSecretKeyName);
         window.localStorage.removeItem(this.localStoragePublicKeyName);
         window.localStorage.removeItem(this.localStorageNpubName);
         window.localStorage.removeItem(this.localStorageNsecName);
-
-        console.log("User logged out and keys removed from localStorage.");
     }
-
-
 
     usingNostrBrowserExtension() {
         if (this.usingSecretKey()) {
             return false;
         }
         const gt = globalThis as any;
-        if (gt.nostr) {
-            return true;
-        }
-        return false;
+        return !!gt.nostr;
     }
 
+    usingSecretKey() {
+        return !!localStorage.getItem(this.localStorageSecretKeyName);
+    }
 
-    generateAndStoreKeys(): { privateKeyHex: string, publicKey: string, npub: string, nsec: string } | null {
+    generateAndStoreKeys(password: string): { secretKey: string, pubkey: string, npub: string, nsec: string } | null {
         try {
-            // Generate a new private key (as Uint8Array)
-            const privateKeyUint8Array = generateSecretKey(); // Custom method to generate private key
-
-            // Convert private key (Uint8Array) to hex string for storage
-            const privateKeyHex = Buffer.from(privateKeyUint8Array).toString('hex');
-
-            // Generate the public key from the private key
-            const publicKey = getPublicKey(privateKeyUint8Array);
-
-            // Encode the public key as npub and the private key as nsec
-            const npub = nip19.npubEncode(publicKey);
+            const privateKeyUint8Array = generateSecretKey();
+            const secretKey = Buffer.from(privateKeyUint8Array).toString('hex');
+            const pubkey = getPublicKey(privateKeyUint8Array);
+            const npub = nip19.npubEncode(pubkey);
             const nsec = nip19.nsecEncode(privateKeyUint8Array);
+            this.setSecretKey(secretKey, password);
+            this.setNsec(npub, password);
+            this.setPublicKey(pubkey);
+            this.setNpub(npub);
 
-            // Store the private key, public key, npub, and nsec in session/localStorage
-            this.saveSecretKeyToSession(privateKeyHex);   // Save private key as hex string
-            this.savePublicKeyToSession(publicKey);       // Save public key
-            window.localStorage.setItem(this.localStorageNpubName, npub);    // Save npub to localStorage
-            window.localStorage.setItem(this.localStorageNsecName, nsec);    // Save nsec to localStorage
-
-            // Return keys to be used in the component
-            return { privateKeyHex, publicKey, npub, nsec };
+            return { secretKey, pubkey, npub, nsec };
         } catch (error) {
             console.error("Error during key generation:", error);
             return null;
         }
     }
 
-
-
     async handleLoginWithExtension(): Promise<boolean> {
         const globalContext = globalThis as unknown as { nostr?: { getPublicKey?: Function } };
         if (!globalContext.nostr) {
             return false;
         }
-
         try {
             const pubkey = await globalContext.nostr.getPublicKey();
             if (!pubkey) {
@@ -370,7 +210,7 @@ export class SignerService {
     async signEventWithExtension(unsignedEvent: UnsignedEvent): Promise<Event> {
         const gt = globalThis as any;
         if (gt.nostr) {
-            const signedEvent = await gt.nostr.signEvent(unsignedEvent)
+            const signedEvent = await gt.nostr.signEvent(unsignedEvent);
             return signedEvent;
         } else {
             throw new Error("Tried to sign event with extension but failed");
@@ -380,7 +220,7 @@ export class SignerService {
     async signDMWithExtension(pubkey: string, content: string): Promise<string> {
         const gt = globalThis as any;
         if (gt.nostr && gt.nostr.nip04?.encrypt) {
-            return await gt.nostr.nip04.encrypt(pubkey, content)
+            return await gt.nostr.nip04.encrypt(pubkey, content);
         }
         throw new Error("Failed to Sign with extension");
     }
@@ -388,24 +228,18 @@ export class SignerService {
     async decryptDMWithExtension(pubkey: string, ciphertext: string): Promise<string> {
         const gt = globalThis as any;
         if (gt.nostr && gt.nostr.nip04?.decrypt) {
-            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext)
-                .catch((error: any) => {
-                    return "*Failed to Decrypted Content*"
-                });
+            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext).catch((error: any) => {
+                return "*Failed to Decrypted Content*";
+            });
             return decryptedContent;
         }
-        return "Attempted Nostr Window decryption and failed."
+        return "Attempted Nostr Window decryption and failed.";
     }
 
-    async decryptWithSecretKey(pubkey: string, ciphertext: string): Promise<string> {
+    async decryptWithSecretKey(pubkey: string, ciphertext: string, password: string): Promise<string> {
         try {
-            // Get the stored private key in hex format
-            let secretKey = this.getSecretKey();
-
-            // Ensure the private key is in Uint8Array format
-            const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
-
-            // Decrypt the message using the private key and public key
+            let secretKey = this.getSecretKey(password);
+            const secretKeyUint8Array = new Uint8Array(Buffer.from((await secretKey).toString(), 'hex'));
             return await nip04.decrypt(secretKeyUint8Array, pubkey, ciphertext);
         } catch (error) {
             console.error("Error during decryption: ", error);
