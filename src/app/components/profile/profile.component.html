@@ -18,7 +18,7 @@
             <div class="-mt-26 rounded-full lg:-mt-22">
                 <img
                     class="ring-bg-card h-32 w-32 rounded-full ring-4"
-                    src="images/avatars/male-04.jpg"
+                    [src]="metadata?.picture"
                     alt="User avatar"
                 />
             </div>
@@ -27,8 +27,8 @@
             <div
                 class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start"
             >
-                <div class="text-lg font-bold leading-none">Display Name</div>
-                <div class="text-secondary">London, UK</div>
+                <div class="text-lg font-bold leading-none">{{metadata?.name || 'Unknown User'}}</div>
+                <div class="text-secondary">{{metadata?.username || 'username'}}</div>
             </div>
 
             <!-- Separator -->
@@ -72,11 +72,7 @@
             <angor-card class="flex w-full max-w-80 flex-col p-8">
                 <div class="text-2xl font-semibold leading-tight">About Me</div>
                 <div class="mt-4">
-                    I’m a friendly kitchen assistant who suffers from a severe
-                    phobia of buttons.
-                    <br /><br />
-                    Brother of Elijah Jay Watkins, who has phobia of buttons and
-                    trust issues.
+                   {{metadata?.about || ''}}
                 </div>
                 <hr class="my-6 w-full border-t" />
                 <div class="flex flex-col">
