@@ -28,8 +28,7 @@ interface CustomMessageEvent {
   providedIn: 'root',
 })
 export class NostrService {
-  private secretKey: Uint8Array;
-  private publicKey: string;
+
   private eventSubject = new Subject<NostrEvent>();
   private notificationSubject = new Subject<NostrEvent>();
   private messageSubject = new Subject<CustomMessageEvent>();
@@ -74,41 +73,7 @@ export class NostrService {
   constructor(
     private relayService: RelayService,
     private security: SecurityService,
-  ) {
-    this.secretKey = generateSecretKey();
-    this.publicKey = getPublicKey(this.secretKey);
-  }
-
-
-  // Account management
-  generateNewAccount(): { publicKey: string; secretKeyHex: string } {
-    this.secretKey = generateSecretKey();
-    this.publicKey = getPublicKey(this.secretKey);
-    return {
-      publicKey: this.publicKey,
-      secretKeyHex: bytesToHex(this.secretKey),
-    };
-  }
-
-  getKeys(): { secretKey: Uint8Array; publicKey: string } {
-    return {
-
-      secretKey: this.secretKey,
-      publicKey: this.publicKey,
-    };
-  }
-
-  getSecretKeyHex(): string {
-    return bytesToHex(this.secretKey);
-  }
-
-  getPublicKeyHex(): string {
-    return this.publicKey;
-  }
-
-  getUserPublicKey(): string | null {
-    return localStorage.getItem('nostrPublicKey');
-  }
+  ) {}
 
   // Signing events
   async signEventWithPassword(
@@ -183,7 +148,6 @@ export class NostrService {
     throw new Error('No valid signing method provided.');
   }
 
-  // Event management
   private createEvent(content: string, kind: number, tags: string[][], pubkey: string): NostrEvent {
     return {
       kind,
@@ -195,7 +159,6 @@ export class NostrService {
       sig: '',
     } as unknown as NostrEvent;
   }
-
 
   async getEventId(event: NostrEvent): Promise<string> {
     const eventSerialized = JSON.stringify([
@@ -223,8 +186,6 @@ export class NostrService {
     return verifyEvent(event);
   }
 
-
-
   // Messaging (NIP-04)
   async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
     try {
@@ -236,7 +197,6 @@ export class NostrService {
       throw new Error('Failed to decrypt message with Nostr extension.');
     }
   }
-
 
   async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
     const gt = globalThis as any;
@@ -266,7 +226,6 @@ export class NostrService {
     }
   }
 
-
   // Profile management
   async updateProfile(
     name: string | null,
@@ -277,7 +236,7 @@ export class NostrService {
   ): Promise<NostrEvent> {
     const content = JSON.stringify({ name, about, picture });
 
-    const finalPubkey = pubkey || this.getPublicKeyHex();
+    const finalPubkey = pubkey ;
 
     const event = this.createEvent(content, 0, tags, finalPubkey);
 
@@ -300,7 +259,7 @@ export class NostrService {
   }
 
   async fetchMetadata(pubkey: string): Promise<any> {
-    await this.ensureRelaysConnected();
+    await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
     const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -337,7 +296,7 @@ export class NostrService {
 
   // Social interactions
   async getFollowers(pubkey: string): Promise<any[]> {
-    await this.ensureRelaysConnected();
+    await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
     const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -363,7 +322,7 @@ export class NostrService {
   }
 
   async getFollowing(pubkey: string): Promise<any[]> {
-    await this.ensureRelaysConnected();
+    await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
     const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -391,13 +350,11 @@ export class NostrService {
     });
   }
 
-
-
   async getEventsByAuthor(
     pubkey: string,
     kinds: number[] = [1]
   ): Promise<NostrEvent[]> {
-    await this.ensureRelaysConnected();
+    await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
     const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -422,13 +379,9 @@ export class NostrService {
     });
   }
 
-  // Relay management
-  private async ensureRelaysConnected(): Promise<void> {
-    await this.relayService.ensureConnectedRelays();
-  }
 
   async publishEventToRelays(event: NostrEvent): Promise<NostrEvent> {
-    await this.ensureRelaysConnected();
+    await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
     const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -745,7 +698,6 @@ subscribeToEvents(pubkey: string): void {
       this.processQueue(pubkey, useExtension, decryptedSenderPrivateKey, recipientPublicKey);
     }
   }
-
 
 
   private async decryptReceivedMessage(
