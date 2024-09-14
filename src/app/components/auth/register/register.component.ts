@@ -16,6 +16,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { angorAnimations } from '@angor/animations';
 import { AngorAlertComponent, AngorAlertType } from '@angor/components/alert';
+import { SecurityService } from 'app/services/security.service';
+import { SignerService } from 'app/services/signer.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'auth-register',
@@ -34,6 +37,7 @@ import { AngorAlertComponent, AngorAlertType } from '@angor/components/alert';
         MatIconModule,
         MatCheckboxModule,
         MatProgressSpinnerModule,
+        CommonModule
     ],
 })
 export class RegisterComponent implements OnInit {
@@ -46,7 +50,11 @@ export class RegisterComponent implements OnInit {
     registerForm: UntypedFormGroup;
     showAlert: boolean = false;
 
-    constructor(private _formBuilder: UntypedFormBuilder, private _router: Router) {}
+    constructor(
+        private _formBuilder: UntypedFormBuilder,
+        private _router: Router,
+        private _signerService: SignerService
+    ) {}
 
     ngOnInit(): void {
         this.registerForm = this._formBuilder.group({
@@ -68,17 +76,46 @@ export class RegisterComponent implements OnInit {
 
         this.showAlert = false;
 
+        // Get form values
         const name = this.registerForm.get('name')?.value;
         const username = this.registerForm.get('username')?.value;
         const about = this.registerForm.get('about')?.value;
         const avatarUrl = this.registerForm.get('avatarUrl')?.value;
         const password = this.registerForm.get('password')?.value;
 
-        console.log({ name, username, about, avatarUrl, password });
+        // Generate keys using the security service
+        const keys = this._signerService.generateAndStoreKeys();
 
+        if (!keys) {
+            // If key generation failed, enable the form and show an error
+            this.registerForm.enable();
+            this.alert = { type: 'error', message: 'Error generating keys. Please try again.' };
+            this.showAlert = true;
+            return;
+        }
+
+        const { privateKeyHex, publicKey, npub, nsec } = keys;
+
+        // Simulate saving user metadata along with keys
+        const userMetadata = {
+            name,
+            username,
+            about,
+            avatarUrl,
+            password,
+            publicKey,
+            npub,
+            nsec,
+        };
+
+        console.log('User Metadata:', userMetadata);
+
+        // Display success alert
         this.alert = { type: 'success', message: 'Account created successfully!' };
         this.showAlert = true;
 
+        // Redirect to home
         this._router.navigateByUrl('/home');
     }
+
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { UnsignedEvent, nip19, getPublicKey, nip04, Event } from 'nostr-tools';
+import { UnsignedEvent, nip19, getPublicKey, nip04, Event, generateSecretKey } from 'nostr-tools';
 import { Buffer } from 'buffer';
 import { privateKeyFromSeedWords, accountFromSeedWords } from 'nostr-tools/nip06';
 
@@ -11,6 +11,8 @@ export class SignerService {
 
     localStorageSecretKeyName: string = "secretKey";
     localStoragePublicKeyName: string = "publicKey";
+    localStorageNpubName: string = "npub";
+    localStorageNsecName: string = "nsec";
 
     constructor() { }
 
@@ -187,11 +189,11 @@ export class SignerService {
     savePublicKeyToSession(publicKey: string): void {
         const npub = nip19.npubEncode(publicKey);
         window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
-        window.localStorage.setItem('npub', npub);
+        window.localStorage.setItem(this.localStorageNpubName, npub);
     }
 
     getNpub(): string {
-        return window.localStorage.getItem('npub') || '';
+        return window.localStorage.getItem(this.localStorageNpubName) || '';
     }
 
     removePublicKeyToSession() {
@@ -234,9 +236,9 @@ export class SignerService {
         let npub: string;
 
         try {
-            if (key.startsWith('nsec')) {
+            if (key.startsWith(this.localStorageNsecName)) {
                 const decoded = nip19.decode(key);
-                if (decoded.type !== 'nsec') {
+                if (decoded.type !== this.localStorageNsecName) {
                     throw new Error('Invalid nsec key.');
                 }
                 const secretKeyUint8Array = decoded.data as Uint8Array;
@@ -253,8 +255,8 @@ export class SignerService {
             nsec = nip19.nsecEncode(secretKeyUint8Array);
             this.saveSecretKeyToSession(secretKey);
             this.savePublicKeyToSession(pubkey);
-            localStorage.setItem('npub', npub);
-            localStorage.setItem('nsec', nsec);
+            localStorage.setItem(this.localStorageNpubName, npub);
+            localStorage.setItem(this.localStorageNsecName, nsec);
             console.log("Public Key (npub): ", npub);
             console.log("Private Key (hex): ", secretKey);
             console.log("nsec: ", nsec);
@@ -275,7 +277,7 @@ export class SignerService {
             const nsec = nip19.nsecEncode(privateKeyUint8Array);
             this.saveSecretKeyToSession(privateKey);
             this.savePublicKeyToSession(publicKey);
-            window.localStorage.setItem('nsec', nsec);
+            window.localStorage.setItem(this.localStorageNsecName, nsec);
             console.log("Login with mnemonic successful!");
             console.log("Public Key:", publicKey);
             console.log("Private Key (hex):", privateKey);
@@ -289,6 +291,19 @@ export class SignerService {
         }
     }
 
+
+    logout(): void {
+        // Remove keys from localStorage
+        window.localStorage.removeItem(this.localStorageSecretKeyName);
+        window.localStorage.removeItem(this.localStoragePublicKeyName);
+        window.localStorage.removeItem(this.localStorageNpubName);
+        window.localStorage.removeItem(this.localStorageNsecName);
+
+        console.log("User logged out and keys removed from localStorage.");
+    }
+
+
+
     usingNostrBrowserExtension() {
         if (this.usingSecretKey()) {
             return false;
@@ -299,6 +314,38 @@ export class SignerService {
         }
         return false;
     }
+
+
+    generateAndStoreKeys(): { privateKeyHex: string, publicKey: string, npub: string, nsec: string } | null {
+        try {
+            // Generate a new private key (as Uint8Array)
+            const privateKeyUint8Array = generateSecretKey(); // Custom method to generate private key
+
+            // Convert private key (Uint8Array) to hex string for storage
+            const privateKeyHex = Buffer.from(privateKeyUint8Array).toString('hex');
+
+            // Generate the public key from the private key
+            const publicKey = getPublicKey(privateKeyUint8Array);
+
+            // Encode the public key as npub and the private key as nsec
+            const npub = nip19.npubEncode(publicKey);
+            const nsec = nip19.nsecEncode(privateKeyUint8Array);
+
+            // Store the private key, public key, npub, and nsec in session/localStorage
+            this.saveSecretKeyToSession(privateKeyHex);   // Save private key as hex string
+            this.savePublicKeyToSession(publicKey);       // Save public key
+            window.localStorage.setItem(this.localStorageNpubName, npub);    // Save npub to localStorage
+            window.localStorage.setItem(this.localStorageNsecName, nsec);    // Save nsec to localStorage
+
+            // Return keys to be used in the component
+            return { privateKeyHex, publicKey, npub, nsec };
+        } catch (error) {
+            console.error("Error during key generation:", error);
+            return null;
+        }
+    }
+
+
 
     async handleLoginWithExtension(): Promise<boolean> {
         const globalContext = globalThis as unknown as { nostr?: { getPublicKey?: Function } };
