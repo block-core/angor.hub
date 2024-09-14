@@ -37,60 +37,48 @@ import { AngorAlertComponent, AngorAlertType } from '@angor/components/alert';
     ],
 })
 export class RegisterComponent implements OnInit {
-    @ViewChild('signUpNgForm') signUpNgForm: NgForm;
+    @ViewChild('registerNgForm') registerNgForm: NgForm;
 
     alert: { type: AngorAlertType; message: string } = {
         type: 'success',
         message: '',
     };
-    signUpForm: UntypedFormGroup;
+    registerForm: UntypedFormGroup;
     showAlert: boolean = false;
 
-    /**
-     * Constructor
-     */
-    constructor(
-         private _formBuilder: UntypedFormBuilder,
-        private _router: Router
-    ) {}
+    constructor(private _formBuilder: UntypedFormBuilder, private _router: Router) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Create the form
-        this.signUpForm = this._formBuilder.group({
+        this.registerForm = this._formBuilder.group({
             name: ['', Validators.required],
-            email: ['', [Validators.required, Validators.email]],
+            username: ['', Validators.required],
+            about: [''],
+            avatarUrl: [''],
             password: ['', Validators.required],
-            company: [''],
             agreements: ['', Validators.requiredTrue],
         });
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Sign up
-     */
-    signUp(): void {
-        // Do nothing if the form is invalid
-        if (this.signUpForm.invalid) {
+    register(): void {
+        if (this.registerForm.invalid) {
             return;
         }
 
-        // Disable the form
-        this.signUpForm.disable();
+        this.registerForm.disable();
 
-        // Hide the alert
         this.showAlert = false;
 
+        const name = this.registerForm.get('name')?.value;
+        const username = this.registerForm.get('username')?.value;
+        const about = this.registerForm.get('about')?.value;
+        const avatarUrl = this.registerForm.get('avatarUrl')?.value;
+        const password = this.registerForm.get('password')?.value;
 
+        console.log({ name, username, about, avatarUrl, password });
+
+        this.alert = { type: 'success', message: 'Account created successfully!' };
+        this.showAlert = true;
+
+        this._router.navigateByUrl('/home');
     }
 }

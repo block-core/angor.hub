@@ -28,10 +28,9 @@
                 {{ alert.message }}
             </angor-alert>
 
-            <!-- Login form -->
+            <!-- Login form with Secret Key -->
             <form class="mt-8" [formGroup]="SecretKeyLoginForm" (ngSubmit)="loginWithSecretKey()">
                 <!-- secret key field -->
-                <!-- Separator -->
                 <div class="mt-8 flex items-center">
                     <div class="mt-px flex-auto border-t"></div>
                     <div class="text-secondary mx-2">Enter secret key</div>
@@ -40,7 +39,24 @@
                 <mat-form-field class="w-full">
                     <mat-label>Secret Key</mat-label>
                     <input matInput formControlName="secretKey" />
+                </mat-form-field>
 
+                <!-- Password field -->
+                <mat-form-field class="w-full">
+                    <mat-label>Password</mat-label>
+                    <input id="password" matInput type="password" [formControlName]="'password'" #secretPasswordField />
+                    <button mat-icon-button type="button" (click)="
+                secretPasswordField.type === 'password'
+                    ? (secretPasswordField.type = 'text')
+                    : (secretPasswordField.type = 'password')
+            " matSuffix>
+                        <mat-icon *ngIf="secretPasswordField.type === 'password'" class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+                        <mat-icon *ngIf="secretPasswordField.type === 'text'" class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+                    </button>
+                    <mat-error *ngIf="SecretKeyLoginForm.get('password').hasError('required')"> Password is required
+                    </mat-error>
                 </mat-form-field>
 
                 <!-- Submit button -->
@@ -59,14 +75,31 @@
             </div>
 
 
+            <!-- Login form with Menemonic -->
             <form class="mt-8" [formGroup]="MenemonicLoginForm" (ngSubmit)="loginWithMenemonic()">
-
-
                 <!-- Menemonic field -->
                 <mat-form-field class="w-full">
                     <mat-label>Menemonic</mat-label>
                     <input matInput formControlName="menemonic" />
+                </mat-form-field>
 
+                <!-- Password field -->
+                <mat-form-field class="w-full">
+                    <mat-label>Password</mat-label>
+                    <input id="password" matInput type="password" [formControlName]="'password'"
+                        #menemonicPasswordField />
+                    <button mat-icon-button type="button" (click)="
+                menemonicPasswordField.type === 'password'
+                    ? (menemonicPasswordField.type = 'text')
+                    : (menemonicPasswordField.type = 'password')
+            " matSuffix>
+                        <mat-icon *ngIf="menemonicPasswordField.type === 'password'" class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:eye'"></mat-icon>
+                        <mat-icon *ngIf="menemonicPasswordField.type === 'text'" class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+                    </button>
+                    <mat-error *ngIf="MenemonicLoginForm.get('password').hasError('required')"> Password is required
+                    </mat-error>
                 </mat-form-field>
 
                 <!-- Submit button -->
@@ -76,6 +109,9 @@
                     <mat-progress-spinner *ngIf="loading" diameter="24" mode="indeterminate"></mat-progress-spinner>
                 </button>
             </form>
+
+
+
             <div *ngIf="isInstalledExtension">
                 <!-- Separator -->
                 <div class="mt-8 flex items-center">

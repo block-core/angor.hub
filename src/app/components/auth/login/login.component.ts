@@ -50,16 +50,17 @@ export class LoginComponent implements OnInit {
 
     private initializeForms(): void {
         this.SecretKeyLoginForm = this._formBuilder.group({
-            secretKey: ['', [Validators.required, Validators.minLength(64)]],
+            secretKey: ['', [Validators.required, Validators.minLength(3)]],
+            password: ['', Validators.required]
         });
 
         this.MenemonicLoginForm = this._formBuilder.group({
-            menemonic: ['', [Validators.required, Validators.minLength(12)]],
+            menemonic: ['', [Validators.required, Validators.minLength(3)]],
+            password: ['', Validators.required]
         });
     }
 
     private checkNostrExtensionAvailability(): void {
-
         const globalContext = globalThis as unknown as { nostr?: { signEvent?: Function } };
 
         if (globalContext.nostr && typeof globalContext.nostr.signEvent === 'function') {
@@ -69,13 +70,13 @@ export class LoginComponent implements OnInit {
         }
     }
 
-
     loginWithSecretKey(): void {
         if (this.SecretKeyLoginForm.invalid) {
             return;
         }
 
-        const secretKey = this.SecretKeyLoginForm.get('secretKey').value;
+        const secretKey = this.SecretKeyLoginForm.get('secretKey')?.value;
+        const password = this.SecretKeyLoginForm.get('password')?.value;
 
         this.loading = true;
         this.showAlert = false;
@@ -96,7 +97,8 @@ export class LoginComponent implements OnInit {
             return;
         }
 
-        const menemonic = this.MenemonicLoginForm.get('menemonic').value;
+        const menemonic = this.MenemonicLoginForm.get('menemonic')?.value;
+        const password = this.MenemonicLoginForm.get('password')?.value;
 
         this.loading = true;
         this.showAlert = false;
