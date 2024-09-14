@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { UnsignedEvent, nip19, getPublicKey, nip04, Event } from 'nostr-tools';
 import { Buffer } from 'buffer';
+import { privateKeyFromSeedWords, accountFromSeedWords } from 'nostr-tools/nip06';
 
 
 @Injectable({
@@ -183,8 +184,6 @@ export class SignerService {
         localStorage.setItem("following", newFollowingList);
     }
 
-
-
      savePublicKeyToSession(publicKey: string): void {
         const npub = nip19.npubEncode(publicKey);
         window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
@@ -246,6 +245,46 @@ export class SignerService {
           return true;
       } catch (e) {
           console.error("Error during key handling: ", e);
+          return false;
+      }
+  }
+
+
+
+
+
+  handleLoginWithMenemonic(mnemonic: string, passphrase: string = ''): boolean {
+      try {
+          // Index of the account (default to 0)
+          const accountIndex = 0;
+
+          // Generate private key (as a string) and public key from mnemonic and passphrase
+          const privateKey = privateKeyFromSeedWords(mnemonic, passphrase, accountIndex);
+
+          // Convert privateKey (hex string) to Uint8Array
+          const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
+
+          // Generate the public key from the private key (Uint8Array)
+          const publicKey = getPublicKey(privateKeyUint8Array);
+
+          // Encode public key as npub and private key as nsec
+          const npub = nip19.npubEncode(publicKey);
+          const nsec = nip19.nsecEncode(privateKeyUint8Array);
+
+          // Save keys to session/localStorage
+          this.saveSecretKeyToSession(privateKey);  // Save private key as hex (string)
+          this.savePublicKeyToSession(publicKey);   // Save public key and npub
+          window.localStorage.setItem('nsec', nsec);  // Save nsec to localStorage
+
+          console.log("Login with mnemonic successful!");
+          console.log("Public Key:", publicKey);
+          console.log("Private Key (hex):", privateKey);
+          console.log("npub:", npub);
+          console.log("nsec:", nsec);
+
+          return true;
+      } catch (error) {
+          console.error("Error during login with mnemonic:", error);
           return false;
       }
   }

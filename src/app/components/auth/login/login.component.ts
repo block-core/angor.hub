@@ -32,14 +32,19 @@ import { SignerService } from 'app/services/signer.service';
 export class LoginComponent implements OnInit {
     SecretKeyLoginForm: FormGroup;
     MenemonicLoginForm: FormGroup;
-    alert = { type: 'error', message: '' };
-    showAlert = false;
+    secAlert = { type: 'error', message: '' };
+    showSecAlert = false;
+
+    menemonicAlert = { type: 'error', message: '' };
+    showMenemonicAlert = false;
+
     loading = false;
     isInstalledExtension = false;
     privateKey: Uint8Array = new Uint8Array();
     publicKey: string = "";
     npub: string = "";
     nsec: string = "";
+
     constructor(
         private _formBuilder: FormBuilder,
         private _router: Router,
@@ -59,6 +64,7 @@ export class LoginComponent implements OnInit {
 
         this.MenemonicLoginForm = this._formBuilder.group({
             menemonic: ['', [Validators.required, Validators.minLength(3)]],
+            passphrase: [''], // Passphrase is optional
             password: ['', Validators.required]
         });
     }
@@ -82,16 +88,16 @@ export class LoginComponent implements OnInit {
         const password = this.SecretKeyLoginForm.get('password')?.value;
 
         this.loading = true;
-        this.showAlert = false;
+        this.showSecAlert = false;
 
-        this._signerService.saveSecretKeyToSession(secretKey);
+        const success = this._signerService.handleLoginWithNsec(secretKey);
 
-        if (this._signerService.getPublicKey()) {
+        if (success) {
             this._router.navigateByUrl('/home');
         } else {
             this.loading = false;
-            this.alert.message = 'Secret key is missing or invalid.';
-            this.showAlert = true;
+            this.secAlert.message = 'Secret key is missing or invalid.';
+            this.showSecAlert = true;
         }
     }
 
@@ -101,19 +107,20 @@ export class LoginComponent implements OnInit {
         }
 
         const menemonic = this.MenemonicLoginForm.get('menemonic')?.value;
+        const passphrase = this.MenemonicLoginForm.get('passphrase')?.value || ''; // Optional passphrase
         const password = this.MenemonicLoginForm.get('password')?.value;
 
         this.loading = true;
-        this.showAlert = false;
+        this.showMenemonicAlert = false;
 
-        this._signerService.saveSecretKeyToSession(menemonic);
+        const success = this._signerService.handleLoginWithMenemonic(menemonic, passphrase);
 
-        if (this._signerService.getPublicKey()) {
+        if (success) {
             this._router.navigateByUrl('/home');
         } else {
             this.loading = false;
-            this.alert.message = 'Menemonic is missing or invalid.';
-            this.showAlert = true;
+            this.menemonicAlert.message = 'Menemonic is missing or invalid.';
+            this.showMenemonicAlert = true;
         }
     }
 
