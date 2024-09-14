@@ -1,5 +1,5 @@
 import { AngorAlertComponent } from '@angor/components/alert';
-import { CommonModule, I18nPluralPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,10 +30,12 @@ import { SignerService } from 'app/services/signer.service';
     ],
 })
 export class LoginComponent implements OnInit {
-    signInForm: FormGroup;
+    SecretKeyLoginForm: FormGroup;
+    MenemonicLoginForm: FormGroup;
     alert = { type: 'error', message: '' };
     showAlert = false;
     loading = false;
+    isInstalledExtension = false;
 
     constructor(
         private _formBuilder: FormBuilder,
@@ -42,32 +44,70 @@ export class LoginComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.signInForm = this._formBuilder.group({
-            privateKey: ['', Validators.required],
-            publicKey: ['', Validators.required],
+        this.initializeForms();
+        this.checkNostrExtensionAvailability();
+    }
+
+    private initializeForms(): void {
+        this.SecretKeyLoginForm = this._formBuilder.group({
+            secretKey: ['', [Validators.required, Validators.minLength(64)]],
+        });
+
+        this.MenemonicLoginForm = this._formBuilder.group({
+            menemonic: ['', [Validators.required, Validators.minLength(12)]],
         });
     }
 
-    signIn(): void {
-        if (this.signInForm.invalid) {
+    private checkNostrExtensionAvailability(): void {
+
+        const globalContext = globalThis as unknown as { nostr?: { signEvent?: Function } };
+
+        if (globalContext.nostr && typeof globalContext.nostr.signEvent === 'function') {
+            this.isInstalledExtension = true;
+        } else {
+            this.isInstalledExtension = false;
+        }
+    }
+
+
+    loginWithSecretKey(): void {
+        if (this.SecretKeyLoginForm.invalid) {
             return;
         }
 
-        const privateKey = this.signInForm.get('privateKey').value;
-        const publicKey = this.signInForm.get('publicKey').value;
+        const secretKey = this.SecretKeyLoginForm.get('secretKey').value;
 
         this.loading = true;
         this.showAlert = false;
 
-        // Save private and public keys in the service
-        this._signerService.savePrivateKeyToSession(privateKey);
-        this._signerService.savePublicKeyToSession(publicKey);
+        this._signerService.saveSecretKeyToSession(secretKey);
 
         if (this._signerService.getPublicKey()) {
             this._router.navigateByUrl('/home');
         } else {
             this.loading = false;
-            this.alert.message = 'Public key is missing or invalid.';
+            this.alert.message = 'Secret key is missing or invalid.';
+            this.showAlert = true;
+        }
+    }
+
+    loginWithMenemonic(): void {
+        if (this.MenemonicLoginForm.invalid) {
+            return;
+        }
+
+        const menemonic = this.MenemonicLoginForm.get('menemonic').value;
+
+        this.loading = true;
+        this.showAlert = false;
+
+        this._signerService.saveSecretKeyToSession(menemonic);
+
+        if (this._signerService.getPublicKey()) {
+            this._router.navigateByUrl('/home');
+        } else {
+            this.loading = false;
+            this.alert.message = 'Menemonic is missing or invalid.';
             this.showAlert = true;
         }
     }

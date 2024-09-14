@@ -46,12 +46,12 @@ export class AuthMockApi {
             .reply(() => [200, true]);
 
         // -----------------------------------------------------------------------------------------------------
-        // @ Sign in - POST
+        // @ Login - POST
         // -----------------------------------------------------------------------------------------------------
         this._angorMockApiService
             .onPost('api/auth/sign-in', 1500)
             .reply(({ request }) => {
-                // Sign in successful
+                // Login successful
                 if (
                     request.body.email === 'username@angor.io' &&
                     request.body.password === 'admin'
@@ -71,7 +71,7 @@ export class AuthMockApi {
             });
 
         // -----------------------------------------------------------------------------------------------------
-        // @ Sign in using the access token - POST
+        // @ Login using the access token - POST
         // -----------------------------------------------------------------------------------------------------
         this._angorMockApiService
             .onPost('api/auth/sign-in-with-token')
@@ -114,7 +114,7 @@ export class AuthMockApi {
         this._angorMockApiService
             .onPost('api/auth/unlock-session', 1500)
             .reply(({ request }) => {
-                // Sign in successful
+                // Login successful
                 if (
                     request.body.email === 'username@angor.io' &&
                     request.body.password === 'admin'

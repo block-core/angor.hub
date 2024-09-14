@@ -18,7 +18,7 @@
             <!-- Alert -->
             <angor-alert class="mt-8" [appearance]="'outline'" [showIcon]="false" [type]="'info'">
                 Privet key test = <strong>123</strong> <br>
-                Public key test = <strong>321</strong> <br>
+                Menemonic test = <strong>321</strong> <br>
             </angor-alert>
 
 
@@ -28,39 +28,93 @@
                 {{ alert.message }}
             </angor-alert>
 
-            <!-- Sign in form -->
-            <form class="mt-8" [formGroup]="signInForm" (ngSubmit)="signIn()">
+            <!-- Login form -->
+            <form class="mt-8" [formGroup]="SecretKeyLoginForm" (ngSubmit)="loginWithSecretKey()">
                 <!-- secret key field -->
+                <!-- Separator -->
+                <div class="mt-8 flex items-center">
+                    <div class="mt-px flex-auto border-t"></div>
+                    <div class="text-secondary mx-2">Enter secret key</div>
+                    <div class="mt-px flex-auto border-t"></div>
+                </div>
                 <mat-form-field class="w-full">
                     <mat-label>Secret Key</mat-label>
-                    <input matInput formControlName="privateKey" />
-                    <mat-error *ngIf="
-                            signInForm.get('privateKey').hasError('required')
-                        ">
-                        Secret Key is required
-                    </mat-error>
-                </mat-form-field>
+                    <input matInput formControlName="secretKey" />
 
-                <!-- public key field -->
-                <mat-form-field class="w-full">
-                    <mat-label>Public Key</mat-label>
-                    <input matInput formControlName="publicKey" />
-                    <mat-error *ngIf="signInForm.get('publicKey').hasError('required')">
-                        Public key is required
-                    </mat-error>
                 </mat-form-field>
 
                 <!-- Submit button -->
                 <button class="angor-mat-button-large mt-6 w-full" mat-flat-button color="primary"
-                    [disabled]="signInForm.invalid">
+                    [disabled]="SecretKeyLoginForm.invalid">
                     <span *ngIf="!loading">Login</span>
                     <mat-progress-spinner *ngIf="loading" diameter="24" mode="indeterminate"></mat-progress-spinner>
                 </button>
             </form>
+
+
+            <div class="mt-8 flex items-center">
+                <div class="mt-px flex-auto border-t"></div>
+                <div class="text-secondary mx-2">Or enter menemonic</div>
+                <div class="mt-px flex-auto border-t"></div>
+            </div>
+
+
+            <form class="mt-8" [formGroup]="MenemonicLoginForm" (ngSubmit)="loginWithMenemonic()">
+
+
+                <!-- Menemonic field -->
+                <mat-form-field class="w-full">
+                    <mat-label>Menemonic</mat-label>
+                    <input matInput formControlName="menemonic" />
+
+                </mat-form-field>
+
+                <!-- Submit button -->
+                <button class="angor-mat-button-large mt-6 w-full" mat-flat-button color="primary"
+                    [disabled]="MenemonicLoginForm.invalid">
+                    <span *ngIf="!loading">Login</span>
+                    <mat-progress-spinner *ngIf="loading" diameter="24" mode="indeterminate"></mat-progress-spinner>
+                </button>
+            </form>
+            <div *ngIf="isInstalledExtension">
+                <!-- Separator -->
+                <div class="mt-8 flex items-center">
+                    <div class="mt-px flex-auto border-t"></div>
+                    <div class="text-secondary mx-2">Or login with extension</div>
+                    <div class="mt-px flex-auto border-t"></div>
+                </div>
+
+                <!-- Single sign-on buttons -->
+                <div class="mt-8 flex items-center space-x-4">
+                    <button class="flex-auto" type="button" mat-stroked-button>
+                        <mat-icon class="icon-size-5" [svgIcon]="'feather:zap'"></mat-icon>
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
     <div
         class="relative hidden h-full w-1/2 flex-auto items-center justify-center overflow-hidden bg-gray-800 p-16 dark:border-l md:flex lg:px-28">
+
+        <svg class="absolute inset-0 pointer-events-none" viewBox="0 0 960 540" width="100%" height="100%"
+            preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            <g class="text-gray-700 opacity-25" fill="none" stroke="currentColor" stroke-width="100">
+                <circle r="234" cx="196" cy="23"></circle>
+                <circle r="234" cx="790" cy="491"></circle>
+            </g>
+        </svg>
+
+        <svg class="absolute -top-16 -right-16 text-gray-700" viewBox="0 0 220 192" width="220" height="192"
+            fill="none">
+            <defs>
+                <pattern id="837c3e70-6c3a-44e6-8854-cc48c737b659" x="0" y="0" width="20" height="20"
+                    patternUnits="userSpaceOnUse">
+                    <rect x="0" y="0" width="4" height="4" fill="currentColor"></rect>
+                </pattern>
+            </defs>
+            <rect width="220" height="192" fill="url(#837c3e70-6c3a-44e6-8854-cc48c737b659)"></rect>
+        </svg>
         <!-- Background and Content -->
         <div class="relative z-10 w-full max-w-2xl">
             <div class="text-7xl font-bold leading-none text-gray-100">

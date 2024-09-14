@@ -8,7 +8,7 @@ import { Buffer } from 'buffer';
 })
 export class SignerService {
 
-    localStoragePrivateKeyName: string = "privateKey";
+    localStorageSecretKeyName: string = "secretKey";
     localStoragePublicKeyName: string = "publicKey";
 
     constructor() { }
@@ -19,7 +19,7 @@ export class SignerService {
         localStorage.removeItem("currentChip");
         localStorage.removeItem("following");
         localStorage.removeItem(`${this.getPublicKey()}_img`);
-        localStorage.removeItem(this.localStoragePrivateKeyName);
+        localStorage.removeItem(this.localStorageSecretKeyName);
         localStorage.removeItem(this.localStoragePublicKeyName);
         console.log("data cleared")
         console.log(localStorage.getItem("nostrWalletConnect"))
@@ -39,10 +39,10 @@ export class SignerService {
     }
 
     nsec() {
-      if (this.usingPrivateKey()) {
-          let privateKey = this.getPrivateKey();
-          const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
-          return nip19.nsecEncode(privateKeyUint8Array);
+      if (this.usingSecretKey()) {
+          let secretKey = this.getSecretKey();
+          const secretKeyUint8Array = Uint8Array.from(Buffer.from(secretKey, 'hex'));
+          return nip19.nsecEncode(secretKeyUint8Array);
       }
       return "";
   }
@@ -62,8 +62,8 @@ export class SignerService {
         return localStorage.getItem(this.localStoragePublicKeyName) || "";
     }
 
-    getPrivateKey() {
-        return localStorage.getItem(this.localStoragePrivateKeyName) || "";
+    getSecretKey() {
+        return localStorage.getItem(this.localStorageSecretKeyName) || "";
     }
 
     getLoggedInUserImage() {
@@ -76,8 +76,8 @@ export class SignerService {
         return localStorage.setItem(`${this.getPublicKey()}_img`, url);
     }
 
-    usingPrivateKey() {
-        if (localStorage.getItem(this.localStoragePrivateKeyName)) {
+    usingSecretKey() {
+        if (localStorage.getItem(this.localStorageSecretKeyName)) {
             return true;
         }
         return false;
@@ -187,8 +187,8 @@ export class SignerService {
         localStorage.setItem(this.localStoragePublicKeyName, publicKey);
     }
 
-    savePrivateKeyToSession(privateKey: string) {
-        localStorage.setItem(this.localStoragePrivateKeyName, privateKey);
+    saveSecretKeyToSession(secretKey: string) {
+        localStorage.setItem(this.localStorageSecretKeyName, secretKey);
     }
 
     setPublicKeyFromExtension(publicKey: string) {
@@ -212,19 +212,19 @@ export class SignerService {
     }
 
     handleLoginWithNsec(nsec: string) {
-      let privateKey: string;
+      let secretKey: string;
       try {
-          privateKey = nip19.decode(nsec).data as string;
+          secretKey = nip19.decode(nsec).data as string;
 
-          const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
+          const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
 
-          let pubkey = getPublicKey(privateKeyUint8Array);
+          let pubkey = getPublicKey(secretKeyUint8Array);
 
-          this.savePrivateKeyToSession(privateKey);
+          this.saveSecretKeyToSession(secretKey);
           this.savePublicKeyToSession(pubkey);
 
           console.log("Public Key: ", this.getPublicKey());
-          console.log("Private Key: ", this.getPrivateKey());
+          console.log("Private Key: ", this.getSecretKey());
 
           return true;
       } catch (e) {
@@ -236,7 +236,7 @@ export class SignerService {
 
 
     usingNostrBrowserExtension() {
-        if (this.usingPrivateKey()) {
+        if (this.usingSecretKey()) {
             return false;
         }
         const gt = globalThis as any;
@@ -292,16 +292,16 @@ export class SignerService {
         return "Attempted Nostr Window decryption and failed."
     }
 
-    async decryptWithPrivateKey(pubkey: string, ciphertext: string): Promise<string> {
+    async decryptWithSecretKey(pubkey: string, ciphertext: string): Promise<string> {
       try {
           // Get the stored private key in hex format
-          let privateKey = this.getPrivateKey();
+          let secretKey = this.getSecretKey();
 
           // Ensure the private key is in Uint8Array format
-          const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
+          const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
 
           // Decrypt the message using the private key and public key
-          return await nip04.decrypt(privateKeyUint8Array, pubkey, ciphertext);
+          return await nip04.decrypt(secretKeyUint8Array, pubkey, ciphertext);
       } catch (error) {
           console.error("Error during decryption: ", error);
           return "*Failed to Decrypted Content*";
