@@ -98,6 +98,7 @@ export class RegisterComponent implements OnInit {
 
         // Simulate saving user metadata along with keys
         const userMetadata = {
+            secretKey,
             name,
             username,
             about,
