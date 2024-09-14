@@ -32,6 +32,9 @@
                 <mat-form-field class="w-full">
                     <mat-label>Secret Key</mat-label>
                     <input matInput formControlName="secretKey" autocomplete="secretKey" />
+                    @if (SecretKeyLoginForm.get('secretKey').hasError('required')) {
+                        <mat-error> Secret key is required </mat-error>
+                    }
                 </mat-form-field>
 
                 <!-- Password field -->
@@ -77,6 +80,9 @@
                 <mat-form-field class="w-full">
                     <mat-label>Menemonic</mat-label>
                     <input matInput formControlName="menemonic" autocomplete="menemonic" />
+                    @if (MenemonicLoginForm.get('menemonic').hasError('required')) {
+                        <mat-error> Menemonic is required </mat-error>
+                    }
                 </mat-form-field>
 
                 <!-- Passphrase field -->

@@ -5,7 +5,7 @@ import { privateKeyFromSeedWords, accountFromSeedWords } from 'nostr-tools/nip06
 
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class SignerService {
 
@@ -40,13 +40,13 @@ export class SignerService {
     }
 
     nsec() {
-      if (this.usingSecretKey()) {
-          let secretKey = this.getSecretKey();
-          const secretKeyUint8Array = Uint8Array.from(Buffer.from(secretKey, 'hex'));
-          return nip19.nsecEncode(secretKeyUint8Array);
-      }
-      return "";
-  }
+        if (this.usingSecretKey()) {
+            let secretKey = this.getSecretKey();
+            const secretKeyUint8Array = Uint8Array.from(Buffer.from(secretKey, 'hex'));
+            return nip19.nsecEncode(secretKeyUint8Array);
+        }
+        return "";
+    }
 
 
     pubkey(npub: string) {
@@ -55,7 +55,7 @@ export class SignerService {
 
     encodeNoteAsEvent(note: string): string {
         let decodedNote = nip19.decode(note).data.toString()
-        let eventP: nip19.EventPointer = {id: decodedNote}
+        let eventP: nip19.EventPointer = { id: decodedNote }
         return nip19.neventEncode(eventP);
     }
 
@@ -128,7 +128,7 @@ export class SignerService {
                 "wss://relay.damus.io/",
                 "wss://relay.angor.io/",
                 "wss://relay2.angor.io/"
-           ]
+            ]
         }
         return relays
     }
@@ -184,13 +184,13 @@ export class SignerService {
         localStorage.setItem("following", newFollowingList);
     }
 
-     savePublicKeyToSession(publicKey: string): void {
+    savePublicKeyToSession(publicKey: string): void {
         const npub = nip19.npubEncode(publicKey);
         window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
         window.localStorage.setItem('npub', npub);
     }
 
-     getNpub(): string {
+    getNpub(): string {
         return window.localStorage.getItem('npub') || '';
     }
 
@@ -227,69 +227,67 @@ export class SignerService {
         return true;
     }
 
-    handleLoginWithNsec(nsec: string) {
-      let secretKey: string;
-      try {
-          secretKey = nip19.decode(nsec).data as string;
+    handleLoginWithKey(key: string): boolean {
+        let secretKey: string;
+        let pubkey: string;
+        let nsec: string;
+        let npub: string;
 
-          const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
+        try {
+            if (key.startsWith('nsec')) {
+                const decoded = nip19.decode(key);
+                if (decoded.type !== 'nsec') {
+                    throw new Error('Invalid nsec key.');
+                }
+                const secretKeyUint8Array = decoded.data as Uint8Array;
+                secretKey = Buffer.from(secretKeyUint8Array).toString('hex');
+            } else if (/^[0-9a-fA-F]{64}$/.test(key)) {
+                secretKey = key;
+            } else {
+                throw new Error('Invalid key format. Must be either nsec or hex.');
+            }
 
-          let pubkey = getPublicKey(secretKeyUint8Array);
+            const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
+            pubkey = getPublicKey(secretKeyUint8Array);
+            npub = nip19.npubEncode(pubkey);
+            nsec = nip19.nsecEncode(secretKeyUint8Array);
+            this.saveSecretKeyToSession(secretKey);
+            this.savePublicKeyToSession(pubkey);
+            localStorage.setItem('npub', npub);
+            localStorage.setItem('nsec', nsec);
+            console.log("Public Key (npub): ", npub);
+            console.log("Private Key (hex): ", secretKey);
+            console.log("nsec: ", nsec);
+            return true;
+        } catch (e) {
+            console.error("Error during key handling: ", e);
+            return false;
+        }
+    }
 
-          this.saveSecretKeyToSession(secretKey);
-          this.savePublicKeyToSession(pubkey);
+    handleLoginWithMenemonic(mnemonic: string, passphrase: string = ''): boolean {
+        try {
+            const accountIndex = 0;
+            const privateKey = privateKeyFromSeedWords(mnemonic, passphrase, accountIndex);
+            const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
+            const publicKey = getPublicKey(privateKeyUint8Array);
+            const npub = nip19.npubEncode(publicKey);
+            const nsec = nip19.nsecEncode(privateKeyUint8Array);
+            this.saveSecretKeyToSession(privateKey);
+            this.savePublicKeyToSession(publicKey);
+            window.localStorage.setItem('nsec', nsec);
+            console.log("Login with mnemonic successful!");
+            console.log("Public Key:", publicKey);
+            console.log("Private Key (hex):", privateKey);
+            console.log("npub:", npub);
+            console.log("nsec:", nsec);
 
-          console.log("Public Key: ", this.getPublicKey());
-          console.log("Private Key: ", this.getSecretKey());
-
-          return true;
-      } catch (e) {
-          console.error("Error during key handling: ", e);
-          return false;
-      }
-  }
-
-
-
-
-
-  handleLoginWithMenemonic(mnemonic: string, passphrase: string = ''): boolean {
-      try {
-          // Index of the account (default to 0)
-          const accountIndex = 0;
-
-          // Generate private key (as a string) and public key from mnemonic and passphrase
-          const privateKey = privateKeyFromSeedWords(mnemonic, passphrase, accountIndex);
-
-          // Convert privateKey (hex string) to Uint8Array
-          const privateKeyUint8Array = Uint8Array.from(Buffer.from(privateKey, 'hex'));
-
-          // Generate the public key from the private key (Uint8Array)
-          const publicKey = getPublicKey(privateKeyUint8Array);
-
-          // Encode public key as npub and private key as nsec
-          const npub = nip19.npubEncode(publicKey);
-          const nsec = nip19.nsecEncode(privateKeyUint8Array);
-
-          // Save keys to session/localStorage
-          this.saveSecretKeyToSession(privateKey);  // Save private key as hex (string)
-          this.savePublicKeyToSession(publicKey);   // Save public key and npub
-          window.localStorage.setItem('nsec', nsec);  // Save nsec to localStorage
-
-          console.log("Login with mnemonic successful!");
-          console.log("Public Key:", publicKey);
-          console.log("Private Key (hex):", privateKey);
-          console.log("npub:", npub);
-          console.log("nsec:", nsec);
-
-          return true;
-      } catch (error) {
-          console.error("Error during login with mnemonic:", error);
-          return false;
-      }
-  }
-
-
+            return true;
+        } catch (error) {
+            console.error("Error during login with mnemonic:", error);
+            return false;
+        }
+    }
 
     usingNostrBrowserExtension() {
         if (this.usingSecretKey()) {
@@ -353,19 +351,19 @@ export class SignerService {
     }
 
     async decryptWithSecretKey(pubkey: string, ciphertext: string): Promise<string> {
-      try {
-          // Get the stored private key in hex format
-          let secretKey = this.getSecretKey();
+        try {
+            // Get the stored private key in hex format
+            let secretKey = this.getSecretKey();
 
-          // Ensure the private key is in Uint8Array format
-          const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
+            // Ensure the private key is in Uint8Array format
+            const secretKeyUint8Array = new Uint8Array(Buffer.from(secretKey, 'hex'));
 
-          // Decrypt the message using the private key and public key
-          return await nip04.decrypt(secretKeyUint8Array, pubkey, ciphertext);
-      } catch (error) {
-          console.error("Error during decryption: ", error);
-          return "*Failed to Decrypted Content*";
-      }
-  }
+            // Decrypt the message using the private key and public key
+            return await nip04.decrypt(secretKeyUint8Array, pubkey, ciphertext);
+        } catch (error) {
+            console.error("Error during decryption: ", error);
+            return "*Failed to Decrypted Content*";
+        }
+    }
 
 }

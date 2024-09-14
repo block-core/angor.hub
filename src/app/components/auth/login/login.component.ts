@@ -90,16 +90,24 @@ export class LoginComponent implements OnInit {
         this.loading = true;
         this.showSecAlert = false;
 
-        const success = this._signerService.handleLoginWithNsec(secretKey);
+        try {
+            const success = this._signerService.handleLoginWithKey(secretKey); // Updated method to handle both nsec and hex
 
-        if (success) {
-            this._router.navigateByUrl('/home');
-        } else {
+            if (success) {
+                // Successful login
+                this._router.navigateByUrl('/home');
+            } else {
+                throw new Error('Secret key is missing or invalid.');
+            }
+        } catch (error) {
+            // Handle login failure
             this.loading = false;
-            this.secAlert.message = 'Secret key is missing or invalid.';
+            this.secAlert.message = (error instanceof Error) ? error.message : 'An unexpected error occurred.';
             this.showSecAlert = true;
+            console.error("Login error: ", error);
         }
     }
+
 
     loginWithMenemonic(): void {
         if (this.MenemonicLoginForm.invalid) {
