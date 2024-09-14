@@ -33,7 +33,7 @@ export class LogoutComponent implements OnInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Sign out
+        // Logout
 
         // Redirect after the countdown
         timer(1000, 1000)

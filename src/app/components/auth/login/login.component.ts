@@ -36,7 +36,10 @@ export class LoginComponent implements OnInit {
     showAlert = false;
     loading = false;
     isInstalledExtension = false;
-
+    privateKey: Uint8Array = new Uint8Array();
+    publicKey: string = "";
+    npub: string = "";
+    nsec: string = "";
     constructor(
         private _formBuilder: FormBuilder,
         private _router: Router,
@@ -113,4 +116,14 @@ export class LoginComponent implements OnInit {
             this.showAlert = true;
         }
     }
+
+    async loginWithNostrExtension(): Promise<void> {
+        const success = await this._signerService.handleLoginWithExtension();
+        if (success) {
+            this._router.navigateByUrl('/home');
+        } else {
+            console.error('Failed to log in using Nostr extension');
+        }
+    }
+
 }

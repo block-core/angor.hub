@@ -38,13 +38,13 @@
                 </div>
                 <mat-form-field class="w-full">
                     <mat-label>Secret Key</mat-label>
-                    <input matInput formControlName="secretKey" />
+                    <input matInput formControlName="secretKey" autocomplete="secretKey" />
                 </mat-form-field>
 
                 <!-- Password field -->
                 <mat-form-field class="w-full">
                     <mat-label>Password</mat-label>
-                    <input id="password" matInput type="password" [formControlName]="'password'" #secretPasswordField />
+                    <input matInput type="password" [formControlName]="'password'" autocomplete="current-password-seckey" #secretPasswordField />
                     <button mat-icon-button type="button" (click)="
                 secretPasswordField.type === 'password'
                     ? (secretPasswordField.type = 'text')
@@ -80,13 +80,13 @@
                 <!-- Menemonic field -->
                 <mat-form-field class="w-full">
                     <mat-label>Menemonic</mat-label>
-                    <input matInput formControlName="menemonic" />
+                    <input matInput formControlName="menemonic" autocomplete="menemonic" />
                 </mat-form-field>
 
                 <!-- Password field -->
                 <mat-form-field class="w-full">
                     <mat-label>Password</mat-label>
-                    <input id="password" matInput type="password" [formControlName]="'password'"
+                    <input matInput type="password" [formControlName]="'password'" autocomplete="current-password-menemonic"
                         #menemonicPasswordField />
                     <button mat-icon-button type="button" (click)="
                 menemonicPasswordField.type === 'password'
@@ -120,9 +120,9 @@
                     <div class="mt-px flex-auto border-t"></div>
                 </div>
 
-                <!-- Single sign-on buttons -->
+                <!-- extension login buttons -->
                 <div class="mt-8 flex items-center space-x-4">
-                    <button class="flex-auto" type="button" mat-stroked-button>
+                    <button class="flex-auto" type="button" mat-stroked-button (click)="loginWithNostrExtension()">
                         <mat-icon class="icon-size-5" [svgIcon]="'feather:zap'"></mat-icon>
                     </button>
                 </div>

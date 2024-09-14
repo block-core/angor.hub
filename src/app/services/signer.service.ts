@@ -183,12 +183,29 @@ export class SignerService {
         localStorage.setItem("following", newFollowingList);
     }
 
-    savePublicKeyToSession(publicKey: string) {
-        localStorage.setItem(this.localStoragePublicKeyName, publicKey);
+
+
+     savePublicKeyToSession(publicKey: string): void {
+        const npub = nip19.npubEncode(publicKey);
+        window.localStorage.setItem(this.localStoragePublicKeyName, publicKey);
+        window.localStorage.setItem('npub', npub);
     }
+
+     getNpub(): string {
+        return window.localStorage.getItem('npub') || '';
+    }
+
+    removePublicKeyToSession() {
+        localStorage.removeItem(this.localStoragePublicKeyName);
+    }
+
 
     saveSecretKeyToSession(secretKey: string) {
         localStorage.setItem(this.localStorageSecretKeyName, secretKey);
+    }
+
+    removeSecretKeyToSession() {
+        localStorage.removeItem(this.localStorageSecretKeyName);
     }
 
     setPublicKeyFromExtension(publicKey: string) {
@@ -247,19 +264,23 @@ export class SignerService {
     }
 
     async handleLoginWithExtension(): Promise<boolean> {
-        const gt = globalThis as any;
-        if (gt.nostr) {
-            const pubkey = await gt.nostr.getPublicKey().catch((e) => {
-                console.log(e);
-                return "";
-            });
-            if (pubkey === "") {
-                return false;
+        const globalContext = globalThis as unknown as { nostr?: { getPublicKey?: Function } };
+        if (!globalContext.nostr) {
+            return false;
+        }
+
+        try {
+            const pubkey = await globalContext.nostr.getPublicKey();
+            if (!pubkey) {
+                throw new Error("Public key not available from Nostr extension.");
             }
+
             this.setPublicKeyFromExtension(pubkey);
             return true;
+        } catch (error) {
+            console.error('Failed to connect to Nostr extension:', error);
+            return false;
         }
-        return false;
     }
 
     async signEventWithExtension(unsignedEvent: UnsignedEvent): Promise<Event> {

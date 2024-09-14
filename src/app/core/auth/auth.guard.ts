@@ -7,7 +7,7 @@ export const authGuard = () => {
   const signerService = inject(SignerService);
   const router = inject(Router);
 
-  if (signerService.getSecretKey() !== "") {
+  if (signerService.getPublicKey() !== "") {
     return true;
   }
 
