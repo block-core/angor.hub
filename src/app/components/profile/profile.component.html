@@ -16,11 +16,12 @@
         >
             <!-- Avatar -->
             <div class="-mt-26 rounded-full lg:-mt-22">
-                <img
-                    class="ring-bg-card h-32 w-32 rounded-full ring-4"
-                    [src]="metadata?.picture"
-                    alt="User avatar"
-                />
+                 <ng-container *ngIf="metadata?.picture; else defaultAvatar">
+                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" [src]="metadata?.picture" alt="User Avatar" />
+                </ng-container>
+                <ng-template #defaultAvatar>
+                    <mat-icon class="icon-size-24" [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                </ng-template>
             </div>
 
             <!-- Details -->

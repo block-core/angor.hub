@@ -1,5 +1,5 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
-import { NgClass } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -37,6 +37,7 @@ import { SignerService } from 'app/services/signer.service';
         MatDividerModule,
         MatTooltipModule,
         NgClass,
+        CommonModule
     ],
 })
 export class ProfileComponent {
