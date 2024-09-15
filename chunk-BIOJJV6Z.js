@@ -1,0 +1,1 @@
+import{mc as a,ra as n}from"./chunk-YC5DAVGE.js";var r=(()=>{let e=class e{constructor(){}};e.\u0275fac=function(o){return new(o||e)},e.\u0275cmp=n({type:e,selectors:[["explore"]],standalone:!0,features:[a],decls:0,vars:0,template:function(o,i){},encapsulation:2});let t=e;return t})();var l=[{path:"",component:r}];export{l as default};
