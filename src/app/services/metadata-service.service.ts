@@ -22,26 +22,21 @@ export class MetadataService {
 
 
   async fetchMetadataWithCache(pubkey: string): Promise<any> {
-
     let metadata = await this.indexedDBService.getUserMetadata(pubkey);
-
     if (metadata) {
       this.metadataSubject.next(metadata);
       console.log('Metadata loaded from localForage (IndexedDB)');
-    } else {
-
-      metadata = await this.fetchMetadataRealtime(pubkey);
-      console.log('Metadata fetched from relays');
+      return metadata;
     }
-
-
+    metadata = await this.fetchMetadataRealtime(pubkey);
+    console.log('Metadata fetched from relays');
     if (metadata) {
       await this.indexedDBService.saveUserMetadata(pubkey, metadata);
       console.log('Metadata saved to localForage (IndexedDB)');
     }
-
     return metadata;
   }
+
 
 
   private subscribeToMetadataUpdates(pubkey: string): void {
