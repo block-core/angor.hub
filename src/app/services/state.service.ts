@@ -56,18 +56,7 @@ export class StateService {
       return;
     }
 
-    try {
-      const metadata = await this.nostrService.fetchMetadata(project.nostrPubKey);
-
-      if (metadata) {
-        this.applyMetadata(project, metadata);
-        this.metadataCache.set(project.nostrPubKey, metadata); // Cache the metadata
-      } else {
-        console.warn(`Metadata is null for project ${project.nostrPubKey}.`);
-      }
-    } catch (error) {
-      console.error(`Error fetching metadata for project ${project.nostrPubKey}:`, error);
-    }
+ 
   }
 
 

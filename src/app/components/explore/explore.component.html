@@ -1,16 +1,11 @@
 <div
     class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto"
-    cdkScrollable
 >
     <!-- Header -->
-    <div
-        class="dark relative flex-0 overflow-hidden bg-gray-800 px-4 py-8 sm:p-16"
-    >
+    <div class="dark relative flex-0 overflow-hidden bg-gray-800 px-4 py-8 sm:p-16">
         <!-- Background -->
-        <!-- Rings -->
-        <!-- prettier-ignore -->
         <svg class="absolute inset-0 pointer-events-none"
-             viewBox="0 0 960 540" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            viewBox="0 0 960 540" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
             <g class="text-gray-700 opacity-25" fill="none" stroke="currentColor" stroke-width="100">
                 <circle r="234" cx="196" cy="23"></circle>
                 <circle r="234" cx="790" cy="491"></circle>
@@ -18,40 +13,22 @@
         </svg>
         <div class="relative z-10 flex flex-col items-center">
             <h2 class="text-xl font-semibold">Explore Projects</h2>
-            <div
-                class="mt-1 text-center text-4xl font-extrabold leading-tight tracking-tight sm:text-7xl"
-            >
+            <div class="mt-1 text-center text-4xl font-extrabold leading-tight tracking-tight sm:text-7xl">
                 What’s your next investment?
             </div>
-            <div
-                class="text-secondary mt-6 max-w-2xl text-center tracking-tight sm:text-2xl"
-            >
+            <div class="text-secondary mt-6 max-w-2xl text-center tracking-tight sm:text-2xl">
                 Check out our projects and find your next investment opportunity.
             </div>
         </div>
-
-
     </div>
 
     <!-- Main -->
     <div class="flex flex-auto p-6 sm:p-10">
-        <div
-            class="mx-auto flex w-full max-w-xs flex-auto flex-col sm:max-w-5xl"
-        >
+        <div class="mx-auto flex w-full max-w-xs flex-auto flex-col sm:max-w-5xl">
             <!-- Filters -->
-            <div
-                class="flex w-full max-w-xs flex-col items-center justify-between sm:max-w-none sm:flex-row"
-            >
-
-                <mat-form-field
-                    class="mt-4 w-full sm:mt-0 sm:w-72"
-                    [subscriptSizing]="'dynamic'"
-                >
-                    <mat-icon
-                        matPrefix
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:magnifying-glass'"
-                    ></mat-icon>
+            <div class="flex w-full max-w-xs flex-col items-center justify-between sm:max-w-none sm:flex-row">
+                <mat-form-field class="mt-4 w-full sm:mt-0 sm:w-72" [subscriptSizing]="'dynamic'">
+                    <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
                     <input
                         (input)="filterByQuery(query.value)"
                         placeholder="Search ..."
@@ -59,252 +36,20 @@
                         #query
                     />
                 </mat-form-field>
-                <mat-slide-toggle
-                    class="mt-8 sm:ml-auto sm:mt-0"
-                    [color]="'primary'"
-                    (change)="toggleCompleted($event)"
-                >
+                <mat-slide-toggle class="mt-8 sm:ml-auto sm:mt-0" [color]="'primary'" (change)="toggleCompleted($event)">
                     Hide completed
                 </mat-slide-toggle>
             </div>
-            <!-- Main -->
-                 <div
-                    class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 mt-10"
-                >
-                    <angor-card class="filter-info flex w-full flex-col">
-                        <div class="flex h-32">
-                            <img
-                                class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
-                                alt="Card cover image"
-                            />
-                        </div>
-                        <div class="flex px-8">
-                            <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex flex-col px-8 pb-6 pt-4">
-                            <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
-                                    </div>
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about ...
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
-                                    <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <hr class="my-6 w-full border-t" />
-                            <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
-                                </div>
-                                <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </angor-card>
-                    <angor-card class="filter-info flex w-full flex-col">
-                        <div class="flex h-32">
-                            <img
-                                class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
-                                alt="Card cover image"
-                            />
-                        </div>
-                        <div class="flex px-8">
-                            <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex flex-col px-8 pb-6 pt-4">
-                            <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
-                                    </div>
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
-                                    <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <hr class="my-6 w-full border-t" />
-                            <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
-                                </div>
-                                <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </angor-card>
-                    <angor-card class="filter-info flex w-full flex-col">
-                        <div class="flex h-32">
-                            <img
-                                class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
-                                alt="Card cover image"
-                            />
-                        </div>
-                        <div class="flex px-8">
-                            <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex flex-col px-8 pb-6 pt-4">
-                            <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
-                                    </div>
 
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about ...
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
-                                    <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <hr class="my-6 w-full border-t" />
-                            <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
-                                </div>
-                                <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </angor-card>
+            <!-- Project Cards -->
+            <div class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 mt-10">
+                <!-- Loop through projects and render cards -->
+                <ng-container *ngFor="let project of projects">
                     <angor-card class="filter-info flex w-full flex-col">
                         <div class="flex h-32">
                             <img
                                 class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
+                                [src]="project.banner || 'images/pages/profile/cover.jpg'"
                                 alt="Card cover image"
                             />
                         </div>
@@ -312,223 +57,56 @@
                             <div class="bg-card -mt-12 rounded-full p-1">
                                 <img
                                     class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
+                                    [src]="project.picture || 'images/avatars/avatar-placeholder.png'"
+                                    alt="Project logo"
                                 />
                             </div>
                         </div>
                         <div class="flex flex-col px-8 pb-6 pt-4">
                             <div class="flex items-center justify-between">
                                 <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
+                                    <div class="text-2xl font-semibold leading-tight">
+                                        {{ project.displayName || project.nostrPubKey }}
                                     </div>
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about ...
+                                    <div class="text-secondary mt-1 leading-tight">
+                                        {{ project.about || 'No description available' }}
                                     </div>
                                 </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full border">
                                     <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
+                                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user-plus'"></mat-icon>
                                     </button>
                                 </div>
                             </div>
                             <hr class="my-6 w-full border-t" />
                             <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
+                                <div class="text-secondary mr-3 text-md font-medium">
+                                    {{ project.totalInvestmentsCount || 0 }} investors
                                 </div>
                                 <div class="flex items-center">
                                     <img
                                         class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
+                                        [src]="'images/avatars/avatar-placeholder.png'"
+                                        alt="Investor avatar"
                                     />
                                 </div>
                             </div>
                         </div>
                     </angor-card>
-                    <angor-card class="filter-info flex w-full flex-col">
-                        <div class="flex h-32">
-                            <img
-                                class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
-                                alt="Card cover image"
-                            />
-                        </div>
-                        <div class="flex px-8">
-                            <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex flex-col px-8 pb-6 pt-4">
-                            <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
-                                    </div>
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about ...
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
-                                    <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <hr class="my-6 w-full border-t" />
-                            <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
-                                </div>
-                                <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </angor-card>
-                    <angor-card class="filter-info flex w-full flex-col">
-                        <div class="flex h-32">
-                            <img
-                                class="object-cover"
-                                src="images/cards/coffee-shop-01-320x200.jpg"
-                                alt="Card cover image"
-                            />
-                        </div>
-                        <div class="flex px-8">
-                            <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full"
-                                    src="images/avatars/avatar-placeholder.png"
-                                    alt="Card cover image"
-                                />
-                            </div>
-                        </div>
-                        <div class="flex flex-col px-8 pb-6 pt-4">
-                            <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div
-                                        class="text-2xl font-semibold leading-tight"
-                                    >
-                                        Project name
-                                    </div>
-                                    <div
-                                        class="text-secondary mt-1 leading-tight"
-                                    >
-                                        about ...
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-full border"
-                                >
-                                    <button mat-icon-button>
-                                        <mat-icon
-                                            class="icon-size-5"
-                                            [svgIcon]="
-                                                'heroicons_solid:user-plus'
-                                            "
-                                        ></mat-icon>
-                                    </button>
-                                </div>
-                            </div>
-                            <hr class="my-6 w-full border-t" />
-                            <div class="flex items-center justify-between">
-                                <div
-                                    class="text-secondary mr-3 text-md font-medium"
-                                >
-                                    4 investor
-                                </div>
-                                <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        src="images/avatars/avatar-placeholder.png"
-                                        alt="Card cover image"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </angor-card>
-                </div>
-         </div>
+                </ng-container>
+            </div>
+
+            <!-- Load More Button -->
+            <div class="flex justify-center mt-10">
+                <button mat-raised-button color="primary" (click)="loadProjects()" [disabled]="loading">
+                    {{ loading ? 'Loading...' : 'Load More Projects' }}
+                </button>
+            </div>
+
+            <div *ngIf="loading" class="loading-spinner">Loading Projects...</div>
+            <div *ngIf="!loading && errorMessage" class="error-message">
+                {{ errorMessage }}
+            </div>
+        </div>
     </div>
 </div>

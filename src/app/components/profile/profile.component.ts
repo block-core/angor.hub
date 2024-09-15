@@ -75,8 +75,12 @@ export class ProfileComponent implements OnInit {
             this.metadata = metadata;
 
             this._metadataService.getMetadataStream().subscribe((updatedMetadata) => {
+                if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+
+                console.log(updatedMetadata);
                 this.metadata = updatedMetadata;
                 this._changeDetectorRef.markForCheck();  // Trigger change detection to update the view
+                }
             });
         } catch (error) {
             console.error('Failed to load profile data:', error);

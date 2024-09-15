@@ -83,8 +83,10 @@ export class UserComponent implements OnInit, OnDestroy {
 
             this._metadataService.getMetadataStream().pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
-                    this.metadata = updatedMetadata;
-                    this._changeDetectorRef.markForCheck();
+                    if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+                        this.metadata = updatedMetadata;
+                        this._changeDetectorRef.markForCheck();
+                    }
                 });
         } catch (error) {
             console.error('Failed to load profile data:', error);
