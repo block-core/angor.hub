@@ -17,10 +17,10 @@
             <!-- Avatar -->
             <div class="-mt-26 rounded-full lg:-mt-22">
                  <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" [src]="metadata?.picture" alt="User Avatar" />
+                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" [src]="metadata?.picture" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                 </ng-container>
                 <ng-template #defaultAvatar>
-                    <mat-icon class="icon-size-24" [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" src="/images/avatars/avatar-placeholder.png" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                 </ng-template>
             </div>
 
@@ -28,8 +28,8 @@
             <div
                 class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start"
             >
-                <div class="text-lg font-bold leading-none">{{metadata?.name || 'Unknown User'}}</div>
-                <div class="text-secondary">{{metadata?.username || 'username'}}</div>
+                <div class="text-lg font-bold leading-none">{{metadata?.display_name || metadata?.name || 'Unknown User'}}</div>
+                <div class="text-secondary">{{metadata?.username || metadata?.name}}</div>
             </div>
 
             <!-- Separator -->
@@ -138,88 +138,88 @@
                     <div class="mt-6 flex justify-between">
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-01.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-01.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-02.jpg"
-                            alt="Card cover image"
-                        />
-                    </div>
-                    <div class="mt-3 flex justify-between">
-                        <img
-                            class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-03.jpg"
-                            alt="Card cover image"
-                        />
-                        <img
-                            class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-04.jpg"
-                            alt="Card cover image"
-                        />
-                        <img
-                            class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-03.jpg"
-                            alt="Card cover image"
-                        />
-                        <img
-                            class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                     </div>
                     <div class="mt-3 flex justify-between">
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-05.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-06.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-05.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-06.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                     </div>
                     <div class="mt-3 flex justify-between">
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/male-08.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="h-14 w-14 rounded-full"
-                            src="images/avatars/female-08.jpg"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                    </div>
+                    <div class="mt-3 flex justify-between">
+                        <img
+                            class="h-14 w-14 rounded-full"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="h-14 w-14 rounded-full"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="h-14 w-14 rounded-full"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="h-14 w-14 rounded-full"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                     </div>
@@ -580,7 +580,7 @@
                     <div class="flex">
                         <img
                             class="mr-4 h-10 w-10 rounded-full"
-                            src="images/avatars/female-01.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="flex min-w-0 flex-col">
@@ -598,7 +598,7 @@
                     <div class="mt-8 flex">
                         <img
                             class="mr-4 h-10 w-10 rounded-full"
-                            src="images/avatars/male-01.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="flex min-w-0 flex-col">
@@ -615,7 +615,7 @@
                     <div class="mt-8 flex">
                         <img
                             class="mr-4 h-10 w-10 rounded-full"
-                            src="images/avatars/male-15.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="flex min-w-0 flex-col">
@@ -632,7 +632,7 @@
                     <div class="mt-8 flex">
                         <img
                             class="mr-4 h-10 w-10 rounded-full"
-                            src="images/avatars/female-15.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="flex min-w-0 flex-col">
@@ -668,12 +668,8 @@
                 <div class="text-xl font-semibold">Create Post</div>
                 <div class="mt-8 flex flex-col items-start sm:flex-row">
                     <div class="mb-6 flex items-center sm:mb-0">
-                        <img
-                            class="mr-4 h-12 w-12 min-w-12 rounded-full"
-                            src="images/avatars/username.jpg"
-                            alt="Card cover image"
-                        />
-                        <div class="sm:hidden">Display Name</div>
+                             <img class="mr-4 h-12 w-12 min-w-12 rounded-full" [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                        <div class="sm:hidden">{{metadata?.name || 'Unknown User'}}</div>
                     </div>
                     <mat-form-field
                         class="w-full"
@@ -777,7 +773,7 @@
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-01.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -911,22 +907,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">
@@ -964,7 +960,7 @@
                         <div class="flex items-start">
                             <img
                                 class="mr-5 h-12 w-12 rounded-full"
-                                src="images/avatars/username.jpg"
+                                src="images/avatars/avatar-placeholder.png"
                                 alt="Card cover image"
                             />
                             <mat-form-field
@@ -1006,7 +1002,7 @@
                             <div class="flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/male-05.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1038,7 +1034,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/female-01.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1065,7 +1061,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/female-08.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1091,7 +1087,7 @@
                             <div class="mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/male-11.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1126,7 +1122,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/female-01.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1153,7 +1149,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/male-11.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1182,7 +1178,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/female-01.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1209,7 +1205,7 @@
                             <div class="ml-12 mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/male-11.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1237,7 +1233,7 @@
                             <div class="mt-8 flex items-start">
                                 <img
                                     class="mr-4 h-8 w-8 rounded-full"
-                                    src="images/avatars/female-05.jpg"
+                                    src="images/avatars/avatar-placeholder.png"
                                     alt="Card cover image"
                                 />
                                 <div class="mt-0.5 flex flex-col">
@@ -1271,7 +1267,7 @@
                 <div class="mx-6 mb-1 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-01.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -1400,22 +1396,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">
@@ -1439,7 +1435,7 @@
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-14.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -1581,22 +1577,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">
@@ -1620,7 +1616,7 @@
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-01.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -1762,22 +1758,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">
@@ -1801,7 +1797,7 @@
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-14.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -1934,22 +1930,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">
@@ -1973,7 +1969,7 @@
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img
                         class="mr-4 h-10 w-10 rounded-full"
-                        src="images/avatars/female-01.jpg"
+                        src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image"
                     />
                     <div class="flex flex-col">
@@ -2114,22 +2110,22 @@
                     <div class="flex items-center">
                         <img
                             class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-02.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/female-04.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-09.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <img
                             class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/male-07.jpg"
+                            src="images/avatars/avatar-placeholder.png"
                             alt="Card cover image"
                         />
                         <div class="ml-3 text-md tracking-tight">

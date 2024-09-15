@@ -15,7 +15,7 @@ export const activities = [
     },
     {
         id: '6e3e97e5-effc-4fb7-b730-52a151f0b641',
-        image: 'images/avatars/male-04.jpg',
+        image: 'images/avatars/avatar-placeholder.png',
         description:
             '<strong>Leo Gill</strong> added you to <strong>Top Secret Project</strong> group and assigned you as a <strong>Project Manager</strong>',
         date: now.minus({ minutes: 50 }).toISO(), // 50 minutes ago
@@ -44,7 +44,7 @@ export const activities = [
     },
     {
         id: 'ef7b95a7-8e8b-4616-9619-130d9533add9',
-        image: 'images/avatars/male-06.jpg',
+        image: 'images/avatars/avatar-placeholder.png',
         description:
             '<strong>Roger Murray</strong> accepted your friend request',
         date: now.minus({ hours: 7 }).toISO(), // 7 hours ago
@@ -52,7 +52,7 @@ export const activities = [
     },
     {
         id: 'eb8aa470-635e-461d-88e1-23d9ea2a5665',
-        image: 'images/avatars/female-04.jpg',
+        image: 'images/avatars/avatar-placeholder.png',
         description: '<strong>Sophie Stone</strong> sent you a direct message',
         date: now.minus({ hours: 9 }).toISO(), // 9 hours ago
     },
@@ -72,7 +72,7 @@ export const activities = [
     },
     {
         id: 'fd0f01b4-f3de-4333-add5-cd86850279f8',
-        image: 'images/avatars/female-02.jpg',
+        image: 'images/avatars/avatar-placeholder.png',
         description: '<strong>Tina Harris</strong> started a chat with you',
         date: now.minus({ day: 1 }).toISO(), // 1 day ago,
         linkedContent: 'Go to Chat (Tina Harris)',

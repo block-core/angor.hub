@@ -202,7 +202,7 @@ export const chats = [
 export const contacts = [
     {
         id: '16b9e696-ea95-4dd8-86c4-3caf705a1dc6',
-        avatar: 'images/avatars/male-12.jpg',
+        avatar: 'images/avatars/avatar-placeholder.png',
         name: 'Sali',
         about: "Hi there! I'm using AngorChat.",
         details: {
@@ -228,7 +228,7 @@ export const contacts = [
     },
     {
         id: '9d3f0e7f-dcbd-4e56-a5e8-87b8154e9edf',
-        avatar: 'images/avatars/male-02.jpg',
+        avatar: 'images/avatars/avatar-placeholder.png',
         name: 'John',
         about: "Hi there! I'm using AngorChat.",
         details: {
@@ -261,6 +261,6 @@ export const profile: any = {
     id: 'cfaad35d-07a3-4447-a6c3-d8c3d54fd5df',
     name: 'Username',
     email: 'username@angor.io',
-    avatar: 'images/avatars/username.jpg',
+    avatar: 'images/avatars/avatar-placeholder.png',
     about: "Hi there! I'm using AngorChat.",
 };

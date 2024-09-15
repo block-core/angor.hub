@@ -48,43 +48,43 @@ export class SettingsRoleComponent implements OnInit {
         // Setup the team members
         this.members = [
             {
-                avatar: 'images/avatars/male-01.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Dejesus Michael',
                 email: 'dejesusmichael@mail.org',
                 role: 'admin',
             },
             {
-                avatar: 'images/avatars/male-03.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Mclaughlin Steele',
                 email: 'mclaughlinsteele@mail.me',
                 role: 'admin',
             },
             {
-                avatar: 'images/avatars/female-02.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Laverne Dodson',
                 email: 'lavernedodson@mail.ca',
                 role: 'write',
             },
             {
-                avatar: 'images/avatars/female-03.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Trudy Berg',
                 email: 'trudyberg@mail.us',
                 role: 'read',
             },
             {
-                avatar: 'images/avatars/male-07.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Lamb Underwood',
                 email: 'lambunderwood@mail.me',
                 role: 'read',
             },
             {
-                avatar: 'images/avatars/male-08.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Mcleod Wagner',
                 email: 'mcleodwagner@mail.biz',
                 role: 'read',
             },
             {
-                avatar: 'images/avatars/female-07.jpg',
+                avatar: 'images/avatars/avatar-placeholder.png',
                 name: 'Shannon Kennedy',
                 email: 'shannonkennedy@mail.ca',
                 role: 'read',
