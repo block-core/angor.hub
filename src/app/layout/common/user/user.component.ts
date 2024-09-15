@@ -9,14 +9,13 @@ import {
 import { AngorConfig, AngorConfigService, Scheme, Theme, Themes } from '@angor/services/config';
 import { Subject, takeUntil } from 'rxjs';
 import { Router } from '@angular/router';
-import { UserService } from 'app/core/user/user.service';
 import { SignerService } from 'app/services/signer.service';
-import { NostrService } from 'app/services/nostr.service';
 import { NgClass, CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MetadataService } from 'app/services/metadata-service.service';
 
 @Component({
     selector: 'user',
@@ -50,13 +49,14 @@ export class UserComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _router: Router,
         private _angorConfigService: AngorConfigService,
-        private _nostrService: NostrService,
+        private _metadataService: MetadataService,
         private _signerService: SignerService
     ) { }
 
     ngOnInit(): void {
         this.loadUserProfile();
 
+        // Subscribe to config changes
         this._angorConfigService.config$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((config: AngorConfig) => {
@@ -77,16 +77,24 @@ export class UserComponent implements OnInit, OnDestroy {
         }
 
         try {
-            const metadata = await this._nostrService.fetchMetadata(publicKey);
+            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
             this.metadata = metadata;
+            this._changeDetectorRef.markForCheck();
+
+            this._metadataService.getMetadataStream().pipe(takeUntil(this._unsubscribeAll))
+                .subscribe((updatedMetadata) => {
+                    this.metadata = updatedMetadata;
+                    this._changeDetectorRef.markForCheck();
+                });
         } catch (error) {
             console.error('Failed to load profile data:', error);
             this.errorMessage = 'Failed to load profile data. Please try again later.';
         } finally {
             this.isLoading = false;
-            this._changeDetectorRef.markForCheck();  // Trigger change detection to update the view
+            this._changeDetectorRef.markForCheck();
         }
     }
+
 
     ngOnDestroy(): void {
         this._unsubscribeAll.next(null);

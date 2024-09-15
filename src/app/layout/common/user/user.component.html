@@ -13,7 +13,7 @@
     <button mat-menu-item>
         <span class="flex flex-col leading-none">
             <span>Logged in as</span>
-            <span class="mt-1.5 text-md font-medium">{{ metadata?.name || 'Unknown User' }}</span>
+            <span class="mt-1.5 text-md font-medium">{{metadata?.display_name || metadata?.name || 'Unknown User'}}</span>
         </span>
     </button>
     <mat-divider class="my-2"></mat-divider>

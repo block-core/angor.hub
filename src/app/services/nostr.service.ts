@@ -16,6 +16,8 @@ import { Observable, of, Subject } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
 import { mergeMap, bufferTime } from 'rxjs/operators';
+import { IndexedDBService } from './indexed-db.service';
+import { MetadataService } from './metadata-service.service';
 
 
 interface CustomMessageEvent {
@@ -28,7 +30,7 @@ interface CustomMessageEvent {
   providedIn: 'root',
 })
 export class NostrService {
-
+  private metadataSubject = new Subject<any>();
   private eventSubject = new Subject<NostrEvent>();
   private notificationSubject = new Subject<NostrEvent>();
   private messageSubject = new Subject<CustomMessageEvent>();
@@ -73,6 +75,8 @@ export class NostrService {
   constructor(
     private relayService: RelayService,
     private security: SecurityService,
+    private indexedDBService: IndexedDBService,
+    private metadataService: MetadataService
   ) {}
 
   // Signing events
@@ -243,58 +247,7 @@ export class NostrService {
     return this.publishEventToRelays(event);
   }
 
-
-  async getUserProfile(pubkey: string): Promise<any> {
-    const metadata = await this.fetchMetadata(pubkey);
-    const user: any = {
-      nostrPubKey: pubkey,
-      displayName: metadata.name,
-      picture: metadata.picture,
-      about: metadata.about,
-      website: metadata.website,
-      lud16: metadata.lud16,
-      nip05: metadata.nip05,
-    };
-    return user;
-  }
-
-  async fetchMetadata(pubkey: string): Promise<any> {
-    await this.relayService.ensureConnectedRelays();
-    const pool = this.relayService.getPool();
-    const connectedRelays = this.relayService.getConnectedRelays();
-
-    if (connectedRelays.length === 0) {
-      throw new Error('No connected relays');
-    }
-
-    return new Promise((resolve, reject) => {
-      const sub = pool.subscribeMany(
-        connectedRelays,
-        [{ authors: [pubkey], kinds: [0] }],
-        {
-          onevent: (event: NostrEvent) => {
-            if (event.pubkey === pubkey && event.kind === 0) {
-              try {
-                const content = JSON.parse(event.content);
-                resolve(content);
-              } catch (error) {
-                console.error('Error parsing event content:', error);
-                resolve(null);
-              } finally {
-                sub.close();
-              }
-            }
-          },
-          oneose() {
-            sub.close();
-            resolve(null);
-          },
-        }
-      );
-    });
-  }
-
-  // Social interactions
+   // Social interactions
   async getFollowers(pubkey: string): Promise<any[]> {
     await this.relayService.ensureConnectedRelays();
     const pool = this.relayService.getPool();
@@ -833,16 +786,21 @@ subscribeToEvents(pubkey: string): void {
   }
 
   private fetchMetadataForPubKey(pubKey: string): void {
-    this.fetchMetadata(pubKey).then(metadata => {
-      const existingItem = this.chatList.find(item => item.pubKey === pubKey);
-      if (existingItem && metadata) {
-        existingItem.metadata = metadata;
-        this.chatListSubject.next(this.chatList);
-      }
-    }).catch(error => {
-      console.error(`Failed to fetch metadata for pubKey: ${pubKey}`, error);
-    });
+     this.metadataService.fetchMetadataWithCache(pubKey)
+      .then(metadata => {
+         if (metadata) {
+           const existingItem = this.chatList.find(item => item.pubKey === pubKey);
+          if (existingItem) {
+             existingItem.metadata = metadata;
+            this.chatListSubject.next(this.chatList);
+          }
+        }
+      })
+      .catch(error => {
+        console.error(`Failed to fetch metadata for pubKey: ${pubKey}`, error);
+      });
   }
+
 
 
   getChatListStream() {
