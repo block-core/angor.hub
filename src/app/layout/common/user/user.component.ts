@@ -15,7 +15,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MetadataService } from 'app/services/metadata-service.service';
+import { MetadataService } from 'app/services/metadata.service';
+import { IndexedDBService } from 'app/services/indexed-db.service';
 
 @Component({
     selector: 'user',
@@ -50,18 +51,30 @@ export class UserComponent implements OnInit, OnDestroy {
         private _router: Router,
         private _angorConfigService: AngorConfigService,
         private _metadataService: MetadataService,
-        private _signerService: SignerService
+        private _signerService: SignerService,
+        private _indexedDBService: IndexedDBService
     ) { }
 
     ngOnInit(): void {
         this.loadUserProfile();
 
-        // Subscribe to config changes
+
+        this._indexedDBService.getMetadataStream()
+          .pipe(takeUntil(this._unsubscribeAll))
+          .subscribe((updatedMetadata) => {
+            if (updatedMetadata && updatedMetadata.pubkey === this.user?.pubkey) {
+              this.metadata = updatedMetadata.metadata;
+              this._changeDetectorRef.detectChanges();
+            }
+          });
+
+
         this._angorConfigService.config$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((config: AngorConfig) => {
                 localStorage.setItem('angorConfig', JSON.stringify(config));
                 this.config = config;
+                this._changeDetectorRef.detectChanges();
             });
     }
 
@@ -73,19 +86,27 @@ export class UserComponent implements OnInit, OnDestroy {
         if (!publicKey) {
             this.errorMessage = 'No public key found. Please log in again.';
             this.isLoading = false;
+            this._changeDetectorRef.markForCheck();
             return;
         }
 
-        try {
-            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
-            this.metadata = metadata;
-            this._changeDetectorRef.markForCheck();
+        this.user = { pubkey: publicKey };
 
-            this._metadataService.getMetadataStream().pipe(takeUntil(this._unsubscribeAll))
+        try {
+
+            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
+            if (metadata) {
+                this.metadata = metadata;
+                this._changeDetectorRef.detectChanges();
+            }
+
+
+            this._metadataService.getMetadataStream()
+                .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
                     if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
                         this.metadata = updatedMetadata;
-                        this._changeDetectorRef.markForCheck();
+                        this._changeDetectorRef.detectChanges();
                     }
                 });
         } catch (error) {
@@ -93,10 +114,9 @@ export class UserComponent implements OnInit, OnDestroy {
             this.errorMessage = 'Failed to load profile data. Please try again later.';
         } finally {
             this.isLoading = false;
-            this._changeDetectorRef.markForCheck();
+            this._changeDetectorRef.detectChanges();
         }
     }
-
 
     ngOnDestroy(): void {
         this._unsubscribeAll.next(null);
@@ -113,13 +133,16 @@ export class UserComponent implements OnInit, OnDestroy {
 
     setLayout(layout: string): void {
         this._angorConfigService.config = { layout };
+        this._changeDetectorRef.detectChanges();
     }
 
     setScheme(scheme: Scheme): void {
         this._angorConfigService.config = { scheme };
+        this._changeDetectorRef.detectChanges();
     }
 
     setTheme(theme: Theme): void {
         this._angorConfigService.config = { theme };
+        this._changeDetectorRef.detectChanges();
     }
 }

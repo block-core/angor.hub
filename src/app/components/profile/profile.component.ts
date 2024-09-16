@@ -6,6 +6,7 @@ import {
     Component,
     ViewEncapsulation,
     OnInit,
+    OnDestroy,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -18,7 +19,9 @@ import { Router, RouterLink } from '@angular/router';
 import { AngorCardComponent } from '@angor/components/card';
 import { AngorConfigService } from '@angor/services/config';
 import { SignerService } from 'app/services/signer.service';
-import { MetadataService } from 'app/services/metadata-service.service';
+import { MetadataService } from 'app/services/metadata.service';
+import { Subject, takeUntil } from 'rxjs';
+import { IndexedDBService } from 'app/services/indexed-db.service';
 
 @Component({
     selector: 'profile',
@@ -41,22 +44,39 @@ import { MetadataService } from 'app/services/metadata-service.service';
         CommonModule
     ],
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
     user: any;
     isLoading: boolean = true;
     errorMessage: string | null = null;
     metadata: any;
+    private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _router: Router,
         private _angorConfigService: AngorConfigService,
         private _metadataService: MetadataService,
-        private _signerService: SignerService
+        private _signerService: SignerService,
+        private _indexedDBService: IndexedDBService
     ) { }
 
     ngOnInit(): void {
         this.loadUserProfile();
+
+
+        this._indexedDBService.getMetadataStream()
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((updatedMetadata) => {
+                if (updatedMetadata && updatedMetadata.pubkey === this.user?.pubkey) {
+                    this.metadata = updatedMetadata.metadata;
+                    this._changeDetectorRef.detectChanges();
+                }
+            });
+    }
+
+    ngOnDestroy(): void {
+        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.complete();
     }
 
     private async loadUserProfile(): Promise<void> {
@@ -67,27 +87,37 @@ export class ProfileComponent implements OnInit {
         if (!publicKey) {
             this.errorMessage = 'No public key found. Please log in again.';
             this.isLoading = false;
+            this._changeDetectorRef.detectChanges();
             return;
         }
 
+
+        this.user = { pubkey: publicKey };
+
         try {
+
             const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
-            this.metadata = metadata;
+            if (metadata) {
+                this.metadata = metadata;
+                this._changeDetectorRef.detectChanges();
+            }
 
-            this._metadataService.getMetadataStream().subscribe((updatedMetadata) => {
-                if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
 
-                console.log(updatedMetadata);
-                this.metadata = updatedMetadata;
-                this._changeDetectorRef.markForCheck();  // Trigger change detection to update the view
-                }
-            });
+            this._metadataService.getMetadataStream()
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe((updatedMetadata) => {
+                    if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+                        this.metadata = updatedMetadata;
+                        this._changeDetectorRef.detectChanges();
+                    }
+                });
         } catch (error) {
             console.error('Failed to load profile data:', error);
             this.errorMessage = 'Failed to load profile data. Please try again later.';
+            this._changeDetectorRef.detectChanges();
         } finally {
             this.isLoading = false;
-            this._changeDetectorRef.markForCheck();  // Ensure view update
+            this._changeDetectorRef.detectChanges();
         }
     }
 }

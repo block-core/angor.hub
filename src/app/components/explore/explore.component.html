@@ -49,7 +49,7 @@
                         <div class="flex h-32">
                             <img
                                 class="object-cover"
-                                [src]="project.banner || 'images/pages/profile/cover.jpg'"
+                                [src]="project?.banner || 'images/pages/profile/cover.jpg'"
                                 alt="Card cover image"
                             />
                         </div>
@@ -57,7 +57,7 @@
                             <div class="bg-card -mt-12 rounded-full p-1">
                                 <img
                                     class="h-24 w-24 rounded-full"
-                                    [src]="project.picture || 'images/avatars/avatar-placeholder.png'"
+                                    [src]="project?.picture || 'images/avatars/avatar-placeholder.png'"
                                     alt="Project logo"
                                 />
                             </div>

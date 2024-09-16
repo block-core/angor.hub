@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { StateService } from '../../services/state.service';
@@ -16,7 +16,9 @@ import { AngorCardComponent } from '@angor/components/card';
 import { AngorFindByKeyPipe } from '@angor/pipes/find-by-key';
 import { CdkScrollable } from '@angular/cdk/scrolling';
 import { NgClass, PercentPipe, I18nPluralPipe, CommonModule } from '@angular/common';
-import { MetadataService } from 'app/services/metadata-service.service';
+import { MetadataService } from 'app/services/metadata.service';
+import { Subject, takeUntil } from 'rxjs';
+import { IndexedDBService } from 'app/services/indexed-db.service';
 
 interface Project {
   projectIdentifier: string;
@@ -24,6 +26,7 @@ interface Project {
   displayName?: string;
   about?: string;
   picture?: string;
+  banner?:string
 }
 
 @Component({
@@ -39,31 +42,44 @@ interface Project {
   ],
 })
 export class ExploreComponent implements OnInit, OnDestroy {
-filterByQuery(arg0: any) {
-throw new Error('Method not implemented.');
-}
-toggleCompleted($event: any) {
-throw new Error('Method not implemented.');
-}
   projects: Project[] = [];
   errorMessage: string = '';
   loading: boolean = false;
   private metadataLoadLimit = 5;
+  private _unsubscribeAll: Subject<any> = new Subject<any>();
+  filteredProjects: Project[] = [];
 
   constructor(
     private projectService: ProjectsService,
     private router: Router,
     private stateService: StateService,
-    private metadataService: MetadataService
+    private metadataService: MetadataService,
+    private _indexedDBService: IndexedDBService,
+    private _changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.projects = this.stateService.getProjects();
+    this.filteredProjects = [...this.projects];
     if (this.projects.length === 0) {
       this.loadProjects();
     } else {
       this.loading = false;
+
+      this.projects.forEach(project => this.subscribeToProjectMetadata(project));
     }
+
+
+    this._indexedDBService.getMetadataStream()
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe((updatedMetadata) => {
+        if (updatedMetadata) {
+          const projectToUpdate = this.projects.find(p => p.nostrPubKey === updatedMetadata.pubkey);
+          if (projectToUpdate) {
+            this.updateProjectMetadata(projectToUpdate, updatedMetadata.metadata);
+          }
+        }
+      });
   }
 
   loadProjects(): void {
@@ -78,19 +94,26 @@ throw new Error('Method not implemented.');
         this.errorMessage = 'No more projects found';
       } else {
         this.projects = [...this.projects, ...projects];
+        this.filteredProjects = [...this.projects];
 
-        // for (let i = 0; i < projects.length; i += this.metadataLoadLimit) {
-        //   const batch = projects.slice(i, i + this.metadataLoadLimit);
-        //   await Promise.all(batch.map(project => this.loadMetadataForProject(project)));
-        // }
+
+        for (let i = 0; i < projects.length; i += this.metadataLoadLimit) {
+          const batch = projects.slice(i, i + this.metadataLoadLimit);
+          await Promise.all(batch.map(project => this.loadMetadataForProject(project)));
+        }
 
         this.stateService.setProjects(this.projects);
+
+
+        this.projects.forEach(project => this.subscribeToProjectMetadata(project));
       }
       this.loading = false;
+      this._changeDetectorRef.detectChanges();
     }).catch((error: any) => {
       console.error('Error fetching projects:', error);
       this.errorMessage = 'Error fetching projects. Please try again later.';
       this.loading = false;
+      this._changeDetectorRef.detectChanges();
     });
   }
 
@@ -108,14 +131,58 @@ throw new Error('Method not implemented.');
   }
 
   updateProjectMetadata(project: Project, metadata: any): void {
-    project.displayName = metadata.name;
-    project.about = metadata.about;
-    project.picture = metadata.picture;
+    const updatedProject: Project = {
+      ...project,
+      displayName: metadata.name,
+      about: metadata.about,
+      picture: metadata.picture,
+      banner:metadata.banner
+    };
+
+    const index = this.projects.findIndex(p => p.projectIdentifier === project.projectIdentifier);
+    if (index !== -1) {
+      this.projects[index] = updatedProject;
+      this.projects = [...this.projects];  
+    }
+
+    this.filteredProjects = [...this.projects];
+    this._changeDetectorRef.detectChanges();
+  }
+
+  subscribeToProjectMetadata(project: Project): void {
+    this.metadataService.getMetadataStream()
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe((updatedMetadata: any) => {
+        if (updatedMetadata && updatedMetadata.pubkey === project.nostrPubKey) {
+          this.updateProjectMetadata(project, updatedMetadata);
+        }
+      });
   }
 
   goToProjectDetails(project: Project): void {
     this.router.navigate(['/projects', project.projectIdentifier]);
   }
 
-  ngOnDestroy(): void {}
+
+  filterByQuery(query: string): void {
+    if (!query) {
+      this.filteredProjects = [...this.projects];
+      return;
+    }
+
+    this.filteredProjects = this.projects.filter(project =>
+      project.displayName?.toLowerCase().includes(query.toLowerCase()) ||
+      project.about?.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+
+  toggleCompleted(event: any): void {
+
+  }
+
+  ngOnDestroy(): void {
+    this._unsubscribeAll.next(null);
+    this._unsubscribeAll.complete();
+  }
 }

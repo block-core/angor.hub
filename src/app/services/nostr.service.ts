@@ -17,7 +17,7 @@ import { BehaviorSubject } from 'rxjs';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
 import { mergeMap, bufferTime } from 'rxjs/operators';
 import { IndexedDBService } from './indexed-db.service';
-import { MetadataService } from './metadata-service.service';
+import { MetadataService } from './metadata.service';
 
 
 interface CustomMessageEvent {
