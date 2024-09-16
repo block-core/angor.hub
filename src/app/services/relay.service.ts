@@ -88,7 +88,11 @@ export class RelayService {
   }
 
   public connectToRelays() {
-    this.relays.forEach((relay) => this.connectToRelay(relay));
+    this.relays.forEach((relay) => {
+      if (!relay.connected) {  
+        this.connectToRelay(relay);
+      }
+    });
   }
 
   public async ensureConnectedRelays(): Promise<void> {
@@ -105,6 +109,7 @@ export class RelayService {
       checkConnection();
     });
   }
+
 
   private setupVisibilityChangeHandling() {
     document.addEventListener('visibilitychange', () => {
