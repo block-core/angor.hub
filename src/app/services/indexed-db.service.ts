@@ -36,7 +36,6 @@ export class IndexedDBService {
   async saveUserMetadata(pubkey: string, metadata: any): Promise<void> {
     try {
       await localForage.setItem(pubkey, metadata);
-      console.log('Metadata saved successfully!');
       this.metadataSubject.next({ pubkey, metadata });
     } catch (error) {
       console.error('Error saving metadata to IndexedDB:', error);
@@ -46,7 +45,6 @@ export class IndexedDBService {
   async removeUserMetadata(pubkey: string): Promise<void> {
     try {
       await localForage.removeItem(pubkey);
-      console.log(`Metadata for pubkey ${pubkey} removed successfully!`);
       this.metadataSubject.next({ pubkey, metadata: null });
     } catch (error) {
       console.error('Error removing metadata from IndexedDB:', error);
@@ -56,7 +54,6 @@ export class IndexedDBService {
   async clearAllMetadata(): Promise<void> {
     try {
       await localForage.clear();
-      console.log('All metadata cleared successfully!');
       this.metadataSubject.next(null);
     } catch (error) {
       console.error('Error clearing all metadata:', error);

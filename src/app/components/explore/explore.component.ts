@@ -69,7 +69,6 @@ export class ExploreComponent implements OnInit, OnDestroy {
       this.projects.forEach(project => this.subscribeToProjectMetadata(project));
     }
 
-
     this._indexedDBService.getMetadataStream()
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe((updatedMetadata) => {
@@ -96,14 +95,10 @@ export class ExploreComponent implements OnInit, OnDestroy {
         this.projects = [...this.projects, ...projects];
         this.filteredProjects = [...this.projects];
 
-
-        for (let i = 0; i < projects.length; i += this.metadataLoadLimit) {
-          const batch = projects.slice(i, i + this.metadataLoadLimit);
-          await Promise.all(batch.map(project => this.loadMetadataForProject(project)));
-        }
+        const pubkeys = projects.map(project => project.nostrPubKey);
+        await this.metadataService.fetchMetadataForMultipleKeys(pubkeys);
 
         this.stateService.setProjects(this.projects);
-
 
         this.projects.forEach(project => this.subscribeToProjectMetadata(project));
       }
@@ -116,6 +111,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
       this._changeDetectorRef.detectChanges();
     });
   }
+
 
   async loadMetadataForProject(project: Project): Promise<void> {
     try {
@@ -136,13 +132,13 @@ export class ExploreComponent implements OnInit, OnDestroy {
       displayName: metadata.name,
       about: metadata.about,
       picture: metadata.picture,
-      banner:metadata.banner
+      banner: metadata.banner
     };
 
     const index = this.projects.findIndex(p => p.projectIdentifier === project.projectIdentifier);
     if (index !== -1) {
       this.projects[index] = updatedProject;
-      this.projects = [...this.projects];  
+      this.projects = [...this.projects];
     }
 
     this.filteredProjects = [...this.projects];
@@ -154,7 +150,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe((updatedMetadata: any) => {
         if (updatedMetadata && updatedMetadata.pubkey === project.nostrPubKey) {
-          this.updateProjectMetadata(project, updatedMetadata);
+          this.updateProjectMetadata(project, updatedMetadata.metadata);
         }
       });
   }

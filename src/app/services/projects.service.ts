@@ -26,7 +26,7 @@ export interface ProjectStats {
 })
 export class ProjectsService {
   private offset = 0;
-  private limit = 9;
+  private limit = 45;
   private totalProjects = 0;
   private loading = false;
   private projects: Project[] = [];
@@ -56,8 +56,6 @@ export class ProjectsService {
       ? `${indexerUrl}api/query/Angor/projects?offset=${this.offset}&limit=${this.limit}`
       : `${indexerUrl}api/query/Angor/projects?limit=${this.limit}`;
 
-    console.log(`Fetching projects from URL: ${url}`);
-
     try {
       const response = await this.http
         .get<Project[]>(url, { observe: 'response' })
@@ -66,14 +64,12 @@ export class ProjectsService {
       if (!this.totalProjectsFetched && response && response.headers) {
         const paginationTotal = response.headers.get('pagination-total');
         this.totalProjects = paginationTotal ? +paginationTotal : 0;
-        console.log(`Total projects: ${this.totalProjects}`);
         this.totalProjectsFetched = true;
 
         this.offset = Math.max(this.totalProjects - this.limit, 0);
       }
 
       const newProjects = response?.body || [];
-      console.log('New projects received:', newProjects);
 
       if (!newProjects || newProjects.length === 0) {
         this.noMoreProjects = true;
@@ -89,8 +85,6 @@ export class ProjectsService {
 
         if (uniqueNewProjects.length > 0) {
           this.projects = [...this.projects, ...uniqueNewProjects];
-          console.log(`${uniqueNewProjects.length} new projects added`);
-
           this.offset = Math.max(this.offset - this.limit, 0);
           return uniqueNewProjects;
         } else {
@@ -110,8 +104,6 @@ export class ProjectsService {
   fetchProjectStats(projectIdentifier: string): Observable<ProjectStats> {
     const indexerUrl = this.indexerService.getPrimaryIndexer(this.selectedNetwork);
     const url = `${indexerUrl}api/query/Angor/projects/${projectIdentifier}/stats`;
-    console.log(`Fetching project stats from URL: ${url}`);
-
     return this.http.get<ProjectStats>(url).pipe(
       catchError((error) => {
         console.error(
@@ -126,8 +118,6 @@ export class ProjectsService {
   fetchProjectDetails(projectIdentifier: string): Observable<Project> {
     const indexerUrl = this.indexerService.getPrimaryIndexer(this.selectedNetwork);
     const url = `${indexerUrl}api/query/Angor/projects/${projectIdentifier}`;
-    console.log(`Fetching project details from URL: ${url}`);
-
     return this.http.get<Project>(url).pipe(
       catchError((error) => {
         console.error(

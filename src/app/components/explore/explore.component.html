@@ -50,6 +50,7 @@
                             <img
                                 class="object-cover"
                                 [src]="project?.banner || 'images/pages/profile/cover.jpg'"
+                                onerror="this.onerror=null; this.src='/images/pages/profile/cover.jpg';"
                                 alt="Card cover image"
                             />
                         </div>

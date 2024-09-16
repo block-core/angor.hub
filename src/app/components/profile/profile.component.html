@@ -5,8 +5,8 @@
         <div>
             <img
                 class="h-40 object-cover lg:h-80"
-                src="images/pages/profile/cover.jpg"
-                alt="Cover image"
+                [src]="metadata?.banner" onerror="this.onerror=null; this.src='/images/pages/profile/cover.jpg';" alt="{{metadata?.display_name || metadata?.name || 'Banner'}}"
+                
             />
         </div>
 
