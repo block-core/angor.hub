@@ -16,7 +16,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { SettingsAccountComponent } from './account/account.component';
 import { SettingsNotificationsComponent } from './notifications/notifications.component';
 import { SettingsSecurityComponent } from './security/security.component';
-import { SettingsRoleComponent } from './relay/relay.component';
+import { SettingsRelayComponent } from './relay/relay.component';
 
 @Component({
     selector: 'settings',
@@ -32,7 +32,7 @@ import { SettingsRoleComponent } from './relay/relay.component';
         SettingsAccountComponent,
         SettingsSecurityComponent,
         SettingsNotificationsComponent,
-        SettingsRoleComponent,
+        SettingsRelayComponent,
     ],
 })
 export class SettingsComponent implements OnInit, OnDestroy {
@@ -40,7 +40,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     drawerMode: 'over' | 'side' = 'side';
     drawerOpened: boolean = true;
     panels: any[] = [];
-    selectedPanel: string = 'account';
+    selectedPanel: string = 'relay';
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     /**
@@ -51,16 +51,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
         private _angorMediaWatcherService: AngorMediaWatcherService
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
     /**
      * On init
      */
     ngOnInit(): void {
         // Setup available panels
         this.panels = [
+            {
+                id: 'relay',
+                icon: 'heroicons_outline:computer-desktop',
+                title: 'Relay',
+                description:
+                    'Manage your existing relays and update their access roles/permissions',
+            },
             {
                 id: 'account',
                 icon: 'heroicons_outline:user-circle',
@@ -80,14 +83,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 icon: 'heroicons_outline:bell',
                 title: 'Notifications',
                 description: "Manage when you'll be notified on which channels",
-            },
-            {
-                id: 'relay',
-                icon: 'heroicons_outline:computer-desktop',
-                title: 'Relay',
-                description:
-                    'Manage your existing relays and change roles/permissions',
-            },
+            }
         ];
 
         // Subscribe to media changes
@@ -116,10 +112,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
 
     /**
      * Navigate to the panel

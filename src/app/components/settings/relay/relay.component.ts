@@ -1,16 +1,21 @@
-import { TitleCasePipe } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     OnInit,
     ViewEncapsulation,
+    ChangeDetectorRef,
+    NgZone,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { RelayService } from 'app/services/relay.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'settings-relay',
@@ -26,105 +31,83 @@ import { MatSelectModule } from '@angular/material/select';
         MatSelectModule,
         MatOptionModule,
         TitleCasePipe,
+        CommonModule,
+        FormsModule,
     ],
 })
-export class SettingsRoleComponent implements OnInit {
-    members: any[];
-    roles: any[];
+export class SettingsRelayComponent implements OnInit {
+    relays: any[] = [];
+    accessOptions: any[] = [];
+    newRelayUrl: string = '';
+    private subscriptions: Subscription = new Subscription();
 
-    /**
-     * Constructor
-     */
-    constructor() {}
+    constructor(
+        private relayService: RelayService,
+        private cdr: ChangeDetectorRef,
+        private zone: NgZone
+    ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Setup the team members
-        this.members = [
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Dejesus Michael',
-                email: 'dejesusmichael@mail.org',
-                role: 'admin',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Mclaughlin Steele',
-                email: 'mclaughlinsteele@mail.me',
-                role: 'admin',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Laverne Dodson',
-                email: 'lavernedodson@mail.ca',
-                role: 'write',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Trudy Berg',
-                email: 'trudyberg@mail.us',
-                role: 'read',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Lamb Underwood',
-                email: 'lambunderwood@mail.me',
-                role: 'read',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Mcleod Wagner',
-                email: 'mcleodwagner@mail.biz',
-                role: 'read',
-            },
-            {
-                avatar: 'images/avatars/avatar-placeholder.png',
-                name: 'Shannon Kennedy',
-                email: 'shannonkennedy@mail.ca',
-                role: 'read',
-            },
-        ];
+        // Subscribe to relays observable
+        this.subscriptions.add(
+            this.relayService.getRelays().subscribe(relays => {
+                this.zone.run(() => {
+                    this.relays = relays;
+                    this.cdr.markForCheck(); // Mark the component for check
+                });
+            })
+        );
 
-        // Setup the roles
-        this.roles = [
+        // Setup access roles
+        this.accessOptions = [
             {
                 label: 'Read',
                 value: 'read',
-                description:
-                    'Can read and clone this repository. Can also open and comment on issues and pull requests.',
+                description: 'Reads only, does not write, unless explicitly specified on publish action.',
             },
             {
                 label: 'Write',
                 value: 'write',
-                description:
-                    'Can read, clone, and push to this repository. Can also manage issues and pull requests.',
+                description: 'Writes your events, profile, and other metadata updates. Connects on-demand.',
             },
             {
-                label: 'Admin',
-                value: 'admin',
-                description:
-                    'Can read, clone, and push to this repository. Can also manage issues, pull requests, and repository settings, including adding collaborators.',
+                label: 'Read and Write',
+                value: 'read-write',
+                description: 'Reads and writes events, profiles, and other metadata. Always connected.',
             },
         ];
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+    ngOnDestroy(): void {
+        this.subscriptions.unsubscribe();
+    }
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
+    addRelay() {
+        if (this.newRelayUrl) {
+            this.relayService.addRelay(this.newRelayUrl);
+            this.newRelayUrl = '';
+        }
+    }
+
+    updateRelayAccess(relay: any) {
+        console.log('Relay Access Updated:', relay.url, relay.accessType);
+        this.relayService.updateRelayAccessType(relay.url, relay.accessType);
+    }
+
+    removeRelay(url: string) {
+        this.relayService.removeRelay(url);
+    }
+
     trackByFn(index: number, item: any): any {
-        return item.id || index;
+        return item.url || index;
+    }
+
+    getRelayStatus(relay: any): string {
+        return relay.connected ? 'Connected' : 'Disconnected';
+    }
+
+    relayFavIcon(url: string) {
+        const favUrl = url.replace('wss://', 'https://');
+        return favUrl + '/favicon.ico';
     }
 }

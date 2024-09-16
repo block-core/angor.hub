@@ -1,99 +1,50 @@
 <div class="w-full max-w-3xl">
-    <!-- Add team member -->
+    <!-- Add relay -->
     <div class="w-full">
         <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-            <mat-label>Add team members</mat-label>
-            <mat-icon
-                class="icon-size-5"
-                [svgIcon]="'heroicons_solid:user'"
-                matPrefix
-            ></mat-icon>
-            <input matInput [placeholder]="'Email address'" />
-            <button mat-icon-button matSuffix>
-                <mat-icon
-                    class="icon-size-5"
-                    [svgIcon]="'heroicons_solid:plus-circle'"
-                ></mat-icon>
+            <mat-label>Add Relay</mat-label>
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
+            <input matInput [(ngModel)]="newRelayUrl" placeholder="Relay URL" />
+            <button mat-icon-button matSuffix (click)="addRelay()">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
             </button>
         </mat-form-field>
     </div>
 
-    <!-- Team members -->
+    <!-- Relays -->
     <div class="mt-8 flex flex-col divide-y border-b border-t">
-        @for (member of members; track trackByFn($index, member)) {
-            <div class="flex flex-col py-6 sm:flex-row sm:items-center">
-                <div class="flex items-center">
-                    <div
+        <div *ngFor="let relay of relays; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+            <div class="flex items-center">
+                                    <div
                         class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full"
                     >
-                        @if (member.avatar) {
-                            <img
+                             <img
                                 class="h-full w-full object-cover"
-                                [src]="member.avatar"
-                                alt="Contact avatar"
+                                onerror="this.src='/images/avatars/avatar-placeholder.png'" [src]="relayFavIcon(relay.url)"
+                                alt="relay avatar"
                             />
-                        }
-                        @if (!member.avatar) {
-                            <div
-                                class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                            >
-                                {{ member.name.charAt(0) }}
-                            </div>
-                        }
+
                     </div>
-                    <div class="ml-4">
-                        <div class="font-medium">{{ member.name }}</div>
-                        <div class="text-secondary">{{ member.email }}</div>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
-                    <div class="order-2 ml-4 sm:order-1 sm:ml-0">
-                        <mat-form-field
-                            class="angor-mat-dense w-32"
-                            [subscriptSizing]="'dynamic'"
-                        >
-                            <mat-select
-                                [panelClass]="
-                                    'w-72 min-w-72 max-w-72 h-auto max-h-none'
-                                "
-                                [value]="member.role"
-                                disableOptionCentering
-                                #roleSelect="matSelect"
-                            >
-                                <mat-select-trigger class="text-md">
-                                    <span>Role:</span>
-                                    <span class="ml-1 font-medium">{{
-                                        roleSelect.value | titlecase
-                                    }}</span>
-                                </mat-select-trigger>
-                                @for (role of roles; track role) {
-                                    <mat-option
-                                        class="h-auto py-4 leading-none"
-                                        [value]="role.value"
-                                    >
-                                        <div class="font-medium">
-                                            {{ role.label }}
-                                        </div>
-                                        <div
-                                            class="text-secondary mt-1.5 whitespace-normal text-sm leading-normal"
-                                        >
-                                            {{ role.description }}
-                                        </div>
-                                    </mat-option>
-                                }
-                            </mat-select>
-                        </mat-form-field>
-                    </div>
-                    <div class="order-1 sm:order-2 sm:ml-3">
-                        <button mat-icon-button>
-                            <mat-icon
-                                class="text-hint"
-                                [svgIcon]="'heroicons_outline:trash'"
-                            ></mat-icon>
-                        </button>
-                    </div>
+                <div class="ml-4">
+                    <div class="font-medium">{{ relay.url }}</div>
+                     <div class="text-sm text-gray-500">Status: {{ getRelayStatus(relay) }}</div>
                 </div>
             </div>
-        }
+            <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
+                <mat-form-field class="angor-mat-dense w-50" [subscriptSizing]="'dynamic'">
+                    <mat-select [(ngModel)]="relay.accessType" (selectionChange)="updateRelayAccess(relay)">
+                        <mat-select-trigger class="text-md">
+                            <span class="ml-1 font-medium">{{ relay.accessType | titlecase }}</span>
+                        </mat-select-trigger>
+                        <mat-option *ngFor="let option of accessOptions" [value]="option.value">
+                            <div class="font-medium">{{ option.label }}</div>
+                         </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <button mat-icon-button (click)="removeRelay(relay.url)">
+                    <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

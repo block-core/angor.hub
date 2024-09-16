@@ -1,33 +1,46 @@
 import { Injectable } from '@angular/core';
-import { NostrService } from './nostr.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StateService {
   private projects: any[] = [];
-  private metadataCache: Map<string, any> = new Map();
+  private projectsSubject = new BehaviorSubject<any[]>([]); // Stream for projects updates
 
-  constructor(private nostrService: NostrService) {}
-
-
-  async setProjects(projects: any[]): Promise<void> {
-    this.projects = projects;
-    this.updateMetadataInBackground();
+  /**
+   * Returns an observable for project updates.
+   */
+  getProjectsObservable() {
+    return this.projectsSubject.asObservable();
   }
 
+  /**
+   * Sets the projects and emits the updated list.
+   */
+  setProjects(projects: any[]): void {
+    this.projects = projects;
+    this.projectsSubject.next(this.projects); // Emit updated projects
+  }
 
+  /**
+   * Returns the current list of projects.
+   */
   getProjects(): any[] {
     return this.projects;
   }
 
-
+  /**
+   * Returns a boolean indicating whether there are projects.
+   */
   hasProjects(): boolean {
     return this.projects.length > 0;
   }
 
-
-  async updateProjectActivity(project: any): Promise<void> {
+  /**
+   * Updates or adds a project based on its nostrPubKey.
+   */
+  updateProject(project: any): void {
     const index = this.projects.findIndex(p => p.nostrPubKey === project.nostrPubKey);
 
     if (index > -1) {
@@ -36,37 +49,13 @@ export class StateService {
       this.projects.push(project);
     }
 
-    this.projects.sort((a, b) => b.lastActivity - a.lastActivity);
-    await this.updateMetadataForProject(project); // Ensure metadata is updated for the project
+    this.projectsSubject.next(this.projects); // Emit updated projects
   }
 
-
-  private updateMetadataInBackground(): void {
-    const batchSize = 5;
-
-    for (let i = 0; i < this.projects.length; i += batchSize) {
-      const batch = this.projects.slice(i, i + batchSize);
-      batch.forEach(project => this.updateMetadataForProject(project));
-    }
+  /**
+   * Returns a specific project by its nostrPubKey.
+   */
+  getProjectByPubKey(nostrPubKey: string): any | undefined {
+    return this.projects.find(p => p.nostrPubKey === nostrPubKey);
   }
-
-  private async updateMetadataForProject(project: any): Promise<void> {
-    if (this.metadataCache.has(project.nostrPubKey)) {
-      this.applyMetadata(project, this.metadataCache.get(project.nostrPubKey));
-      return;
-    }
-
- 
-  }
-
-
-private applyMetadata(project: any, metadata: any): void {
-  if (metadata && typeof metadata === 'object') {
-    project.displayName = metadata.name || project.displayName;
-    project.picture = metadata.picture || project.picture;
-  } else {
-    console.warn(`Metadata for project ${project.nostrPubKey} is invalid or null.`);
-  }
-}
-
 }

@@ -1,76 +1,85 @@
 import { Injectable } from "@angular/core";
-import { Filter, NostrEvent, SimplePool } from "nostr-tools";
-import { Observable, Subject, throttleTime } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
+import { NostrEvent, SimplePool } from "nostr-tools";
 
 @Injectable({
     providedIn: 'root',
 })
 export class RelayService {
     private pool: SimplePool;
-    private relays: { url: string, connected: boolean, retries: number, retryTimeout: any, ws?: WebSocket }[] = [];
+    private relays: { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }[] = [];
     private maxRetries = 10;
     private retryDelay = 15000;
-    private eventSubject = new Subject<NostrEvent>();
-    private requestQueue: Set<string> = new Set();
-    private isProcessingQueue = false;
-    private maxConcurrentRequests = 2;
+    private eventSubject = new BehaviorSubject<NostrEvent | null>(null); // For publishing events to the UI
+    private relaysSubject = new BehaviorSubject<{ url: string, connected: boolean, accessType: string, ws?: WebSocket }[]>([]); // For tracking relay changes
 
     constructor() {
         this.pool = new SimplePool();
         this.relays = this.loadRelaysFromLocalStorage();
-        this.connectToRelays();
+        this.connectToRelays(); // Initiates connection to all relays on service creation
         this.setupVisibilityChangeHandling();
+        this.relaysSubject.next(this.relays); // Emit the initial relay state
     }
 
-    private loadRelaysFromLocalStorage() {
+    /**
+     * Load relays from localStorage and return them with their initial state.
+     */
+    private loadRelaysFromLocalStorage(): { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }[] {
+        const storedRelays = JSON.parse(localStorage.getItem('nostrRelays') || '[]');
         const defaultRelays = [
-            { url: 'wss://relay.angor.io', connected: false, retries: 0, retryTimeout: null, ws: undefined },
-            { url: 'wss://relay2.angor.io', connected: false, retries: 0, retryTimeout: null, ws: undefined },
+            { url: 'wss://relay.angor.io', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
+            { url: 'wss://relay2.angor.io', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
         ];
 
-        const storedRelays = JSON.parse(localStorage.getItem('nostrRelays') || '[]').map((relay: any) => ({
+        return storedRelays.length > 0 ? storedRelays.map(relay => ({
             ...relay,
-            connected: false,
+            connected: false, // The connection will be re-established
             retries: 0,
             retryTimeout: null,
-            ws: undefined,
-        }));
-        return [...defaultRelays, ...storedRelays];
+            ws: undefined, // WebSocket will be reinitialized
+        })) : defaultRelays;
     }
 
-    private connectToRelay(relay: { url: string, connected: boolean, retries: number, retryTimeout: any, ws?: WebSocket }) {
+    /**
+     * Save the current relays to localStorage, omitting WebSocket references.
+     */
+    private saveRelaysToLocalStorage(): void {
+        const relaysToSave = this.relays.map(relay => ({
+            url: relay.url,
+            accessType: relay.accessType,
+            connected: relay.connected,
+            retries: relay.retries,
+            retryTimeout: relay.retryTimeout,
+        }));
+        localStorage.setItem('nostrRelays', JSON.stringify(relaysToSave));
+        this.relaysSubject.next(this.relays); // Notify subscribers of relay changes
+    }
+
+    /**
+     * Connect to a single relay using WebSocket.
+     */
+    private connectToRelay(relay: { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }): void {
         if (relay.connected) {
-            return;
+            return; // Already connected
         }
 
         relay.ws = new WebSocket(relay.url);
 
         relay.ws.onopen = () => {
-            try {
-                relay.connected = true;
-                relay.retries = 0;
-                clearTimeout(relay.retryTimeout);
-                this.saveRelaysToLocalStorage();
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
+            relay.connected = true;
+            relay.retries = 0;
+            clearTimeout(relay.retryTimeout);
+            this.saveRelaysToLocalStorage();
+            console.log(`Connected to relay: ${relay.url}`);
         };
 
-        relay.ws.onerror = (error) => {
-            try {
-                this.handleRelayError(relay);
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
+        relay.ws.onerror = () => {
+            this.handleRelayError(relay);
         };
 
         relay.ws.onclose = () => {
-            try {
-                relay.connected = false;
-                this.handleRelayError(relay);
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
+            relay.connected = false;
+            this.handleRelayError(relay);
         };
 
         relay.ws.onmessage = (message) => {
@@ -84,7 +93,10 @@ export class RelayService {
         };
     }
 
-    private handleRelayError(relay: { url: string, connected: boolean, retries: number, retryTimeout: any, ws?: WebSocket }) {
+    /**
+     * Handle errors for a relay connection and attempt reconnection.
+     */
+    private handleRelayError(relay: { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }): void {
         if (relay.retries >= this.maxRetries) {
             console.error(`Max retries reached for relay: ${relay.url}. No further attempts will be made.`);
             return;
@@ -99,7 +111,10 @@ export class RelayService {
         }, retryInterval);
     }
 
-    public connectToRelays() {
+    /**
+     * Connect to all relays in the list.
+     */
+    public connectToRelays(): void {
         this.relays.forEach((relay) => {
             if (!relay.connected) {
                 this.connectToRelay(relay);
@@ -107,6 +122,9 @@ export class RelayService {
         });
     }
 
+    /**
+     * Ensure that at least one relay is connected before continuing.
+     */
     public async ensureConnectedRelays(): Promise<void> {
         this.connectToRelays();
 
@@ -115,15 +133,17 @@ export class RelayService {
                 if (this.getConnectedRelays().length > 0) {
                     resolve();
                 } else {
-                    setTimeout(checkConnection, 1000);
+                    setTimeout(checkConnection, 1000); // Retry after 1 second
                 }
             };
             checkConnection();
         });
     }
 
-
-    private setupVisibilityChangeHandling() {
+    /**
+     * Handle browser visibility changes to reconnect relays when the user returns to the page.
+     */
+    private setupVisibilityChangeHandling(): void {
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 this.connectToRelays();
@@ -139,78 +159,82 @@ export class RelayService {
         });
     }
 
+    /**
+     * Return the URLs of all connected relays.
+     */
     public getConnectedRelays(): string[] {
         return this.relays.filter((relay) => relay.connected).map((relay) => relay.url);
     }
 
-    public saveRelaysToLocalStorage(): void {
-        const customRelays = this.relays.filter(
-            (relay) => !['wss://relay.angor.io', 'wss://relay2.angor.io'].includes(relay.url)
-        );
-        localStorage.setItem('nostrRelays', JSON.stringify(customRelays));
+    /**
+     * Return an observable of relay changes for the UI to subscribe to.
+     */
+    public getRelays(): Observable<{ url: string, connected: boolean, accessType: string, ws?: WebSocket }[]> {
+        return this.relaysSubject.asObservable();
     }
 
-    public getEventStream(): Observable<NostrEvent> {
-        return this.eventSubject.asObservable();
+    /**
+     * Publish an event to all relays with write or read-write access.
+     */
+    public publishEventToWriteRelays(event: NostrEvent): void {
+        const writeRelays = this.relays.filter(relay => relay.accessType === 'write' || relay.accessType === 'read-write');
+        writeRelays.forEach((relay) => {
+            if (relay.connected && relay.ws?.readyState === WebSocket.OPEN) {
+                relay.ws.send(JSON.stringify(event));
+                console.log(`Event published to ${relay.url}`);
+            }
+        });
     }
 
-    public addRelay(url: string): void {
+    /**
+     * Add a new relay to the list and attempt to connect to it.
+     */
+    public addRelay(url: string, accessType: string = 'read-write'): void {
         if (!this.relays.some(relay => relay.url === url)) {
-            const newRelay = { url, connected: false, retries: 0, retryTimeout: null, ws: undefined };
+            const newRelay = { url, connected: false, retries: 0, retryTimeout: null, accessType, ws: undefined };
             this.relays.push(newRelay);
             this.connectToRelay(newRelay);
             this.saveRelaysToLocalStorage();
+        } else {
+            console.log(`Relay with URL ${url} already exists.`);
         }
     }
 
+    /**
+     * Remove a relay from the list by its URL.
+     */
     public removeRelay(url: string): void {
         this.relays = this.relays.filter(relay => relay.url !== url);
         this.saveRelaysToLocalStorage();
     }
 
+    /**
+     * Remove all custom relays, leaving only the default ones.
+     */
     public removeAllCustomRelays(): void {
         const defaultRelays = ['wss://relay.angor.io', 'wss://relay2.angor.io'];
         this.relays = this.relays.filter(relay => defaultRelays.includes(relay.url));
         this.saveRelaysToLocalStorage();
     }
 
-    private async processRequestQueue(): Promise<void> {
-        if (this.isProcessingQueue) {
-            return;
-        }
-
-        this.isProcessingQueue = true;
-
-        while (this.requestQueue.size > 0) {
-            const batch = Array.from(this.requestQueue).slice(0, this.maxConcurrentRequests);
-            this.requestQueue = new Set(Array.from(this.requestQueue).slice(this.maxConcurrentRequests));
-
-            await Promise.all(batch.map(async (filterId) => {
-                console.log(`Processing request for filter: ${filterId}`);
-            }));
-
-            await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-        }
-
-        this.isProcessingQueue = false;
-    }
-
-    public async subscribeToFilter(filter: Filter): Promise<void> {
-        try {
-            this.requestQueue.add(JSON.stringify(filter));
-            this.processRequestQueue();
-        } catch (error) {
-            console.error('Failed to subscribe to filter:', error);
+    /**
+     * Update the access type of a specific relay.
+     */
+    public updateRelayAccessType(url: string, accessType: string): void {
+        const relay = this.relays.find(relay => relay.url === url);
+        if (relay) {
+            relay.accessType = accessType;
+            this.saveRelaysToLocalStorage();
         }
     }
-
-
 
     public getPool(): SimplePool {
         return this.pool;
     }
-
-    public getRelays(): { url: string, connected: boolean, ws?: WebSocket }[] {
-        return this.relays;
+    /**
+     * Return the event stream as an observable for other parts of the app to subscribe to.
+     */
+    public getEventStream(): Observable<NostrEvent | null> {
+        return this.eventSubject.asObservable();
     }
 }
