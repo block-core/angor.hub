@@ -108,11 +108,22 @@
                         "styles": ["src/styles/styles.scss"],
                         "scripts": []
                     }
+                },
+                "deploy": {
+                    "builder": "angular-cli-ghpages:deploy",
+                    "options": {
+                        "name": "miladsoft",
+                        "email": "miladsoft@yahoo.com",
+                        "baseHref": "/",
+                        "dir": "dist/browser",
+                        "repo": "https://github.com/block-core/angor-hub.git",
+                        "cname": "hub.angor.io"
+                    }
                 }
             }
         }
     },
     "cli": {
-      "analytics": "ca2ac0bc-0558-4b9d-b46e-815b90f23eb6"
+        "analytics": "ca2ac0bc-0558-4b9d-b46e-815b90f23eb6"
     }
 }

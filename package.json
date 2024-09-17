@@ -2,15 +2,15 @@
     "name": "angor-browse",
     "version": "0.0.1",
     "description": "Angor Hub- Decentralized Crowdfunding<",
-    "author": "https://themeforest.net/user/srcn",
-    "license": "https://themeforest.net/licenses/standard",
+    "author": "angor",
     "private": true,
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
         "build": "ng build",
         "watch": "ng build --watch --configuration development",
-        "test": "ng test"
+        "test": "ng test",
+        "deploy": "ng deploy"
     },
     "dependencies": {
         "@angular/animations": "18.0.1",
@@ -58,6 +58,7 @@
         "@types/lodash": "4.17.4",
         "@types/lodash-es": "4.17.12",
         "@types/luxon": "3.4.2",
+        "angular-cli-ghpages": "^2.0.1",
         "autoprefixer": "10.4.19",
         "chroma-js": "2.4.2",
         "jasmine-core": "5.1.2",
