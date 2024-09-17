@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1726600801225,
+  "timestamp": 1726600883374,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -229,9 +229,9 @@
     "/images/logo/logo.svg": "eaadf840082d5fdcc0d728530b0fc7927e703ce9",
     "/images/pages/help-center/image-1.jpg": "806a87043b0c49207b587e50cf4deb8ca0008a6e",
     "/images/pages/profile/cover.jpg": "a874a39cd3b94a9a7a94faffe80f94c2db3f5a1e",
-    "/index.html": "8db5b2f969a7342ebac77c973b39a194a53f46f8",
+    "/index.html": "4e42927daab469c425af5e730969b0635682d650",
     "/main-OYX5NGRK.js": "7814e60eacc056bf58a2dbe530ccdc8278c72e56",
-    "/manifest.webmanifest": "88016b74a3476bd801715078f242d03677c4a1cd",
+    "/manifest.webmanifest": "fd6065c16eb892ec6d23f8481bf59ff95e312888",
     "/polyfills-SCHOHYNV.js": "d45c76c5960bab3ace7fd6d211b9579456241f8a",
     "/styles-5DJTDG74.css": "de35c55d10927dcc5a0efbf88a3eddf4ffd2af3f"
   },
