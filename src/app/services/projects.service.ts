@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
 import { IndexerService } from './indexer.service';
+import { IndexedDBService } from './indexed-db.service';
 
 export interface Project {
   founderKey: string;
@@ -26,7 +27,7 @@ export interface ProjectStats {
 })
 export class ProjectsService {
   private offset = 0;
-  private limit = 45;
+  private limit = 21;
   private totalProjects = 0;
   private loading = false;
   private projects: Project[] = [];
@@ -36,8 +37,8 @@ export class ProjectsService {
 
   constructor(
     private http: HttpClient,
-    private indexerService: IndexerService
-
+    private indexerService: IndexerService,
+    private indexedDBService: IndexedDBService
   ) {
     this.loadNetwork();
   }
@@ -45,60 +46,74 @@ export class ProjectsService {
   loadNetwork() {
     this.selectedNetwork = this.indexerService.getNetwork();
   }
+
   async fetchProjects(): Promise<Project[]> {
     if (this.loading || this.noMoreProjects) {
-      return [];
+        return [];
     }
 
     this.loading = true;
     const indexerUrl = this.indexerService.getPrimaryIndexer(this.selectedNetwork);
     const url = this.totalProjectsFetched
-      ? `${indexerUrl}api/query/Angor/projects?offset=${this.offset}&limit=${this.limit}`
-      : `${indexerUrl}api/query/Angor/projects?limit=${this.limit}`;
+        ? `${indexerUrl}api/query/Angor/projects?offset=${this.offset}&limit=${this.limit}`
+        : `${indexerUrl}api/query/Angor/projects?limit=${this.limit}`;
 
     try {
-      const response = await this.http
-        .get<Project[]>(url, { observe: 'response' })
-        .toPromise();
+        const response = await this.http.get<Project[]>(url, { observe: 'response' }).toPromise();
 
-      if (!this.totalProjectsFetched && response && response.headers) {
-        const paginationTotal = response.headers.get('pagination-total');
-        this.totalProjects = paginationTotal ? +paginationTotal : 0;
-        this.totalProjectsFetched = true;
+        if (!this.totalProjectsFetched && response && response.headers) {
+            const paginationTotal = response.headers.get('pagination-total');
+            this.totalProjects = paginationTotal ? +paginationTotal : 0;
+            this.totalProjectsFetched = true;
+            this.offset = Math.max(this.totalProjects - this.limit, 0);
+        }
 
-        this.offset = Math.max(this.totalProjects - this.limit, 0);
-      }
+        const newProjects = response?.body || [];
 
-      const newProjects = response?.body || [];
+        if (!newProjects.length) {
+            this.noMoreProjects = true;
+            return [];
+        }
 
-      if (!newProjects || newProjects.length === 0) {
-        this.noMoreProjects = true;
-        return [];
-      } else {
         const uniqueNewProjects = newProjects.filter(
-          (newProject) =>
-            !this.projects.some(
-              (existingProject) =>
-                existingProject.projectIdentifier === newProject.projectIdentifier
+            newProject => !this.projects.some(
+                existingProject => existingProject.projectIdentifier === newProject.projectIdentifier
             )
         );
 
-        if (uniqueNewProjects.length > 0) {
-          this.projects = [...this.projects, ...uniqueNewProjects];
-          this.offset = Math.max(this.offset - this.limit, 0);
-          return uniqueNewProjects;
-        } else {
-          this.noMoreProjects = true;
-          return [];
+        if (!uniqueNewProjects.length) {
+            this.noMoreProjects = true;
+            return [];
         }
-      }
+
+         const saveProjectsPromises = uniqueNewProjects.map(async project => {
+            await this.indexedDBService.saveProject(project);
+        });
+
+         const projectDetailsPromises = uniqueNewProjects.map(async project => {
+            try {
+                const projectDetails = await this.fetchProjectDetails(project.projectIdentifier).toPromise();
+                project.totalInvestmentsCount = projectDetails.totalInvestmentsCount;
+                return project;
+            } catch (error) {
+                console.error(`Error fetching details for project ${project.projectIdentifier}:`, error);
+                return project;
+            }
+        });
+
+        await Promise.all([...saveProjectsPromises, ...projectDetailsPromises]);
+
+        this.projects = [...this.projects, ...uniqueNewProjects];
+        this.offset = Math.max(this.offset - this.limit, 0);
+
+        return uniqueNewProjects;
     } catch (error) {
-      console.error('Error fetching projects:', error);
-      return [];
+        console.error('Error fetching projects:', error);
+        return [];
     } finally {
-      this.loading = false;
+        this.loading = false;
     }
-  }
+}
 
 
   fetchProjectStats(projectIdentifier: string): Observable<ProjectStats> {
@@ -106,13 +121,23 @@ export class ProjectsService {
     const url = `${indexerUrl}api/query/Angor/projects/${projectIdentifier}/stats`;
     return this.http.get<ProjectStats>(url).pipe(
       catchError((error) => {
-        console.error(
-          `Error fetching stats for project ${projectIdentifier}:`,
-          error
-        );
+        console.error(`Error fetching stats for project ${projectIdentifier}:`, error);
         return of({} as ProjectStats);
       })
     );
+  }
+
+  async fetchAndSaveProjectStats(projectIdentifier: string): Promise<ProjectStats | null> {
+    try {
+      const stats = await this.fetchProjectStats(projectIdentifier).toPromise();
+      if (stats) {
+        await this.indexedDBService.saveProjectStats(projectIdentifier, stats);
+      }
+      return stats;
+    } catch (error) {
+      console.error(`Error fetching and saving stats for project ${projectIdentifier}:`, error);
+      return null;
+    }
   }
 
   fetchProjectDetails(projectIdentifier: string): Observable<Project> {
@@ -120,13 +145,31 @@ export class ProjectsService {
     const url = `${indexerUrl}api/query/Angor/projects/${projectIdentifier}`;
     return this.http.get<Project>(url).pipe(
       catchError((error) => {
-        console.error(
-          `Error fetching details for project ${projectIdentifier}:`,
-          error
-        );
+        console.error(`Error fetching details for project ${projectIdentifier}:`, error);
         return of({} as Project);
       })
     );
+  }
+
+  async fetchAndSaveProjectDetails(projectIdentifier: string): Promise<Project | null> {
+    try {
+      const project = await this.fetchProjectDetails(projectIdentifier).toPromise();
+      if (project) {
+        await this.indexedDBService.saveProject(project);
+      }
+      return project;
+    } catch (error) {
+      console.error(`Error fetching and saving details for project ${projectIdentifier}:`, error);
+      return null;
+    }
+  }
+
+  async getAllProjectsFromDB(): Promise<Project[]> {
+    return this.indexedDBService.getAllProjects();
+  }
+
+  async getProjectStatsFromDB(projectIdentifier: string): Promise<ProjectStats | null> {
+    return this.indexedDBService.getProjectStats(projectIdentifier);
   }
 
   getProjects(): Project[] {

@@ -46,6 +46,7 @@ export class UserComponent implements OnInit, OnDestroy {
     theme: string;
     themes: Themes;
 
+
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _router: Router,
@@ -57,18 +58,6 @@ export class UserComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadUserProfile();
-
-
-        this._indexedDBService.getMetadataStream()
-          .pipe(takeUntil(this._unsubscribeAll))
-          .subscribe((updatedMetadata) => {
-            if (updatedMetadata && updatedMetadata.pubkey === this.user?.pubkey) {
-              this.metadata = updatedMetadata.metadata;
-              this._changeDetectorRef.detectChanges();
-            }
-          });
-
-
         this._angorConfigService.config$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((config: AngorConfig) => {
@@ -76,6 +65,23 @@ export class UserComponent implements OnInit, OnDestroy {
                 this.config = config;
                 this._changeDetectorRef.detectChanges();
             });
+            this.loadUserProfile();
+
+            this._indexedDBService.getMetadataStream()
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((updatedMetadata) => {
+                if (updatedMetadata && updatedMetadata.pubkey === this.user?.pubkey) {
+                    this.metadata = updatedMetadata.metadata;
+                    this._changeDetectorRef.detectChanges();
+                }
+            });
+    }
+
+
+
+    ngOnDestroy(): void {
+        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.complete();
     }
 
     private async loadUserProfile(): Promise<void> {
@@ -86,9 +92,10 @@ export class UserComponent implements OnInit, OnDestroy {
         if (!publicKey) {
             this.errorMessage = 'No public key found. Please log in again.';
             this.isLoading = false;
-            this._changeDetectorRef.markForCheck();
+            this._changeDetectorRef.detectChanges();
             return;
         }
+
 
         this.user = { pubkey: publicKey };
 
@@ -112,15 +119,11 @@ export class UserComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.error('Failed to load profile data:', error);
             this.errorMessage = 'Failed to load profile data. Please try again later.';
+            this._changeDetectorRef.detectChanges();
         } finally {
             this.isLoading = false;
             this._changeDetectorRef.detectChanges();
         }
-    }
-
-    ngOnDestroy(): void {
-        this._unsubscribeAll.next(null);
-        this._unsubscribeAll.complete();
     }
 
     logout(): void {

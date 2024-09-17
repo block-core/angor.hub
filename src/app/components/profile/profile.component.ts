@@ -17,7 +17,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { AngorCardComponent } from '@angor/components/card';
-import { AngorConfigService } from '@angor/services/config';
 import { SignerService } from 'app/services/signer.service';
 import { MetadataService } from 'app/services/metadata.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -53,8 +52,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
-        private _router: Router,
-        private _angorConfigService: AngorConfigService,
         private _metadataService: MetadataService,
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService

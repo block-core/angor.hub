@@ -19,15 +19,7 @@ import { NgClass, PercentPipe, I18nPluralPipe, CommonModule } from '@angular/com
 import { MetadataService } from 'app/services/metadata.service';
 import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
-
-interface Project {
-  projectIdentifier: string;
-  nostrPubKey: string;
-  displayName?: string;
-  about?: string;
-  picture?: string;
-  banner?:string
-}
+import { Project } from 'app/interface/project.interface';
 
 @Component({
   selector: 'explore',
@@ -54,22 +46,26 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private router: Router,
     private stateService: StateService,
     private metadataService: MetadataService,
-    private _indexedDBService: IndexedDBService,
-    private _changeDetectorRef: ChangeDetectorRef
+    private indexedDBService: IndexedDBService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.projects = this.stateService.getProjects();
     this.filteredProjects = [...this.projects];
+
     if (this.projects.length === 0) {
       this.loadProjects();
     } else {
       this.loading = false;
-
-      this.projects.forEach(project => this.subscribeToProjectMetadata(project));
+      this.projects.forEach(project => {
+        if (!project.displayName || !project.about) {
+          this.loadMetadataForProject(project);
+        }
+      });
     }
 
-    this._indexedDBService.getMetadataStream()
+    this.indexedDBService.getMetadataStream()
       .pipe(takeUntil(this._unsubscribeAll))
       .subscribe((updatedMetadata) => {
         if (updatedMetadata) {
@@ -80,6 +76,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
         }
       });
   }
+
 
   loadProjects(): void {
     if (this.loading || this.errorMessage === 'No more projects found') return;
@@ -103,12 +100,12 @@ export class ExploreComponent implements OnInit, OnDestroy {
         this.projects.forEach(project => this.subscribeToProjectMetadata(project));
       }
       this.loading = false;
-      this._changeDetectorRef.detectChanges();
+      this.changeDetectorRef.detectChanges();
     }).catch((error: any) => {
       console.error('Error fetching projects:', error);
       this.errorMessage = 'Error fetching projects. Please try again later.';
       this.loading = false;
-      this._changeDetectorRef.detectChanges();
+      this.changeDetectorRef.detectChanges();
     });
   }
 
@@ -142,7 +139,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
     }
 
     this.filteredProjects = [...this.projects];
-    this._changeDetectorRef.detectChanges();
+    this.changeDetectorRef.detectChanges();
   }
 
   subscribeToProjectMetadata(project: Project): void {

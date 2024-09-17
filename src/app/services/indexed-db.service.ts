@@ -1,23 +1,112 @@
 import { Injectable } from '@angular/core';
 import localForage from 'localforage';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Project, ProjectStats } from './projects.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class IndexedDBService {
   private metadataSubject = new BehaviorSubject<any>(null);
+  private projectsSubject = new BehaviorSubject<Project[]>([]);
+  private projectStatsSubject = new BehaviorSubject<{ [key: string]: ProjectStats }>({});
+
+  private userStore: LocalForage;
+  private projectsStore: LocalForage;
+  private projectStatsStore: LocalForage;
 
   constructor() {
-    localForage.config({
+
+    this.userStore = localForage.createInstance({
       driver: localForage.INDEXEDDB,
-      name: 'user-database',
+      name: 'angor-hub',
       version: 1.0,
       storeName: 'users',
       description: 'Store for user metadata',
     });
+
+    this.projectsStore = localForage.createInstance({
+      driver: localForage.INDEXEDDB,
+      name: 'angor-hub',
+      version: 1.0,
+      storeName: 'projects',
+      description: 'Store for projects',
+    });
+
+    this.projectStatsStore = localForage.createInstance({
+      driver: localForage.INDEXEDDB,
+      name: 'angor-hub',
+      version: 1.0,
+      storeName: 'projectStats',
+      description: 'Store for project statistics',
+    });
+
+    this.loadAllProjectsFromDB();
+    this.loadAllProjectStatsFromDB();
   }
 
+  // Returns projects as observable
+  getProjectsObservable(): Observable<Project[]> {
+    return this.projectsSubject.asObservable();
+  }
+
+  // Save new project and notify subscribers
+  async saveProject(project: Project): Promise<void> {
+    try {
+      await this.projectsStore.setItem(project.projectIdentifier, project);
+      const updatedProjects = await this.getAllProjects();
+      this.projectsSubject.next(updatedProjects);
+    } catch (error) {
+      console.error(`Error saving project ${project.projectIdentifier} to IndexedDB:`, error);
+    }
+  }
+
+  async getProject(projectIdentifier: string): Promise<Project | null> {
+    try {
+      const project = await this.projectsStore.getItem<Project>(projectIdentifier);
+      return project || null;
+    } catch (error) {
+      console.error(`Error getting project ${projectIdentifier} from IndexedDB:`, error);
+      return null;
+    }
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    try {
+      const projects: Project[] = [];
+      await this.projectsStore.iterate<Project, void>((value) => {
+        projects.push(value);
+      });
+      return projects;
+    } catch (error) {
+      console.error('Error getting all projects from IndexedDB:', error);
+      return [];
+    }
+  }
+
+  getProjectStatsObservable(): Observable<{ [key: string]: ProjectStats }> {
+    return this.projectStatsSubject.asObservable();
+  }
+
+  async saveProjectStats(projectIdentifier: string, stats: ProjectStats): Promise<void> {
+    try {
+      await this.projectStatsStore.setItem(projectIdentifier, stats);
+      const updatedStats = await this.getAllProjectStats();
+      this.projectStatsSubject.next(updatedStats);
+    } catch (error) {
+      console.error(`Error saving project stats for ${projectIdentifier} to IndexedDB:`, error);
+    }
+  }
+
+  async getProjectStats(projectIdentifier: string): Promise<ProjectStats | null> {
+    try {
+      const stats = await this.projectStatsStore.getItem<ProjectStats>(projectIdentifier);
+      return stats || null;
+    } catch (error) {
+      console.error(`Error getting project stats for ${projectIdentifier} from IndexedDB:`, error);
+      return null;
+    }
+  }
 
   getMetadataStream(): Observable<any> {
     return this.metadataSubject.asObservable();
@@ -25,7 +114,7 @@ export class IndexedDBService {
 
   async getUserMetadata(pubkey: string): Promise<any | null> {
     try {
-      const metadata = await localForage.getItem(pubkey);
+      const metadata = await this.userStore.getItem(pubkey);
       return metadata;
     } catch (error) {
       console.error('Error getting metadata from IndexedDB:', error);
@@ -35,7 +124,7 @@ export class IndexedDBService {
 
   async saveUserMetadata(pubkey: string, metadata: any): Promise<void> {
     try {
-      await localForage.setItem(pubkey, metadata);
+      await this.userStore.setItem(pubkey, metadata);
       this.metadataSubject.next({ pubkey, metadata });
     } catch (error) {
       console.error('Error saving metadata to IndexedDB:', error);
@@ -44,36 +133,63 @@ export class IndexedDBService {
 
   async removeUserMetadata(pubkey: string): Promise<void> {
     try {
-      await localForage.removeItem(pubkey);
+      await this.userStore.removeItem(pubkey);
       this.metadataSubject.next({ pubkey, metadata: null });
     } catch (error) {
       console.error('Error removing metadata from IndexedDB:', error);
     }
   }
 
-  async clearAllMetadata(): Promise<void> {
+  private async loadAllProjectsFromDB(): Promise<void> {
     try {
-      await localForage.clear();
-      this.metadataSubject.next(null);
+      const projects = await this.getAllProjects();
+      this.projectsSubject.next(projects);
     } catch (error) {
-      console.error('Error clearing all metadata:', error);
+      console.error('Error loading projects from IndexedDB:', error);
+    }
+  }
+
+  async getAllProjectStats(): Promise<{ [key: string]: ProjectStats }> {
+    try {
+      const statsMap: { [key: string]: ProjectStats } = {};
+      await this.projectStatsStore.iterate<ProjectStats, void>((value, key) => {
+        statsMap[key] = value;
+      });
+      return statsMap;
+    } catch (error) {
+      console.error('Error getting all project stats from IndexedDB:', error);
+      return {};
+    }
+  }
+
+  private async loadAllProjectStatsFromDB(): Promise<void> {
+    try {
+      const stats = await this.getAllProjectStats();
+      this.projectStatsSubject.next(stats);
+    } catch (error) {
+      console.error('Error loading project stats from IndexedDB:', error);
     }
   }
 
   async getAllUsers(): Promise<any[]> {
     try {
-      const allKeys = await localForage.keys();
-      const users = [];
-      for (const key of allKeys) {
-        const user = await localForage.getItem(key);
-        if (user) {
-          users.push(user);
-        }
-      }
+      const users: any[] = [];
+      await this.userStore.iterate((value) => {
+        users.push(value);
+      });
       return users;
     } catch (error) {
       console.error('Error getting all users from IndexedDB:', error);
       return [];
+    }
+  }
+
+  async clearAllMetadata(): Promise<void> {
+    try {
+      await this.userStore.clear();
+      this.metadataSubject.next(null);
+    } catch (error) {
+      console.error('Error clearing all metadata:', error);
     }
   }
 }
