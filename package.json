@@ -25,6 +25,7 @@
         "@angular/platform-browser-dynamic": "18.2.4",
         "@angular/pwa": "^18.2.4",
         "@angular/router": "18.2.4",
+        "@angular/service-worker": "^18.2.4",
         "@gandlaf21/bolt11-decode": "^3.1.1",
         "@ngneat/cashew": "^4.1.0",
         "@ngneat/transloco": "6.0.4",
