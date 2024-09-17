@@ -20,18 +20,16 @@ export class MetadataService {
     private relayService: RelayService
   ) {}
 
-
   getMetadataStream(): Observable<any> {
     return this.metadataSubject.asObservable().pipe(throttleTime(2000));
   }
-
 
   private enqueueRequest(pubkey: string): void {
     this.requestQueue.add(pubkey);
     this.processQueue();
   }
 
-  async fetchMetadataForMultipleKeys(pubkeys: string[]): Promise<void> {
+  async fetchMetadataForMultipleKeys(pubkeys: string[]): Promise<any[]> {
     const filter: Filter = {
       kinds: [0],
       authors: pubkeys,
@@ -43,8 +41,10 @@ export class MetadataService {
 
       if (connectedRelays.length === 0) {
         console.error('No relays are connected.');
-        return;
+        return [];
       }
+
+      const metadataList: any[] = [];
 
       const sub = this.relayService.getPool().subscribeMany(connectedRelays, [filter], {
         onevent: async (event: NostrEvent) => {
@@ -52,21 +52,25 @@ export class MetadataService {
             try {
               const metadata = JSON.parse(event.content);
               await this.indexedDBService.saveUserMetadata(event.pubkey, metadata);
-              this.metadataSubject.next({ pubkey: event.pubkey, metadata });
+              metadataList.push({ pubkey: event.pubkey, metadata });
             } catch (error) {
               console.error('Error parsing metadata:', error);
             }
           }
         },
         oneose: () => {
-         }
+          console.log('Relay connection closed.');
+        }
       });
 
       setTimeout(() => {
         sub.close();
       }, 10 * 60 * 1000);
+
+      return metadataList;
     } catch (error) {
       console.error('Failed to fetch metadata for multiple keys:', error);
+      return [];
     }
   }
 
@@ -132,9 +136,6 @@ export class MetadataService {
     });
   }
 
-
-
-
   async fetchMetadataRealtime(pubkey: string): Promise<any> {
     await this.relayService.ensureConnectedRelays();
     const connectedRelays = this.relayService.getConnectedRelays();
@@ -165,7 +166,6 @@ export class MetadataService {
       });
     });
   }
-
 
   async refreshAllStoredMetadata(): Promise<void> {
     const storedUsers = await this.indexedDBService.getAllUsers();

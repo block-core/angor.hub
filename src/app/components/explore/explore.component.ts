@@ -51,23 +51,55 @@ export class ExploreComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.projects = this.stateService.getProjects();
-    this.filteredProjects = [...this.projects];
+    this.loadInitialProjects();
+    this.subscribeToMetadataUpdates();
+  }
 
-    if (this.projects.length === 0) {
-      this.loadProjects();
-    } else {
-      this.loading = false;
-      this.projects.forEach(project => {
-        if (!project.displayName || !project.about) {
-          this.loadMetadataForProject(project);
+  private async loadInitialProjects(): Promise<void> {
+    try {
+      this.loading = true;
+      this.projects = this.stateService.getProjects();
+
+      if (this.projects.length === 0) {
+        await this.loadProjectsFromService();
+      } else {
+        this.filteredProjects = [...this.projects];
+        const pubkeysToFetch = this.getProjectsWithoutMetadata();
+        if (pubkeysToFetch.length > 0) {
+          await this.loadMetadataForProjects(pubkeysToFetch);
         }
-      });
+      }
+    } catch (error) {
+      this.handleError('Error loading initial projects');
+    } finally {
+      this.loading = false;
+      this.changeDetectorRef.detectChanges();
     }
+  }
 
+  private async loadProjectsFromService(): Promise<void> {
+    try {
+      const projects = await this.projectService.fetchProjects();
+      if (projects.length === 0) {
+        this.errorMessage = 'No projects found';
+        return;
+      }
+
+      this.projects = projects;
+      this.filteredProjects = [...this.projects];
+      this.stateService.setProjects(this.projects);
+
+      const pubkeys = projects.map(p => p.nostrPubKey);
+      await this.loadMetadataForProjects(pubkeys);
+
+    } catch (error) {
+      this.handleError('Error fetching projects from service');
+    }
+  }
+  private subscribeToMetadataUpdates(): void {
     this.indexedDBService.getMetadataStream()
       .pipe(takeUntil(this._unsubscribeAll))
-      .subscribe((updatedMetadata) => {
+      .subscribe((updatedMetadata: any) => {
         if (updatedMetadata) {
           const projectToUpdate = this.projects.find(p => p.nostrPubKey === updatedMetadata.pubkey);
           if (projectToUpdate) {
@@ -77,8 +109,29 @@ export class ExploreComponent implements OnInit, OnDestroy {
       });
   }
 
+  private getProjectsWithoutMetadata(): string[] {
+    return this.projects
+      .filter(project => !project.displayName || !project.about)
+      .map(project => project.nostrPubKey);
+  }
 
-  loadProjects(): void {
+  loadMetadataForProjects(pubkeys: string[]): void {
+    this.metadataService.fetchMetadataForMultipleKeys(pubkeys)
+      .then((metadataList: any[]) => {
+        metadataList.forEach(metadata => {
+          const project = this.projects.find(p => p.nostrPubKey === metadata.pubkey);
+          if (project) {
+            this.updateProjectMetadata(project, metadata);
+          }
+        });
+        this.changeDetectorRef.detectChanges();
+      })
+      .catch(error => {
+        console.error('Error fetching metadata for projects:', error);
+      });
+  }
+
+  async loadProjects(): Promise<void> {
     if (this.loading || this.errorMessage === 'No more projects found') return;
 
     this.loading = true;
@@ -93,7 +146,8 @@ export class ExploreComponent implements OnInit, OnDestroy {
         this.filteredProjects = [...this.projects];
 
         const pubkeys = projects.map(project => project.nostrPubKey);
-        await this.metadataService.fetchMetadataForMultipleKeys(pubkeys);
+
+        await this.loadMetadataForProjects(pubkeys);
 
         this.stateService.setProjects(this.projects);
 
@@ -108,7 +162,6 @@ export class ExploreComponent implements OnInit, OnDestroy {
       this.changeDetectorRef.detectChanges();
     });
   }
-
 
   async loadMetadataForProject(project: Project): Promise<void> {
     try {
@@ -156,7 +209,6 @@ export class ExploreComponent implements OnInit, OnDestroy {
     this.router.navigate(['/projects', project.projectIdentifier]);
   }
 
-
   filterByQuery(query: string): void {
     if (!query) {
       this.filteredProjects = [...this.projects];
@@ -169,7 +221,6 @@ export class ExploreComponent implements OnInit, OnDestroy {
     );
   }
 
-
   toggleCompleted(event: any): void {
 
   }
@@ -177,5 +228,12 @@ export class ExploreComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this._unsubscribeAll.next(null);
     this._unsubscribeAll.complete();
+  }
+
+  private handleError(message: string): void {
+    console.error(message);
+    this.errorMessage = message;
+    this.loading = false;
+    this.changeDetectorRef.detectChanges();
   }
 }
