@@ -40,10 +40,10 @@ export type AngorProviderConfig = {
 export const provideAngor = (
     config: AngorProviderConfig
 ): Array<Provider | EnvironmentProviders> => {
-    // Base providers
+
     const providers: Array<Provider | EnvironmentProviders> = [
         {
-            // Disable 'theme' sanity check
+
             provide: MATERIAL_SANITY_CHECKS,
             useValue: {
                 doctype: true,
@@ -52,7 +52,7 @@ export const provideAngor = (
             },
         },
         {
-            // Use the 'fill' appearance on Angular Material form fields by default
+
             provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
             useValue: {
                 appearance: 'fill',
@@ -103,7 +103,7 @@ export const provideAngor = (
         },
     ];
 
-    // Mock Api services
+
     if (config?.mockApi?.services) {
         providers.push(
             provideHttpClient(withInterceptors([mockApiInterceptor])),
@@ -116,6 +116,6 @@ export const provideAngor = (
         );
     }
 
-    // Return the providers
+
     return providers;
 };

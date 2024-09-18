@@ -80,24 +80,21 @@
         </div>
     </div>
 
-    <!-- Content -->
     <div class="flex w-full flex-auto flex-col">
-        <!-- *ngIf="true" hack is required here for router-outlet to work correctly.
-             Otherwise, layout changes won't be registered and the view won't be updated! -->
+
         @if (true) {
             <router-outlet></router-outlet>
         }
     </div>
 
-    <!-- Footer -->
+
     <div
         class="bg-card relative z-49 flex h-14 w-full flex-0 items-center border-t px-4 dark:bg-transparent sm:h-20 md:px-6 print:hidden"
     >
         <span class="text-secondary font-medium"
-            >Angor &copy; {{ currentYear }}</span
+            >Angor &copy; {{ currentYear }} - version {{version}}</span
         >
     </div>
 </div>
 
-<!-- Quick chat -->
 <quick-chat #quickChat="quickChat"></quick-chat>
