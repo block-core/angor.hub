@@ -1,16 +1,7 @@
-import { CurrencyPipe, NgClass } from '@angular/common';
-import {
-    ChangeDetectionStrategy,
-    Component,
-    OnInit,
-    ViewEncapsulation,
-} from '@angular/core';
-import {
-    FormsModule,
-    ReactiveFormsModule,
-    UntypedFormBuilder,
-    UntypedFormGroup,
-} from '@angular/forms';
+import { AngorAlertComponent } from '@angor/components/alert';
+import { NgClass, CurrencyPipe, CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,91 +9,52 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
-import { AngorAlertComponent } from '@angor/components/alert';
+import { IndexerService } from 'app/services/indexer.service';
 
 @Component({
-    selector: 'settings-network',
-    templateUrl: './network.component.html',
-    encapsulation: ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [
-        FormsModule,
-        ReactiveFormsModule,
-        AngorAlertComponent,
-        MatRadioModule,
-        NgClass,
-        MatIconModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatSelectModule,
-        MatOptionModule,
-        MatButtonModule,
-        CurrencyPipe,
-    ],
+  selector: 'settings-network',
+  templateUrl: './network.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    AngorAlertComponent,
+    MatRadioModule,
+    NgClass,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatButtonModule,
+    CurrencyPipe,
+    CommonModule
+  ],
 })
 export class SettingsNetworkComponent implements OnInit {
-    planBillingForm: UntypedFormGroup;
-    plans: any[];
+    networkForm: FormGroup;
+    selectedNetwork: 'mainnet' | 'testnet' = 'testnet';
+    constructor(private fb: FormBuilder, private indexerService: IndexerService) {}
 
-    /**
-     * Constructor
-     */
-    constructor(private _formBuilder: UntypedFormBuilder) {}
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Create the form
-        this.planBillingForm = this._formBuilder.group({
-            plan: ['team'],
-            cardHolder: ['Brian Hughes'],
-            cardNumber: [''],
-            cardExpiration: [''],
-            cardCVC: [''],
-            country: ['usa'],
-            zip: [''],
-        });
+       this.networkForm = this.fb.group({
+        network: [this.indexerService.getNetwork()]
+      });
 
-        // Setup the plans
-        this.plans = [
-            {
-                value: 'basic',
-                label: 'BASIC',
-                details: 'Starter plan for individuals.',
-                price: '10',
-            },
-            {
-                value: 'team',
-                label: 'TEAM',
-                details: 'Collaborate up to 10 people.',
-                price: '20',
-            },
-            {
-                value: 'enterprise',
-                label: 'ENTERPRISE',
-                details: 'For bigger businesses.',
-                price: '40',
-            },
-        ];
+       this.selectedNetwork = this.indexerService.getNetwork();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+    setNetwork(network: 'mainnet' | 'testnet'): void {
+      this.selectedNetwork = network;
+      this.indexerService.setNetwork(this.selectedNetwork);
+    }
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
-    trackByFn(index: number, item: any): any {
-        return item.id || index;
+    save(): void {
+       this.indexerService.setNetwork(this.selectedNetwork);
+     }
+
+    cancel(): void {
+       this.selectedNetwork = this.indexerService.getNetwork();
     }
 }
