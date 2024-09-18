@@ -45,12 +45,10 @@ export class IndexedDBService {
     this.loadAllProjectStatsFromDB();
   }
 
-  // Returns projects as observable
   getProjectsObservable(): Observable<Project[]> {
     return this.projectsSubject.asObservable();
   }
 
-  // Save new project and notify subscribers
   async saveProject(project: Project): Promise<void> {
     try {
       await this.projectsStore.setItem(project.projectIdentifier, project);

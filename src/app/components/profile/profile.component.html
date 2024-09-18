@@ -17,7 +17,7 @@
             <!-- Avatar -->
             <div class="-mt-26 rounded-full lg:-mt-22">
                  <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" [src]="metadata?.picture" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" [src]="getSafeUrl(metadata?.picture)" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                 </ng-container>
                 <ng-template #defaultAvatar>
                     <img class="ring-bg-card h-32 w-32 rounded-full ring-4" src="/images/avatars/avatar-placeholder.png" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />

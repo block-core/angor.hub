@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { RelayService } from 'app/services/relay.service';
 import { Subscription } from 'rxjs';
 
@@ -44,7 +45,8 @@ export class SettingsRelayComponent implements OnInit {
     constructor(
         private relayService: RelayService,
         private cdr: ChangeDetectorRef,
-        private zone: NgZone
+        private zone: NgZone,
+        private sanitizer: DomSanitizer
     ) {}
 
     ngOnInit(): void {
@@ -106,8 +108,14 @@ export class SettingsRelayComponent implements OnInit {
         return relay.connected ? 'Connected' : 'Disconnected';
     }
 
-    relayFavIcon(url: string) {
-        const favUrl = url.replace('wss://', 'https://');
-        return favUrl + '/favicon.ico';
-    }
+    relayFavIcon(url: string): string {
+        let safeUrl = url.replace('wss://', 'https://').replace('ws://', 'https://');
+
+        return safeUrl + '/favicon.ico';
+      }
+
+      getSafeUrl(url: string): SafeUrl {
+        return this.sanitizer.bypassSecurityTrustUrl(url);
+      }
+
 }

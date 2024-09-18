@@ -21,6 +21,7 @@ import { SignerService } from 'app/services/signer.service';
 import { MetadataService } from 'app/services/metadata.service';
 import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
     selector: 'profile',
@@ -54,7 +55,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _metadataService: MetadataService,
         private _signerService: SignerService,
-        private _indexedDBService: IndexedDBService
+        private _indexedDBService: IndexedDBService,
+        private _sanitizer: DomSanitizer
+
     ) { }
 
     ngOnInit(): void {
@@ -117,4 +120,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this._changeDetectorRef.detectChanges();
         }
     }
+
+    getSafeUrl(url: string): SafeUrl {
+        return this._sanitizer.bypassSecurityTrustUrl(url);
+      }
 }

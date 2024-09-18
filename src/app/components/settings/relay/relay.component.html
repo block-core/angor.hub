@@ -19,7 +19,7 @@
                         class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full"
                     >
                              <img
-                                class="h-full w-full object-cover" [src]="relayFavIcon(relay.url)"
+                                class="h-full w-full object-cover" [src]="getSafeUrl(relayFavIcon(relay.url))"
                                 onerror="this.src='/images/avatars/avatar-placeholder.png'"
                                 alt="relay avatar"
                             />

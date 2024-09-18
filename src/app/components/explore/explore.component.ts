@@ -20,6 +20,7 @@ import { MetadataService } from 'app/services/metadata.service';
 import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { Project } from 'app/interface/project.interface';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'explore',
@@ -47,7 +48,8 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private metadataService: MetadataService,
     private indexedDBService: IndexedDBService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -236,4 +238,19 @@ export class ExploreComponent implements OnInit, OnDestroy {
     this.loading = false;
     this.changeDetectorRef.detectChanges();
   }
+
+   getSafeUrl(url: any, isBanner: boolean): SafeUrl {
+    if (url && typeof url === 'string' && this.isImageUrl(url)) {
+      return this.sanitizer.bypassSecurityTrustUrl(url);
+    } else {
+      const defaultImage = isBanner ? '/images/pages/profile/cover.jpg' : 'images/avatars/avatar-placeholder.png';
+      return this.sanitizer.bypassSecurityTrustUrl(defaultImage);
+    }
+  }
+
+  private isImageUrl(url: string): boolean {
+    return /\.(jpeg|jpg|gif|png|svg|bmp|webp|tiff|ico)$/i.test(url);
+  }
+
+
 }

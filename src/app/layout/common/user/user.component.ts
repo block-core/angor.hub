@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MetadataService } from 'app/services/metadata.service';
 import { IndexedDBService } from 'app/services/indexed-db.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
     selector: 'user',
@@ -53,7 +54,9 @@ export class UserComponent implements OnInit, OnDestroy {
         private _angorConfigService: AngorConfigService,
         private _metadataService: MetadataService,
         private _signerService: SignerService,
-        private _indexedDBService: IndexedDBService
+        private _indexedDBService: IndexedDBService,
+        private sanitizer: DomSanitizer
+
     ) { }
 
     ngOnInit(): void {
@@ -148,4 +151,8 @@ export class UserComponent implements OnInit, OnDestroy {
         this._angorConfigService.config = { theme };
         this._changeDetectorRef.detectChanges();
     }
+
+    getSafeUrl(url: string): SafeUrl {
+        return this.sanitizer.bypassSecurityTrustUrl(url);
+      }
 }
