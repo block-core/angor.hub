@@ -17,6 +17,8 @@ import { SettingsAccountComponent } from './account/account.component';
 import { SettingsNotificationsComponent } from './notifications/notifications.component';
 import { SettingsSecurityComponent } from './security/security.component';
 import { SettingsRelayComponent } from './relay/relay.component';
+import { SettingsNetworkComponent } from "./network/network.component";
+import { SettingsIndexerComponent } from "./indexer/indexer.component";
 
 @Component({
     selector: 'settings',
@@ -25,123 +27,94 @@ import { SettingsRelayComponent } from './relay/relay.component';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
     imports: [
-        MatSidenavModule,
-        MatButtonModule,
-        MatIconModule,
-        NgClass,
-        SettingsAccountComponent,
-        SettingsSecurityComponent,
-        SettingsNotificationsComponent,
-        SettingsRelayComponent,
-    ],
+    MatSidenavModule,
+    MatButtonModule,
+    MatIconModule,
+    NgClass,
+    SettingsAccountComponent,
+    SettingsSecurityComponent,
+    SettingsNotificationsComponent,
+    SettingsRelayComponent,
+    SettingsNetworkComponent,
+    SettingsIndexerComponent
+],
 })
 export class SettingsComponent implements OnInit, OnDestroy {
     @ViewChild('drawer') drawer: MatDrawer;
     drawerMode: 'over' | 'side' = 'side';
-    drawerOpened: boolean = true;
-    panels: any[] = [];
-    selectedPanel: string = 'relay';
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
+    drawerOpened = true;
+    panels = [
+        {
+            id: 'relay',
+            icon: 'heroicons_outline:server',
+            title: 'Relay',
+            description: 'Manage and configure your existing relays and update their access roles and permissions.',
+        },
+        {
+            id: 'network',
+            icon: 'heroicons_outline:globe-alt',
+            title: 'Network',
+            description: 'Switch between mainnet and testnet for different Bitcoin network configurations.',
+        },
+        {
+            id: 'indexer',
+            icon: 'heroicons_outline:chart-bar',
+            title: 'Indexer',
+            description: 'Add, remove, and manage your indexers, including setting the primary indexer.',
+        },
+        {
+            id: 'account',
+            icon: 'heroicons_outline:user',
+            title: 'Account',
+            description: 'Update your personal profile, manage your account details, and modify your private information.',
+        },
+        {
+            id: 'security',
+            icon: 'heroicons_outline:shield-check',
+            title: 'Security',
+            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
+        },
+        {
+            id: 'notifications',
+            icon: 'heroicons_outline:bell',
+            title: 'Notifications',
+            description: 'Control when and how you’ll be notified across various communication channels.',
+        },
+    ];
+    selectedPanel = 'relay';
+    private _unsubscribeAll = new Subject<void>();
 
-    /**
-     * Constructor
-     */
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _angorMediaWatcherService: AngorMediaWatcherService
     ) {}
 
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Setup available panels
-        this.panels = [
-            {
-                id: 'relay',
-                icon: 'heroicons_outline:computer-desktop',
-                title: 'Relay',
-                description:
-                    'Manage your existing relays and update their access roles/permissions',
-            },
-            {
-                id: 'account',
-                icon: 'heroicons_outline:user-circle',
-                title: 'Account',
-                description:
-                    'Manage your public profile and private information',
-            },
-            {
-                id: 'security',
-                icon: 'heroicons_outline:lock-closed',
-                title: 'Security',
-                description:
-                    'Manage your password and 2-step verification preferences',
-            },
-            {
-                id: 'notifications',
-                icon: 'heroicons_outline:bell',
-                title: 'Notifications',
-                description: "Manage when you'll be notified on which channels",
-            }
-        ];
-
-        // Subscribe to media changes
         this._angorMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe(({ matchingAliases }) => {
-                // Set the drawerMode and drawerOpened
-                if (matchingAliases.includes('lg')) {
-                    this.drawerMode = 'side';
-                    this.drawerOpened = true;
-                } else {
-                    this.drawerMode = 'over';
-                    this.drawerOpened = false;
-                }
-
-                // Mark for check
+                this.drawerMode = matchingAliases.includes('lg') ? 'side' : 'over';
+                this.drawerOpened = this.drawerMode === 'side';
                 this._changeDetectorRef.markForCheck();
             });
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.next();
         this._unsubscribeAll.complete();
     }
 
-    /**
-     * Navigate to the panel
-     *
-     * @param panel
-     */
     goToPanel(panel: string): void {
         this.selectedPanel = panel;
-
-        // Close the drawer on 'over' mode
         if (this.drawerMode === 'over') {
             this.drawer.close();
         }
     }
 
-    /**
-     * Get the details of the panel
-     *
-     * @param id
-     */
     getPanelInfo(id: string): any {
-        return this.panels.find((panel) => panel.id === id);
+        return this.panels.find(panel => panel.id === id);
     }
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }
