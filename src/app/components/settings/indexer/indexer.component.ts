@@ -1,4 +1,4 @@
-import { CurrencyPipe, NgClass } from '@angular/common';
+import { CommonModule, CurrencyPipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { AngorAlertComponent } from '@angor/components/alert';
+import { IndexerService } from 'app/services/indexer.service';
 
 @Component({
     selector: 'settings-indexer',
@@ -39,70 +40,59 @@ import { AngorAlertComponent } from '@angor/components/alert';
         MatOptionModule,
         MatButtonModule,
         CurrencyPipe,
+        CommonModule
     ],
 })
 export class SettingsIndexerComponent implements OnInit {
-    planBillingForm: UntypedFormGroup;
-    plans: any[];
+    mainnetIndexers: Array<{ url: string, primary: boolean }> = [];
+  testnetIndexers: Array<{ url: string, primary: boolean }> = [];
+  newMainnetIndexerUrl: string = '';
+  newTestnetIndexerUrl: string = '';
 
-    /**
-     * Constructor
-     */
-    constructor(private _formBuilder: UntypedFormBuilder) {}
+  constructor(private indexerService: IndexerService) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
+  ngOnInit(): void {
+    this.loadIndexers();
+  }
 
-    /**
-     * On init
-     */
-    ngOnInit(): void {
-        // Create the form
-        this.planBillingForm = this._formBuilder.group({
-            plan: ['team'],
-            cardHolder: ['Brian Hughes'],
-            cardNumber: [''],
-            cardExpiration: [''],
-            cardCVC: [''],
-            country: ['usa'],
-            zip: [''],
-        });
+  loadIndexers(): void {
+    this.mainnetIndexers = this.indexerService.getIndexers('mainnet').map(url => ({
+      url,
+      primary: url === this.indexerService.getPrimaryIndexer('mainnet')
+    }));
+    this.testnetIndexers = this.indexerService.getIndexers('testnet').map(url => ({
+      url,
+      primary: url === this.indexerService.getPrimaryIndexer('testnet')
+    }));
 
-        // Setup the plans
-        this.plans = [
-            {
-                value: 'basic',
-                label: 'BASIC',
-                details: 'Starter plan for individuals.',
-                price: '10',
-            },
-            {
-                value: 'team',
-                label: 'TEAM',
-                details: 'Collaborate up to 10 people.',
-                price: '20',
-            },
-            {
-                value: 'enterprise',
-                label: 'ENTERPRISE',
-                details: 'For bigger businesses.',
-                price: '40',
-            },
-        ];
+    console.log('Mainnet Indexers:', this.mainnetIndexers);
+    console.log('Testnet Indexers:', this.testnetIndexers);
+  }
+
+
+  addIndexer(network: 'mainnet' | 'testnet'): void {
+    if (network === 'mainnet' && this.newMainnetIndexerUrl) {
+      this.indexerService.addIndexer(this.newMainnetIndexerUrl, 'mainnet');
+      this.loadIndexers();
+      this.newMainnetIndexerUrl = '';
+    } else if (network === 'testnet' && this.newTestnetIndexerUrl) {
+      this.indexerService.addIndexer(this.newTestnetIndexerUrl, 'testnet');
+      this.loadIndexers();
+      this.newTestnetIndexerUrl = '';
     }
+  }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+  removeIndexer(network: 'mainnet' | 'testnet', indexer: { url: string, primary: boolean }): void {
+    this.indexerService.removeIndexer(indexer.url, network);
+    this.loadIndexers();
+  }
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
-    trackByFn(index: number, item: any): any {
-        return item.id || index;
-    }
+  setPrimaryIndexer(network: 'mainnet' | 'testnet', indexer: { url: string, primary: boolean }): void {
+    this.indexerService.setPrimaryIndexer(indexer.url, network);
+    this.loadIndexers();
+  }
+
+  trackByFn(index: number, item: any): any {
+    return item.url;
+  }
 }

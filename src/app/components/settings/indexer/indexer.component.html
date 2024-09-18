@@ -1,171 +1,77 @@
 <div class="w-full max-w-3xl">
-    <!-- Form -->
-    <form [formGroup]="planBillingForm">
-        <!-- Section -->
-        <div class="w-full">
-            <div class="text-xl">Change your plan</div>
-            <div class="text-secondary">
-                Upgrade or downgrade your current plan.
-            </div>
-        </div>
-        <div class="mt-8 grid w-full gap-6 sm:grid-cols-3">
-            <!-- Plan -->
-            <div class="sm:col-span-3">
-                <angor-alert [appearance]="'outline'" [type]="'info'">
-                    Changing the plan will take effect immediately. You will be
-                    charged for the rest of the current month.
-                </angor-alert>
-            </div>
-            <mat-radio-group
-                class="pointer-events-none invisible absolute h-0 w-0"
-                [formControlName]="'plan'"
-                #planRadioGroup="matRadioGroup"
-            >
-                @for (plan of plans; track trackByFn($index, plan)) {
-                    <mat-radio-button [value]="plan.value"></mat-radio-button>
-                }
-            </mat-radio-group>
-            @for (plan of plans; track trackByFn($index, plan)) {
-                <div
-                    class="bg-card relative flex cursor-pointer flex-col items-start justify-start rounded-md p-6 shadow"
-                    [ngClass]="{
-                        'ring ring-inset ring-primary':
-                            planRadioGroup.value === plan.value,
-                    }"
-                    (click)="planRadioGroup.value = plan.value"
-                >
-                    @if (planRadioGroup.value === plan.value) {
-                        <mat-icon
-                            class="absolute right-0 top-0 mr-3 mt-3 text-primary icon-size-7"
-                            [svgIcon]="'heroicons_solid:check-circle'"
-                        ></mat-icon>
-                    }
-                    <div class="font-semibold">{{ plan.label }}</div>
-                    <div class="text-secondary mt-1 whitespace-normal">
-                        {{ plan.details }}
-                    </div>
-                    <div class="flex-auto"></div>
-                    <div class="mt-8 text-lg">
-                        <span>{{
-                            plan.price | currency: 'USD' : 'symbol' : '1.0'
-                        }}</span>
-                        <span class="text-secondary"> / month</span>
+    <!-- Add Mainnet Indexer -->
+    <div class="w-full mb-8">
+        <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+            <mat-label>Add Mainnet Indexer</mat-label>
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
+            <input matInput [(ngModel)]="newMainnetIndexerUrl" placeholder="Mainnet Indexer URL" />
+            <button mat-icon-button matSuffix (click)="addIndexer('mainnet')">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
+            </button>
+        </mat-form-field>
+    </div>
+
+    <!-- Mainnet Indexers -->
+    <div class="mt-8">
+        <h3>Mainnet Indexers</h3>
+        <div class="flex flex-col divide-y border-b border-t">
+            <div *ngFor="let indexer of mainnetIndexers; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+                <div class="flex items-center">
+                    <div class="ml-4">
+                        <div class="font-medium">{{ indexer.url }}</div>
+                        <div class="text-sm text-gray-500">Primary: {{ indexer.primary ? 'Yes' : 'No' }}</div>
                     </div>
                 </div>
-            }
-        </div>
-
-        <!-- Divider -->
-        <div class="mb-10 mt-12 border-t"></div>
-
-        <!-- Section -->
-        <div class="w-full">
-            <div class="text-xl">Payment Details</div>
-            <div class="text-secondary">
-                Update your billing information. Make sure to set your location
-                correctly as it could affect your tax rates.
+                <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
+                    <button mat-icon-button (click)="setPrimaryIndexer('mainnet', indexer)">
+                        <mat-icon *ngIf="indexer.primary; else nonPrimaryIcon" class="text-primary" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                        <ng-template #nonPrimaryIcon>
+                            <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                        </ng-template>
+                    </button>
+                    <button mat-icon-button (click)="removeIndexer('mainnet', indexer)">
+                        <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="mt-8 grid w-full grid-cols-4 gap-6">
-            <!-- Card holder -->
-            <div class="col-span-4">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>Card holder</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:user'"
-                        matPrefix
-                    ></mat-icon>
-                    <input [formControlName]="'cardHolder'" matInput />
-                </mat-form-field>
-            </div>
-            <!-- Card number -->
-            <div class="col-span-4 sm:col-span-2">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>Card number</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:credit-card'"
-                        matPrefix
-                    ></mat-icon>
-                    <input [formControlName]="'cardNumber'" matInput />
-                </mat-form-field>
-            </div>
-            <!-- Card expiration -->
-            <div class="col-span-2 sm:col-span-1">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>Expiration date</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:calendar'"
-                        matPrefix
-                    ></mat-icon>
-                    <input
-                        [formControlName]="'cardExpiration'"
-                        [placeholder]="'MM / YY'"
-                        matInput
-                    />
-                </mat-form-field>
-            </div>
-            <!-- Card CVC -->
-            <div class="col-span-2 sm:col-span-1">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>CVC / CVC2</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:lock-closed'"
-                        matPrefix
-                    ></mat-icon>
-                    <input [formControlName]="'cardCVC'" matInput />
-                </mat-form-field>
-            </div>
-            <!-- Country -->
-            <div class="col-span-4 sm:col-span-2">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>Country</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:map-pin'"
-                        matPrefix
-                    ></mat-icon>
-                    <mat-select [formControlName]="'country'">
-                        <mat-option [value]="'usa'">United States</mat-option>
-                        <mat-option [value]="'canada'">Canada</mat-option>
-                        <mat-option [value]="'mexico'">Mexico</mat-option>
-                        <mat-option [value]="'france'">France</mat-option>
-                        <mat-option [value]="'germany'">Germany</mat-option>
-                        <mat-option [value]="'italy'">Italy</mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-            <!-- ZIP -->
-            <div class="col-span-4 sm:col-span-2">
-                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                    <mat-label>ZIP / Postal code</mat-label>
-                    <mat-icon
-                        class="icon-size-5"
-                        [svgIcon]="'heroicons_solid:hashtag'"
-                        matPrefix
-                    ></mat-icon>
-                    <input matInput />
-                </mat-form-field>
-            </div>
-        </div>
+    </div>
 
-        <!-- Divider -->
-        <div class="mb-10 mt-11 border-t"></div>
-
-        <!-- Actions -->
-        <div class="flex items-center justify-end">
-            <button mat-stroked-button type="button">Cancel</button>
-            <button
-                class="ml-4"
-                mat-flat-button
-                type="button"
-                [color]="'primary'"
-            >
-                Save
+    <!-- Add Testnet Indexer -->
+    <div class="w-full mb-8 mt-10">
+        <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+            <mat-label>Add Testnet Indexer</mat-label>
+            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
+            <input matInput [(ngModel)]="newTestnetIndexerUrl" placeholder="Testnet Indexer URL" />
+            <button mat-icon-button matSuffix (click)="addIndexer('testnet')">
+                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
             </button>
+        </mat-form-field>
+    </div>
+
+    <!-- Testnet Indexers -->
+    <div class="mt-8">
+        <h3>Testnet Indexers</h3>
+        <div class="flex flex-col divide-y border-b border-t">
+            <div *ngFor="let indexer of testnetIndexers; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+                <div class="flex items-center">
+                    <div class="ml-4">
+                        <div class="font-medium">{{ indexer.url }}</div>
+                        <div class="text-sm text-gray-500">Primary: {{ indexer.primary ? 'Yes' : 'No' }}</div>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
+                    <button mat-icon-button (click)="setPrimaryIndexer('testnet', indexer)">
+                        <mat-icon *ngIf="indexer.primary; else nonPrimaryIcon" class="text-primary" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                        <ng-template #nonPrimaryIcon>
+                            <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                        </ng-template>
+                    </button>
+                    <button mat-icon-button (click)="removeIndexer('testnet', indexer)">
+                        <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    </button>
+                </div>
+            </div>
         </div>
-    </form>
+    </div>
 </div>
