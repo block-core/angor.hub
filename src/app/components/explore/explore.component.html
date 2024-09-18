@@ -23,7 +23,7 @@
     </div>
 
     <!-- Main -->
-    <div class="flex flex-auto p-6 sm:p-10">
+    <div class="p-6 sm:p-10">
         <div class="mx-auto flex w-full max-w-xs flex-auto flex-col sm:max-w-5xl">
             <!-- Filters -->
             <div class="flex w-full max-w-xs flex-col items-center justify-between sm:max-w-none sm:flex-row">
@@ -40,9 +40,11 @@
                     Hide completed
                 </mat-slide-toggle>
             </div>
+        </div>
+            <div class="mx-auto flex w-full flex-auto flex-col sm:max-w-5xl">
 
             <!-- Project Cards -->
-            <div class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 mt-10">
+            <div class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 mt-10">
                 <!-- Loop through projects and render cards -->
                 <ng-container *ngFor="let project of projects">
                     <angor-card class="filter-info flex w-full flex-col">

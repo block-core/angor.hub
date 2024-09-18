@@ -27,7 +27,7 @@ export interface ProjectStats {
 })
 export class ProjectsService {
     private offset = 0;
-    private limit = 21;
+    private limit = 20;
     private totalProjects = 0;
     private loading = false;
     private projects: Project[] = [];
