@@ -176,4 +176,26 @@ export class MetadataService {
 
     storedUsers.forEach(user => this.enqueueRequest(user.pubkey));
   }
+
+
+  async getUserMetadata(pubkey: string): Promise<any> {
+    try {
+      const cachedMetadata = await this.indexedDBService.getUserMetadata(pubkey);
+      if (cachedMetadata) {
+        return cachedMetadata;
+      }
+
+      const liveMetadata = await this.fetchMetadataRealtime(pubkey);
+      if (liveMetadata) {
+        await this.indexedDBService.saveUserMetadata(pubkey, liveMetadata);
+        return liveMetadata;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Error fetching metadata for user ${pubkey}:`, error);
+      return null;
+    }
+  }
+
 }

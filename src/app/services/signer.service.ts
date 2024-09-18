@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { UnsignedEvent, nip19, getPublicKey, nip04, Event, generateSecretKey } from 'nostr-tools';
+import { UnsignedEvent, nip19, getPublicKey, nip04, Event, generateSecretKey, finalizeEvent } from 'nostr-tools';
 import { Buffer } from 'buffer';
 import { privateKeyFromSeedWords } from 'nostr-tools/nip06';
 import { SecurityService } from './security.service';
+import { hexToBytes } from '@noble/hashes/utils';
 
 @Injectable({
     providedIn: 'root'
@@ -246,5 +247,25 @@ export class SignerService {
             return "*Failed to Decrypted Content*";
         }
     }
+    getUnsignedEvent(kind: number, tags: string[][], content: string) {
+        const eventUnsigned: UnsignedEvent = {
+            kind: kind,
+            pubkey: this.getPublicKey(),
+            tags: tags,
+            content: content,
+            created_at: Math.floor(Date.now() / 1000),
+        }
+        return eventUnsigned
+    }
+
+    getSignedEvent(eventUnsigned: UnsignedEvent, privateKey: string): Event {
+        // Convert the private key from hex string to Uint8Array
+        const privateKeyBytes = hexToBytes(privateKey);
+
+        // finalizing and signing the event in one step
+        const signedEvent: Event = finalizeEvent(eventUnsigned, privateKeyBytes);
+
+        return signedEvent;
+      }
 
 }

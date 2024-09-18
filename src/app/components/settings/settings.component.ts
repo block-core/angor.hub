@@ -13,7 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { AngorMediaWatcherService } from '@angor/services/media-watcher';
 import { Subject, takeUntil } from 'rxjs';
-import { SettingsAccountComponent } from './account/account.component';
+import { SettingsProfileComponent } from './profile/profile.component';
 import { SettingsNotificationsComponent } from './notifications/notifications.component';
 import { SettingsSecurityComponent } from './security/security.component';
 import { SettingsRelayComponent } from './relay/relay.component';
@@ -31,7 +31,7 @@ import { SettingsIndexerComponent } from "./indexer/indexer.component";
     MatButtonModule,
     MatIconModule,
     NgClass,
-    SettingsAccountComponent,
+    SettingsProfileComponent,
     SettingsSecurityComponent,
     SettingsNotificationsComponent,
     SettingsRelayComponent,
@@ -63,9 +63,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
             description: 'Add, remove, and manage your indexers, including setting the primary indexer.',
         },
         {
-            id: 'account',
+            id: 'profile',
             icon: 'heroicons_outline:user',
-            title: 'Account',
+            title: 'Profile',
             description: 'Update your personal profile, manage your account details, and modify your private information.',
         },
         {

@@ -51,7 +51,7 @@ export class RelayService {
 
     private connectToRelay(relay: { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }): void {
         if (relay.connected) {
-            return; 
+            return;
         }
 
         relay.ws = new WebSocket(relay.url);
@@ -155,6 +155,46 @@ export class RelayService {
             }
         });
     }
+
+
+    async publishEventToRelays(event: NostrEvent): Promise<NostrEvent> {
+         const pool = this.getPool();
+        const connectedRelays = this.getConnectedRelays();
+
+        if (connectedRelays.length === 0) {
+          throw new Error('No connected relays');
+        }
+
+        const publishPromises = connectedRelays.map(async (relayUrl) => {
+          try {
+            await pool.publish([relayUrl], event);
+            console.log(`Event published to relay: ${relayUrl}`);
+            this.eventSubject.next(event); // Emit the event to subscribers
+            return event;
+          } catch (error) {
+            console.error(`Failed to publish event to relay: ${relayUrl}`, error);
+            throw error;
+          }
+        });
+
+        try {
+          await Promise.any(publishPromises);
+          return event;
+        } catch (aggregateError) {
+          console.error('Failed to publish event: AggregateError', aggregateError);
+          this.handlePublishFailure(aggregateError);
+          throw aggregateError;
+        }
+      }
+
+      private handlePublishFailure(error: unknown): void {
+        if (error instanceof AggregateError) {
+          console.error('All relays failed to publish the event. Retrying...');
+        } else {
+          console.error('An unexpected error occurred:', error);
+        }
+      }
+
 
     public addRelay(url: string, accessType: string = 'read-write'): void {
         if (!this.relays.some(relay => relay.url === url)) {

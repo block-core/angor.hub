@@ -1,0 +1,103 @@
+<div class="w-full max-w-3xl">
+    <!-- Form -->
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <!-- Section -->
+        <div class="w-full">
+             <div class="text-secondary">
+                Following information is publicly displayed, be careful!
+            </div>
+        </div>
+
+        <div class="mt-8 grid w-full gap-6 sm:grid-cols-4">
+            <!-- Name -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Name</mat-label>
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user'" matPrefix></mat-icon>
+                    <input [formControlName]="'name'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- Username -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Username</mat-label>
+                    <input [formControlName]="'username'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- Display Name -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Display Name</mat-label>
+                    <input [formControlName]="'displayName'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- Website -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Website</mat-label>
+                    <input [formControlName]="'website'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- About -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>About</mat-label>
+                    <textarea matInput [formControlName]="'about'" cdkTextareaAutosize [cdkAutosizeMinRows]="5"></textarea>
+                </mat-form-field>
+                <div class="text-hint mt-1 text-md">
+                    Brief description for your profile. Basic HTML and Emoji are allowed.
+                </div>
+            </div>
+
+            <!-- Picture URL -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Profile Picture URL</mat-label>
+                    <input [formControlName]="'picture'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- Banner URL -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>Banner URL</mat-label>
+                    <input [formControlName]="'banner'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- LUD06 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>LUD06</mat-label>
+                    <input [formControlName]="'lud06'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- LUD16 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>LUD16</mat-label>
+                    <input [formControlName]="'lud16'" matInput />
+                </mat-form-field>
+            </div>
+
+            <!-- NIP05 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>NIP05</mat-label>
+                    <input [formControlName]="'nip05'" matInput />
+                </mat-form-field>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end mt-8">
+            <button mat-stroked-button type="button">Cancel</button>
+            <button class="ml-4" mat-flat-button type="submit" color="primary">Save</button>
+        </div>
+    </form>
+</div>
