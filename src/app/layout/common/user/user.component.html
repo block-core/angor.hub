@@ -1,7 +1,7 @@
 <button mat-icon-button [matMenuTriggerFor]="userActions">
     <span class="relative">
         <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-            <img class="h-7 w-7 rounded-full" [src]="getSafeUrl(metadata?.picture)" alt="User Avatar" />
+            <img class="h-7 w-7 rounded-full object-cover" [src]="getSafeUrl(metadata?.picture)" alt="User Avatar" />
         </ng-container>
         <ng-template #defaultAvatar>
             <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
