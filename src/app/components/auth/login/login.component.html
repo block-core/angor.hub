@@ -21,6 +21,29 @@
                 {{ secAlert.message }}
             </angor-alert>
 
+            <div *ngIf="isInstalledExtension">
+                <!-- Separator -->
+                <div class="mt-8 flex items-center">
+                    <div class="mt-px flex-auto border-t"></div>
+                    <div class="text-secondary mx-2">Login with extension</div>
+                    <div class="mt-px flex-auto border-t"></div>
+                </div>
+
+                <!-- extension login buttons -->
+                <div class="mt-8 flex items-center space-x-4">
+                    <button class="flex-auto space-x-2" type="button" mat-stroked-button (click)="loginWithNostrExtension()">
+                        <mat-icon class="icon-size-5" [svgIcon]="'feather:zap'"></mat-icon>
+                        <span>Login with Nostr Extension</span>
+                    </button>
+                </div>
+                
+                <div class="mt-8 flex items-center">
+                    <div class="mt-px flex-auto border-t"></div>
+                    <div class="text-secondary mx-2">Or</div>
+                    <div class="mt-px flex-auto border-t"></div>
+                </div>
+            </div>
+
             <!-- Login form with Secret Key -->
             <form class="mt-8" [formGroup]="SecretKeyLoginForm" (ngSubmit)="loginWithSecretKey()">
                 <!-- secret key field -->
@@ -126,26 +149,6 @@
                     <mat-progress-spinner *ngIf="loading" diameter="24" mode="indeterminate"></mat-progress-spinner>
                 </button>
             </form>
-
-
-
-
-            <div *ngIf="isInstalledExtension">
-                <!-- Separator -->
-                <div class="mt-8 flex items-center">
-                    <div class="mt-px flex-auto border-t"></div>
-                    <div class="text-secondary mx-2">Or login with extension</div>
-                    <div class="mt-px flex-auto border-t"></div>
-                </div>
-
-                <!-- extension login buttons -->
-                <div class="mt-8 flex items-center space-x-4">
-                    <button class="flex-auto" type="button" mat-stroked-button (click)="loginWithNostrExtension()">
-                        <mat-icon class="icon-size-5" [svgIcon]="'feather:zap'"></mat-icon>
-                    </button>
-                </div>
-            </div>
-
         </div>
     </div>
     <div
