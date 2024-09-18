@@ -259,13 +259,29 @@ export class SignerService {
     }
 
     getSignedEvent(eventUnsigned: UnsignedEvent, privateKey: string): Event {
-        // Convert the private key from hex string to Uint8Array
         const privateKeyBytes = hexToBytes(privateKey);
 
-        // finalizing and signing the event in one step
         const signedEvent: Event = finalizeEvent(eventUnsigned, privateKeyBytes);
 
         return signedEvent;
-      }
+    }
 
+    public async isUsingExtension(): Promise<boolean> {
+        const globalContext = globalThis as any;
+        if (globalContext.nostr && globalContext.nostr.getPublicKey) {
+            try {
+                const pubkey = await globalContext.nostr.getPublicKey();
+                return !!pubkey;
+            } catch (error) {
+                console.error("Failed to check Nostr extension:", error);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public isUsingSecretKey(): boolean {
+        const secretKey = localStorage.getItem(this.localStorageSecretKeyName);
+        return !!secretKey;
+    }
 }
