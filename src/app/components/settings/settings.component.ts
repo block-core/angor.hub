@@ -19,6 +19,7 @@ import { SettingsSecurityComponent } from './security/security.component';
 import { SettingsRelayComponent } from './relay/relay.component';
 import { SettingsNetworkComponent } from "./network/network.component";
 import { SettingsIndexerComponent } from "./indexer/indexer.component";
+import { SignerService } from 'app/services/signer.service';
 
 @Component({
     selector: 'settings',
@@ -69,27 +70,50 @@ export class SettingsComponent implements OnInit, OnDestroy {
             description: 'Update your personal profile, manage your account details, and modify your private information.',
         },
         {
-            id: 'security',
-            icon: 'heroicons_outline:shield-check',
-            title: 'Security',
-            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
-        },
-        {
             id: 'notifications',
             icon: 'heroicons_outline:bell',
             title: 'Notifications',
             description: 'Control when and how you’ll be notified across various communication channels.',
         },
+        {
+            id: 'security',
+            icon: 'heroicons_outline:shield-check',
+            title: 'Security',
+            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
+        }
     ];
+
+
     selectedPanel = 'relay';
     private _unsubscribeAll = new Subject<void>();
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
-        private _angorMediaWatcherService: AngorMediaWatcherService
+        private _angorMediaWatcherService: AngorMediaWatcherService,
+        private _signerService: SignerService
     ) {}
 
     ngOnInit(): void {
+        const securityPanel = {
+            id: 'security',
+            icon: 'heroicons_outline:shield-check',
+            title: 'Security',
+            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
+        };
+
+        if (!this._signerService.isUsingSecretKey()) {
+            this.panels = this.panels.filter(panel => panel.id !== 'security');
+            console.log("Extension used, security panel removed");
+        } else {
+            const panelExists = this.panels.some(panel => panel.id === 'security');
+            if (!panelExists) {
+                this.panels.push(securityPanel);
+                console.log("Extension not used, security panel added");
+            }
+        }
+
+        this._changeDetectorRef.markForCheck();
+
         this._angorMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe(({ matchingAliases }) => {
@@ -98,6 +122,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.markForCheck();
             });
     }
+
 
     ngOnDestroy(): void {
         this._unsubscribeAll.next();
