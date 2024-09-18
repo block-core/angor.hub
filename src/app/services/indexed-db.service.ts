@@ -190,4 +190,28 @@ export class IndexedDBService {
       console.error('Error clearing all metadata:', error);
     }
   }
+
+
+  async searchUsersByMetadata(query: string): Promise<{ pubkey: string, user: any }[]> {
+    try {
+      const matchingUsers: { pubkey: string, user: any }[] = [];
+      const searchQuery = query.toLowerCase();
+
+      await this.userStore.iterate<any, void>((user, pubkey) => {
+         const userString = JSON.stringify(user).toLowerCase();
+
+         if (userString.includes(searchQuery)) {
+          matchingUsers.push({ pubkey, user });
+        }
+      });
+
+      return matchingUsers;
+    } catch (error) {
+      console.error('Error searching users by metadata from IndexedDB:', error);
+      return [];
+    }
+  }
+
+
+
 }

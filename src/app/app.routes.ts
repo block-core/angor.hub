@@ -15,6 +15,12 @@ export const appRoutes: Route[] = [
         redirectTo: 'home'
     },
 
+    {
+        path: 'project/:pubkey',
+        pathMatch: 'full',
+        redirectTo: 'explore'
+    },
+
     // Redirect login user to '/explore'
     {
         path: 'login-redirect',

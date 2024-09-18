@@ -52,9 +52,13 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private sanitizer: DomSanitizer
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.loadInitialProjects();
     this.subscribeToMetadataUpdates();
+
+
+   console.log(await this.indexedDBService.searchUsersByMetadata("test"));
+
   }
 
   private async loadInitialProjects(): Promise<void> {
