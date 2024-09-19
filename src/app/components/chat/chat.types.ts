@@ -4,6 +4,12 @@ export interface Profile {
     username?: string;
     picture?: string;
     about?: string;
+    displayName?: string;
+    website?: string;
+    banner?: string;
+    lud06?: string;
+    lud16?: string;
+    nip05?: string;
 }
 
 export interface Contact {
