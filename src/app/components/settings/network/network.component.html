@@ -1,11 +1,11 @@
-<div class="w-full">
+<div class="w-full max-w-3xl">
     <div class="text-xl">Change your network</div>
     <div class="text-secondary">
         Switch between Mainnet and Testnet to change your network settings.
     </div>
 </div>
 
-<div class="mt-8 grid w-full gap-6 sm:grid-cols-2">
+<div class="mt-8 grid w-full max-w-3xl gap-6 sm:grid-cols-2">
     <!-- Mainnet Card -->
     <div
         class="bg-card relative flex cursor-pointer flex-col items-start justify-start rounded-md p-6 shadow"
@@ -46,10 +46,11 @@
 </div>
 
 <!-- Divider -->
-<div class="mb-10 mt-11 border-t"></div>
+<div class="mb-10 mt-11 border-t w-full max-w-3xl"></div>
 
 <!-- Actions -->
-<div class="flex items-center justify-end">
+<div class="flex items-center justify-end w-full max-w-3xl">
     <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
     <button mat-flat-button class="ml-4" type="button" color="primary" (click)="save()">Save</button>
 </div>
+

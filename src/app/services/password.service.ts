@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { SignerService } from './signer.service';
 
 @Injectable({
     providedIn: 'root',
@@ -6,6 +7,8 @@ import { Injectable } from '@angular/core';
 export class PasswordService {
 
     private storageKey = 'userPassword';
+
+    constructor(private signerService: SignerService) {}
 
     savePassword(password: string, durationInMinutes: number): void {
         const expirationTime = Date.now() + durationInMinutes * 60 * 1000;
@@ -33,4 +36,32 @@ export class PasswordService {
     clearPassword(): void {
         sessionStorage.removeItem(this.storageKey);
     }
+
+    async changePassword(currentPassword: string, newPassword: string , savePassword:boolean): Promise<boolean> {
+        try {
+            const secretKey = await this.signerService.getSecretKey(currentPassword);
+            if (!secretKey) {
+                throw new Error('Incorrect current password.');
+            }
+
+            await this.signerService.setSecretKey(secretKey, newPassword);
+
+            const nsec = await this.signerService.getNsec(currentPassword);
+            if (nsec) {
+                await this.signerService.setNsec(nsec, newPassword);
+            }
+
+            this.clearPassword();
+
+            if (savePassword) {
+                this.savePassword(newPassword, 60);
+            }
+
+            return true;
+        } catch (error) {
+            console.error("Failed to change password: ", error);
+            return false;
+        }
+    }
+
 }

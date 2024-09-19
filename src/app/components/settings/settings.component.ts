@@ -78,8 +78,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
         {
             id: 'security',
             icon: 'heroicons_outline:shield-check',
-            title: 'Security',
-            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
+            title: 'Password Management',
+            description: 'Manage your password and decryption settings, including saving passwords for future decrypting sensitive information.',
         }
     ];
 
@@ -97,9 +97,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
         const securityPanel = {
             id: 'security',
             icon: 'heroicons_outline:shield-check',
-            title: 'Security',
-            description: 'Enhance your security by managing passwords, enabling 2-step verification, and other security preferences.',
+            title: 'Password Management',
+            description: 'Manage your password and decryption settings, including saving passwords for future decrypting sensitive information.',
         };
+
 
         if (!this._signerService.isUsingSecretKey()) {
             this.panels = this.panels.filter(panel => panel.id !== 'security');

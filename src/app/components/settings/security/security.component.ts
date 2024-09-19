@@ -9,12 +9,15 @@ import {
     ReactiveFormsModule,
     UntypedFormBuilder,
     UntypedFormGroup,
+    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { PasswordService } from 'app/services/password.service';
+import { SignerService } from 'app/services/signer.service';
 
 @Component({
     selector: 'settings-security',
@@ -38,11 +41,11 @@ export class SettingsSecurityComponent implements OnInit {
     /**
      * Constructor
      */
-    constructor(private _formBuilder: UntypedFormBuilder) {}
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
+    constructor(
+        private _formBuilder: UntypedFormBuilder,
+        private _passwordService: PasswordService,
+        private _signerService: SignerService
+    ) {}
 
     /**
      * On init
@@ -50,10 +53,46 @@ export class SettingsSecurityComponent implements OnInit {
     ngOnInit(): void {
         // Create the form
         this.securityForm = this._formBuilder.group({
-            currentPassword: [''],
-            newPassword: [''],
+            currentPassword: ['', Validators.required],
+            newPassword: [
+                '',
+                [
+                    Validators.required,
+                    Validators.minLength(3),
+                ],
+            ],
             twoStep: [true],
             askPasswordChange: [false],
+            savePassword: [false], // Toggle for saving password
         });
+    }
+
+    /**
+     * Change password method
+     */
+    async changePassword(): Promise<void> {
+        if (this.securityForm.invalid) {
+            return;
+        }
+
+        const currentPassword = this.securityForm.get('currentPassword')?.value;
+        const newPassword = this.securityForm.get('newPassword')?.value;
+        const savePassword = this.securityForm.get('savePassword')?.value;
+
+        try {
+            const success = await this._passwordService.changePassword(
+                currentPassword,
+                newPassword,
+                savePassword // Save password toggle value
+            );
+
+            if (success) {
+                alert('Password successfully changed.');
+            } else {
+                alert('Password change failed. Please check your credentials.');
+            }
+        } catch (error) {
+            console.error('Error during password change:', error);
+        }
     }
 }

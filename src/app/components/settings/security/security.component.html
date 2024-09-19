@@ -22,6 +22,7 @@
                         [formControlName]="'currentPassword'"
                         type="password"
                         matInput
+                        required
                     />
                 </mat-form-field>
             </div>
@@ -38,11 +39,11 @@
                         [formControlName]="'newPassword'"
                         type="password"
                         matInput
+                        required
                     />
                 </mat-form-field>
                 <div class="text-hint mt-1 text-md">
-                    Minimum 8 characters. Must include numbers, letters and
-                    special characters.
+                    Minimum 3 characters.
                 </div>
             </div>
         </div>
@@ -50,55 +51,32 @@
         <!-- Divider -->
         <div class="my-10 border-t"></div>
 
-        <!-- Section -->
+        <!-- Password preferences -->
         <div class="w-full">
-            <div class="text-xl">Security preferences</div>
+            <div class="text-xl">Password preferences</div>
             <div class="text-secondary">
-                Keep your account more secure with following preferences.
+                Manage how your password is saved for future logins.
             </div>
         </div>
         <div class="mt-8 grid w-full gap-6 sm:grid-cols-4">
-            <!-- 2-step auth -->
+            <!-- Save password -->
             <div class="flex items-center justify-between sm:col-span-4">
                 <div
                     class="flex-auto cursor-pointer"
-                    (click)="twoStepToggle.toggle()"
+                    (click)="savePasswordToggle.toggle()"
                 >
                     <div class="font-medium leading-6">
-                        Enable 2-step authentication
+                        Save password for future decrypting sensitive information.
                     </div>
                     <div class="text-secondary text-md">
-                        Protects you against password theft by requesting an
-                        authentication code via SMS on every login.
+                        Enable this option to save your password locally for 60 minutes.
                     </div>
                 </div>
                 <mat-slide-toggle
                     class="ml-4"
                     [color]="'primary'"
-                    [formControlName]="'twoStep'"
-                    #twoStepToggle
-                >
-                </mat-slide-toggle>
-            </div>
-            <!-- Ask to change password -->
-            <div class="flex items-center justify-between sm:col-span-4">
-                <div
-                    class="flex-auto cursor-pointer"
-                    (click)="askPasswordChangeToggle.toggle()"
-                >
-                    <div class="font-medium leading-6">
-                        Ask to change password on every 6 months
-                    </div>
-                    <div class="text-secondary text-md">
-                        A simple but an effective way to be protected against
-                        data leaks and password theft.
-                    </div>
-                </div>
-                <mat-slide-toggle
-                    class="ml-4"
-                    [color]="'primary'"
-                    [formControlName]="'askPasswordChange'"
-                    #askPasswordChangeToggle
+                    [formControlName]="'savePassword'"
+                    #savePasswordToggle
                 >
                 </mat-slide-toggle>
             </div>
@@ -115,6 +93,7 @@
                 mat-flat-button
                 type="button"
                 [color]="'primary'"
+                (click)="changePassword()"
             >
                 Save
             </button>
