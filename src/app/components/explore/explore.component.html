@@ -1,11 +1,9 @@
-<div
-    class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto"
->
+<div class="absolute inset-0 flex min-w-0 flex-col overflow-y-auto">
     <!-- Header -->
     <div class="dark relative flex-0 overflow-hidden bg-gray-800 px-4 py-8 sm:p-16">
         <!-- Background -->
-        <svg class="absolute inset-0 pointer-events-none"
-            viewBox="0 0 960 540" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <svg class="absolute inset-0 pointer-events-none" viewBox="0 0 960 540" width="100%" height="100%"
+            preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
             <g class="text-gray-700 opacity-25" fill="none" stroke="currentColor" stroke-width="100">
                 <circle r="234" cx="196" cy="23"></circle>
                 <circle r="234" cx="790" cy="491"></circle>
@@ -29,19 +27,15 @@
             <div class="flex w-full max-w-xs flex-col items-center justify-between sm:max-w-none sm:flex-row">
                 <mat-form-field class="mt-4 w-full sm:mt-0 sm:w-72" [subscriptSizing]="'dynamic'">
                     <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-                    <input
-                        (input)="filterByQuery(query.value)"
-                        placeholder="Search ..."
-                        matInput
-                        #query
-                    />
+                    <input (input)="filterByQuery(query.value)" placeholder="Search ..." matInput #query />
                 </mat-form-field>
-                <mat-slide-toggle class="mt-8 sm:ml-auto sm:mt-0" [color]="'primary'" (change)="toggleCompleted($event)">
+                <mat-slide-toggle class="mt-8 sm:ml-auto sm:mt-0" [color]="'primary'"
+                    (change)="toggleCompleted($event)">
                     Hide completed
                 </mat-slide-toggle>
             </div>
         </div>
-            <div class="mx-auto flex w-full flex-auto flex-col sm:max-w-5xl">
+        <div class="mx-auto flex w-full flex-auto flex-col sm:max-w-5xl">
 
             <!-- Project Cards -->
             <div class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 mt-10">
@@ -49,35 +43,32 @@
                 <ng-container *ngFor="let project of projects">
                     <angor-card class="filter-info flex w-full flex-col">
                         <div class="flex h-32">
-                            <img
-                                class="object-cover"
+                            <img class="object-cover"
                                 [src]="getSafeUrl(project?.banner, true) || 'images/pages/profile/cover.jpg'"
                                 onerror="this.onerror=null; this.src='/images/pages/profile/cover.jpg';"
-                                alt="Card cover image"
-                            />
+                                alt="Card cover image" />
                         </div>
                         <div class="flex px-8">
                             <div class="bg-card -mt-12 rounded-full p-1">
-                                <img
-                                    class="h-24 w-24 rounded-full object-cover"
+                                <img class="h-24 w-24 rounded-full object-cover"
                                     [src]="getSafeUrl(project?.picture, false) || 'images/avatars/avatar-placeholder.png'"
-                                    alt="Project logo"
-                                />
+                                    alt="Project logo" />
                             </div>
                         </div>
                         <div class="flex flex-col px-8 pb-6 pt-4">
                             <div class="flex items-center justify-between">
-                                <div class="mr-4">
-                                    <div class="text-2xl font-semibold leading-tight">
+                                <div class="mr-4 flex-1 min-w-0">
+                                    <div class="text-2xl font-semibold leading-tight truncate">
                                         {{ project.displayName || project.nostrPubKey }}
                                     </div>
-                                    <div class="text-secondary mt-1 leading-tight">
+                                    <div class="text-secondary mt-1 leading-tight truncate">
                                         {{ project.about || 'No description available' }}
                                     </div>
                                 </div>
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full border">
                                     <button mat-icon-button>
-                                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user-plus'"></mat-icon>
+                                        <mat-icon class="icon-size-5"
+                                            [svgIcon]="'heroicons_solid:user-plus'"></mat-icon>
                                     </button>
                                 </div>
                             </div>
@@ -87,14 +78,20 @@
                                     {{ project.totalInvestmentsCount || 0 }} investors
                                 </div>
                                 <div class="flex items-center">
-                                    <img
-                                        class="text-card ring-bg-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2"
-                                        [src]="'images/avatars/avatar-placeholder.png'"
-                                        alt="Investor avatar"
-                                    />
+                                    <ng-container *ngFor="let investor of [].constructor(project.totalInvestmentsCount || 0); let i = index">
+                                        <img
+                                            class="text-card ring-bg-card m-0.5 h-6 w-6 rounded-full ring-2"
+                                            [ngClass]="{'-ml-3': project.totalInvestmentsCount > 1 && i > 0}"
+                                            [src]="'images/avatars/avatar-placeholder.png'"
+                                            alt="Investor avatar {{ i + 1 }}"
+                                        />
+                                    </ng-container>
                                 </div>
                             </div>
+
+
                         </div>
+
                     </angor-card>
                 </ng-container>
             </div>
