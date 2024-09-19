@@ -18,13 +18,16 @@
                         class="group relative mb-1 rounded-md px-6 py-0 text-md dark:hover:bg-hover hover:bg-gray-100"
                         [routerLink]="result.link" [value]="result.name">
                         <div class="flex items-center">
-                            <div
-                                class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 dark:bg-primary-800">
-                                <img *ngIf="result.avatar" [src]="result.avatar" class="h-full w-full object-cover"
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 dark:bg-primary-800">
+                                <img
+                                    *ngIf="result.avatar"
+                                    [src]="result.avatar"
+                                    (error)="handleImageError($event)"
+                                    class="h-full w-full object-cover"
                                     alt="{{ result.name }}'s avatar" />
-                                <mat-icon *ngIf="!result.avatar"
-                                    class="m-0 text-primary icon-size-5 dark:text-primary-400"
-                                    [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                                <ng-container *ngIf="!result.avatar">
+                                    <mat-icon class="m-0 text-primary icon-size-5 dark:text-primary-400" [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
+                                </ng-container>
                             </div>
                             <div class="ml-3 truncate">
                                 <span class="font-semibold">{{
