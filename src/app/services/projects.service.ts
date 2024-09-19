@@ -92,8 +92,8 @@ export class ProjectsService {
 
             const projectDetailsPromises = uniqueNewProjects.map(async project => {
                 try {
-                    const projectDetails = await this.fetchProjectDetails(project.projectIdentifier).toPromise();
-                    project.totalInvestmentsCount = projectDetails.totalInvestmentsCount;
+                    const projectStats = await this.indexedDBService.getProjectStats(project.projectIdentifier);
+                    project.totalInvestmentsCount = projectStats.investorCount | 0;
                     return project;
                 } catch (error) {
                     console.error(`Error fetching details for project ${project.projectIdentifier}:`, error);
