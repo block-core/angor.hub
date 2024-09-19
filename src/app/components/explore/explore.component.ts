@@ -21,6 +21,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { Project } from 'app/interface/project.interface';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { HtmlSanitizerService } from 'app/services/html-sanitizer.service';
 
 @Component({
   selector: 'explore',
@@ -49,16 +50,13 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private metadataService: MetadataService,
     private indexedDBService: IndexedDBService,
     private changeDetectorRef: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private sanitizerService: HtmlSanitizerService
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.loadInitialProjects();
     this.subscribeToMetadataUpdates();
-
-
-   console.log(await this.indexedDBService.searchUsersByMetadata("test"));
-
   }
 
   private async loadInitialProjects(): Promise<void> {
@@ -183,10 +181,12 @@ export class ExploreComponent implements OnInit, OnDestroy {
   }
 
   updateProjectMetadata(project: Project, metadata: any): void {
-    const updatedProject: Project = {
+    const sanitizedAbout = this.sanitizerService.stripHtmlTags(metadata.about || 'No description available');
+
+        const updatedProject: Project = {
       ...project,
       displayName: metadata.name,
-      about: metadata.about,
+      about: sanitizedAbout,
       picture: metadata.picture,
       banner: metadata.banner
     };
