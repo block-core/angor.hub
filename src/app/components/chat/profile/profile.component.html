@@ -1,4 +1,4 @@
-<div class="bg-card flex flex-auto flex-col overflow-y-auto dark:bg-default">
+<div class="bg-card flex flex-auto flex-col dark:bg-default">
     <!-- Header -->
     <div
         class="flex h-18 flex-0 items-center border-b bg-gray-50 px-6 dark:bg-transparent"
@@ -27,14 +27,14 @@
                     Change Profile Photo
                 </div>
             </div>
-            @if (profile.avatar) {
+            @if (profile.picture) {
                 <img
                     class="h-full w-full rounded-full object-cover"
-                    [src]="profile.avatar"
+                    [src]="profile.picture"
                     [alt]="'Profile avatar'"
                 />
             }
-            @if (!profile.avatar) {
+            @if (!profile.picture) {
                 <div
                     class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-8xl font-semibold uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                 >
@@ -55,13 +55,13 @@
                 <input matInput [ngModel]="profile.name" />
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Email</mat-label>
+                <mat-label>Username</mat-label>
                 <mat-icon
                     class="icon-size-5"
                     matPrefix
-                    [svgIcon]="'heroicons_solid:envelope'"
+                    [svgIcon]="'heroicons_solid:at-symbol'"
                 ></mat-icon>
-                <input matInput [ngModel]="profile.email" />
+                <input matInput [ngModel]="profile.username" />
             </mat-form-field>
             <mat-form-field>
                 <mat-label>About</mat-label>

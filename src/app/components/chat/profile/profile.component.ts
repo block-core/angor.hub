@@ -40,10 +40,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
      */
     constructor(private _chatService: ChatService) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
     /**
      * On init
      */

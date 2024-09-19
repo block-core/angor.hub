@@ -1,195 +1,152 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, Subject, throwError, of } from 'rxjs';
+import { filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
-import {
-    BehaviorSubject,
-    Observable,
-    filter,
-    map,
-    of,
-    switchMap,
-    take,
-    tap,
-    throwError,
-} from 'rxjs';
+import { IndexedDBService } from 'app/services/indexed-db.service';
+import { MetadataService } from 'app/services/metadata.service';
+import { SignerService } from 'app/services/signer.service';
 
 @Injectable({ providedIn: 'root' })
-export class ChatService {
-    private _chat: BehaviorSubject<Chat> = new BehaviorSubject(null);
-    private _chats: BehaviorSubject<Chat[]> = new BehaviorSubject(null);
-    private _contact: BehaviorSubject<Contact> = new BehaviorSubject(null);
-    private _contacts: BehaviorSubject<Contact[]> = new BehaviorSubject(null);
-    private _profile: BehaviorSubject<Profile> = new BehaviorSubject(null);
+export class ChatService implements OnDestroy {
+    // BehaviorSubjects to hold the state of chats, contacts, and profiles
+    private _chat: BehaviorSubject<Chat | null> = new BehaviorSubject(null);
+    private _chats: BehaviorSubject<Chat[] | null> = new BehaviorSubject(null);
+    private _contact: BehaviorSubject<Contact | null> = new BehaviorSubject(null);
+    private _contacts: BehaviorSubject<Contact[] | null> = new BehaviorSubject(null);
+    private _profile: BehaviorSubject<Profile | null> = new BehaviorSubject(null);
+    private _unsubscribeAll: Subject<void> = new Subject<void>();
 
     /**
-     * Constructor
+     * Constructor to inject necessary services
      */
-    constructor(private _httpClient: HttpClient) {}
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Accessors
-    // -----------------------------------------------------------------------------------------------------
+    constructor(
+        private _httpClient: HttpClient,
+        private _metadataService: MetadataService,
+        private _signerService: SignerService,
+        private _indexedDBService: IndexedDBService,
+        private _sanitizer: DomSanitizer
+    ) {}
 
     /**
-     * Getter for chat
+     * Observable streams for chat, chats, contact, contacts, and profile
      */
-    get chat$(): Observable<Chat> {
+    get chat$(): Observable<Chat | null> {
         return this._chat.asObservable();
     }
 
-    /**
-     * Getter for chats
-     */
-    get chats$(): Observable<Chat[]> {
+    get chats$(): Observable<Chat[] | null> {
         return this._chats.asObservable();
     }
 
-    /**
-     * Getter for contact
-     */
-    get contact$(): Observable<Contact> {
+    get contact$(): Observable<Contact | null> {
         return this._contact.asObservable();
     }
 
-    /**
-     * Getter for contacts
-     */
-    get contacts$(): Observable<Contact[]> {
+    get contacts$(): Observable<Contact[] | null> {
         return this._contacts.asObservable();
     }
 
-    /**
-     * Getter for profile
-     */
-    get profile$(): Observable<Profile> {
+    get profile$(): Observable<Profile | null> {
         return this._profile.asObservable();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
     /**
-     * Get chats
+     * Fetch all chats from the server
      */
-    getChats(): Observable<any> {
+    getChats(): Observable<Chat[]> {
         return this._httpClient.get<Chat[]>('api/apps/chat/chats').pipe(
-            tap((response: Chat[]) => {
-                this._chats.next(response);
+            tap((chats: Chat[]) => {
+                this._chats.next(chats);
             })
         );
     }
 
     /**
-     * Get contact
-     *
-     * @param id
+     * Fetch a contact by ID
      */
-    getContact(id: string): Observable<any> {
-        return this._httpClient
-            .get<Contact>('api/apps/chat/contacts', { params: { id } })
-            .pipe(
-                tap((response: Contact) => {
-                    this._contact.next(response);
-                })
-            );
+    getContact(id: string): Observable<Contact> {
+        return this._httpClient.get<Contact>('api/apps/chat/contacts', { params: { id } }).pipe(
+            tap((contact: Contact) => {
+                this._contact.next(contact);
+            })
+        );
     }
 
     /**
-     * Get contacts
+     * Fetch all contacts from the server
      */
-    getContacts(): Observable<any> {
+    getContacts(): Observable<Contact[]> {
         return this._httpClient.get<Contact[]>('api/apps/chat/contacts').pipe(
-            tap((response: Contact[]) => {
-                this._contacts.next(response);
+            tap((contacts: Contact[]) => {
+                this._contacts.next(contacts);
             })
         );
     }
 
     /**
-     * Get profile
+     * Fetch the profile metadata using the public key and subscribe to real-time updates
      */
-    getProfile(): Observable<any> {
-        return this._httpClient.get<Profile>('api/apps/chat/profile').pipe(
-            tap((response: Profile) => {
-                this._profile.next(response);
+    async getProfile(): Promise<void> {
+        try {
+            const publicKey = this._signerService.getPublicKey();
+            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
+
+            if (metadata) {
+                this._profile.next(metadata);
+
+                // Subscribe to real-time metadata updates
+                this._indexedDBService.getMetadataStream()
+                    .pipe(takeUntil(this._unsubscribeAll))
+                    .subscribe((updatedMetadata) => {
+                        if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+                            this._profile.next(updatedMetadata.metadata);
+                        }
+                    });
+            }
+        } catch (error) {
+            console.error('Error fetching profile metadata:', error);
+        }
+    }
+
+    /**
+     * Fetch chat by ID and handle the case if the chat is not found
+     */
+    getChatById(id: string): Observable<Chat> {
+        return this._httpClient.get<Chat>('api/apps/chat/chat', { params: { id } }).pipe(
+            map((chat: Chat) => {
+                this._chat.next(chat);
+                return chat;
+            }),
+            switchMap((chat: Chat | null) => {
+                if (!chat) {
+                    return throwError('Could not find chat with id ' + id);
+                }
+                return of(chat);
             })
         );
     }
 
     /**
-     * Get chat
-     *
-     * @param id
-     */
-    getChatById(id: string): Observable<any> {
-        return this._httpClient
-            .get<Chat>('api/apps/chat/chat', { params: { id } })
-            .pipe(
-                map((chat) => {
-                    // Update the chat
-                    this._chat.next(chat);
-
-                    // Return the chat
-                    return chat;
-                }),
-                switchMap((chat) => {
-                    if (!chat) {
-                        return throwError(
-                            'Could not found chat with id of ' + id + '!'
-                        );
-                    }
-
-                    return of(chat);
-                })
-            );
-    }
-
-    /**
-     * Update chat
-     *
-     * @param id
-     * @param chat
+     * Update a chat and synchronize the state of the chats array
      */
     updateChat(id: string, chat: Chat): Observable<Chat> {
         return this.chats$.pipe(
             take(1),
-            switchMap((chats) =>
-                this._httpClient
-                    .patch<Chat>('api/apps/chat/chat', {
-                        id,
-                        chat,
+            switchMap((chats: Chat[] | null) =>
+                this._httpClient.patch<Chat>('api/apps/chat/chat', { id, chat }).pipe(
+                    map((updatedChat: Chat) => {
+                        if (chats) {
+                            const index = chats.findIndex((item) => item.id === id);
+                            if (index !== -1) {
+                                chats[index] = updatedChat;
+                                this._chats.next(chats);
+                            }
+                        }
+                        return updatedChat;
                     })
-                    .pipe(
-                        map((updatedChat) => {
-                            // Find the index of the updated chat
-                            const index = chats.findIndex(
-                                (item) => item.id === id
-                            );
-
-                            // Update the chat
-                            chats[index] = updatedChat;
-
-                            // Update the chats
-                            this._chats.next(chats);
-
-                            // Return the updated contact
-                            return updatedChat;
-                        }),
-                        switchMap((updatedChat) =>
-                            this.chat$.pipe(
-                                take(1),
-                                filter((item) => item && item.id === id),
-                                tap(() => {
-                                    // Update the chat if it's selected
-                                    this._chat.next(updatedChat);
-
-                                    // Return the updated chat
-                                    return updatedChat;
-                                })
-                            )
-                        )
-                    )
+                )
             )
         );
     }
@@ -199,5 +156,13 @@ export class ChatService {
      */
     resetChat(): void {
         this._chat.next(null);
+    }
+
+    /**
+     * Clean up all subscriptions when the service is destroyed
+     */
+    ngOnDestroy(): void {
+        this._unsubscribeAll.next();
+        this._unsubscribeAll.complete();
     }
 }
