@@ -33,6 +33,7 @@ import { RouterLink } from '@angular/router';
 import { angorAnimations } from '@angor/animations/public-api';
 import { Subject, debounceTime, filter, map, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
     selector: 'search',
@@ -78,7 +79,9 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
     constructor(
-        private _indexedDBService: IndexedDBService
+        private _indexedDBService: IndexedDBService,
+        private _sanitizer: DomSanitizer
+
     ) { }
 
     @ViewChild('barSearchInput')
@@ -172,4 +175,11 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }
+
+    handleImageError(event: Event): void {
+        const target = event.target as HTMLImageElement;
+        target.onerror = null;
+        target.src = 'images/avatars/avatar-placeholder.png';
+    }
+
 }
