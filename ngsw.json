@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1726807829798,
+  "timestamp": 1726809016174,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -40,7 +40,7 @@
         "/chunk-Y66DTPTX.js",
         "/chunk-ZFGUKGJZ.js",
         "/index.html",
-        "/main-TTRRLVIZ.js",
+        "/main-GS27IW6E.js",
         "/manifest.webmanifest",
         "/polyfills-SCHOHYNV.js",
         "/styles-C3WWCSPP.css"
@@ -229,8 +229,8 @@
     "/images/logo/logo.svg": "eaadf840082d5fdcc0d728530b0fc7927e703ce9",
     "/images/pages/help-center/image-1.jpg": "806a87043b0c49207b587e50cf4deb8ca0008a6e",
     "/images/pages/profile/cover.jpg": "a874a39cd3b94a9a7a94faffe80f94c2db3f5a1e",
-    "/index.html": "8832e363f05e8c30281fd548b9491d61fc69e1ae",
-    "/main-TTRRLVIZ.js": "f026bac607111d6e50821ac48973bcfa47c74132",
+    "/index.html": "3bfd081e4af0055ce3cbee78d217ca123b0cdce7",
+    "/main-GS27IW6E.js": "c2cf133e5abb0f85ac387e926e8bce34537f976c",
     "/manifest.webmanifest": "fd6065c16eb892ec6d23f8481bf59ff95e312888",
     "/polyfills-SCHOHYNV.js": "d45c76c5960bab3ace7fd6d211b9579456241f8a",
     "/styles-C3WWCSPP.css": "605a6ac4c513fa06b507f6170b137395430c5e66"
