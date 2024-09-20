@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProjectsService } from '../../services/projects.service';
 import { StateService } from '../../services/state.service';
@@ -119,6 +119,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
 
   loadMetadataForProjects(pubkeys: string[]): void {
     this.metadataService.fetchMetadataForMultipleKeys(pubkeys)
+     this.metadataService.fetchMetadataForMultipleKeys(pubkeys)
       .then((metadataList: any[]) => {
         metadataList.forEach(metadata => {
           const project = this.projects.find(p => p.nostrPubKey === metadata.pubkey);
@@ -132,6 +133,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
         console.error('Error fetching metadata for projects:', error);
       });
   }
+
 
   async loadProjects(): Promise<void> {
     if (this.loading || this.errorMessage === 'No more projects found') return;
@@ -180,13 +182,13 @@ export class ExploreComponent implements OnInit, OnDestroy {
 
   updateProjectMetadata(project: Project, metadata: any): void {
 
-        const updatedProject: Project = {
-      ...project,
-      displayName: metadata.name,
-      about: metadata.about.replace(/<\/?[^>]+(>|$)/g, ''),
-      picture: metadata.picture,
-      banner: metadata.banner
-    };
+    const updatedProject: Project = {
+        ...project,
+        displayName: metadata.name || '',
+        about: metadata.about ? metadata.about.replace(/<\/?[^>]+(>|$)/g, '') : '',
+        picture: metadata.picture || '',
+        banner: metadata.banner || ''
+      };
 
     const index = this.projects.findIndex(p => p.projectIdentifier === project.projectIdentifier);
     if (index !== -1) {
