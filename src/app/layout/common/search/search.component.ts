@@ -129,7 +129,7 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
                             pubkey: result.pubkey,
                             username: result.user.username || '',
                             website: result.user.website || '',
-                            about: result.user.about || '',
+                            about: result.user.about ? result.user.about.replace(/<\/?[^>]+(>|$)/g, '') : '',
                             avatar: result.user.picture || null,
                             banner: result.user.banner || null,
                             link: `/project/${result.pubkey}`
