@@ -117,22 +117,51 @@ export class ExploreComponent implements OnInit, OnDestroy {
       .map(project => project.nostrPubKey);
   }
 
-  loadMetadataForProjects(pubkeys: string[]): void {
-    this.metadataService.fetchMetadataForMultipleKeys(pubkeys)
-     this.metadataService.fetchMetadataForMultipleKeys(pubkeys)
-      .then((metadataList: any[]) => {
-        metadataList.forEach(metadata => {
-          const project = this.projects.find(p => p.nostrPubKey === metadata.pubkey);
-          if (project) {
-            this.updateProjectMetadata(project, metadata);
-          }
+  private async loadMetadataForProjects(pubkeys: string[]): Promise<void> {
+    const metadataPromises = pubkeys.map(async (pubkey) => {
+      // Check cache first
+      const cachedMetadata = await this.indexedDBService.getUserMetadata(pubkey);
+      if (cachedMetadata) {
+        return { pubkey, metadata: cachedMetadata };
+      }
+      return null; // This will allow us to fetch the missing ones later
+    });
+
+    const metadataResults = await Promise.all(metadataPromises);
+
+    // Filter out nulls (which represent pubkeys without cached metadata)
+    const missingPubkeys = metadataResults
+      .filter(result => result === null)
+      .map((_, index) => pubkeys[index]);
+
+    // Update projects that have cached metadata
+    metadataResults.forEach(result => {
+      if (result && result.metadata) {
+        const project = this.projects.find(p => p.nostrPubKey === result.pubkey);
+        if (project) {
+          this.updateProjectMetadata(project, result.metadata);
+        }
+      }
+    });
+
+    // Fetch metadata for pubkeys that are not cached
+    if (missingPubkeys.length > 0) {
+      await this.metadataService.fetchMetadataForMultipleKeys(missingPubkeys)
+        .then((metadataList: any[]) => {
+          metadataList.forEach(metadata => {
+            const project = this.projects.find(p => p.nostrPubKey === metadata.pubkey);
+            if (project) {
+              this.updateProjectMetadata(project, metadata);
+            }
+          });
+          this.changeDetectorRef.detectChanges();
+        })
+        .catch(error => {
+          console.error('Error fetching metadata for projects:', error);
         });
-        this.changeDetectorRef.detectChanges();
-      })
-      .catch(error => {
-        console.error('Error fetching metadata for projects:', error);
-      });
+    }
   }
+
 
 
   async loadProjects(): Promise<void> {
