@@ -44,7 +44,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
-        // Profile
+
         this._chatService.profile$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((profile: Profile) => {
@@ -56,7 +56,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
      * On destroy
      */
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
+
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }

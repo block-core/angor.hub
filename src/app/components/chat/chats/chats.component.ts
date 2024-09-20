@@ -57,41 +57,38 @@ export class ChatsComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
 
     /**
      * On init
      */
     ngOnInit(): void {
-        // Chats
+
         this._chatService.chats$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chats: Chat[]) => {
                 this.chats = this.filteredChats = chats;
 
-                // Mark for check
+
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Profile
+
         this._chatService.profile$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((profile: Profile) => {
                 this.profile = profile;
 
-                // Mark for check
+
                 this._changeDetectorRef.markForCheck();
             });
 
-        // Selected chat
+
         this._chatService.chat$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chat: Chat) => {
                 this.selectedChat = chat;
 
-                // Mark for check
+
                 this._changeDetectorRef.markForCheck();
             });
     }
@@ -100,17 +97,13 @@ export class ChatsComponent implements OnInit, OnDestroy {
      * On destroy
      */
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
+
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
 
-        // Reset the chat
+
         this._chatService.resetChat();
     }
-
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
 
     /**
      * Filter the chats
@@ -118,7 +111,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
      * @param query
      */
     filterChats(query: string): void {
-        // Reset the filter
+
         if (!query) {
             this.filteredChats = this.chats;
             return;
@@ -136,7 +129,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
         this.drawerComponent = 'new-chat';
         this.drawerOpened = true;
 
-        // Mark for check
+
         this._changeDetectorRef.markForCheck();
     }
 
@@ -147,7 +140,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
         this.drawerComponent = 'profile';
         this.drawerOpened = true;
 
-        // Mark for check
+
         this._changeDetectorRef.markForCheck();
     }
 

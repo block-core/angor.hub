@@ -185,7 +185,7 @@
                                         @if (chat.contact.picture) {
                                             <img
                                                 class="h-full w-full rounded-full object-cover"
-                                                [src]="chat.contact || '/images/avatars/avatar-placeholder.png'"
+                                                [src]="chat.contact.picture || '/images/avatars/avatar-placeholder.png'"
                                                 onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                                                 alt="Contact picture"
                                             />

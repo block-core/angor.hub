@@ -31,15 +31,15 @@ export class NewChatComponent implements OnInit, OnDestroy {
      */
     constructor(private _chatService: ChatService) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
+
+
+
 
     /**
      * On init
      */
     ngOnInit(): void {
-        // Contacts
+
         this._chatService.contacts$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((contacts: Contact[]) => {
@@ -51,14 +51,14 @@ export class NewChatComponent implements OnInit, OnDestroy {
      * On destroy
      */
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
+
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
+
+
+
 
     /**
      * Track by function for ngFor loops
