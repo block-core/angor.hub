@@ -118,8 +118,9 @@ export class ChatsComponent implements OnInit, OnDestroy {
         }
 
         this.filteredChats = this.chats.filter((chat) =>
-            chat.contact.name.toLowerCase().includes(query.toLowerCase())
+            (chat.contact.name ? chat.contact.name.toLowerCase() : '').includes(query.toLowerCase())
         );
+
     }
 
     /**
