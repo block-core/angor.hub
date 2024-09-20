@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, throwError, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, throwError, of, Subscriber } from 'rxjs';
 import { filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
@@ -78,12 +78,61 @@ export class ChatService implements OnDestroy {
      * Fetch all contacts from the server
      */
     getContacts(): Observable<Contact[]> {
-        return this._httpClient.get<Contact[]>('api/apps/chat/contacts').pipe(
-            tap((contacts: Contact[]) => {
-                this._contacts.next(contacts);
-            })
-        );
+        return new Observable<Contact[]>((observer) => {
+            this._indexedDBService.getAllUsers()
+                .then((cachedContacts: Contact[]) => {
+                    if (cachedContacts.length > 0) {
+                        this._contacts.next(cachedContacts);
+                        observer.next(cachedContacts);
+                    }
+
+                    const pubkeys = cachedContacts.map(contact => contact.pubKey);
+
+                    if (pubkeys.length > 0) {
+                        this.subscribeToRealTimeContacts(pubkeys, observer);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading cached contacts:', error);
+                    observer.error(error);
+                });
+
+            return () => {
+                // Cleanup logic if needed (for example, closing subscriptions)
+            };
+        });
     }
+
+    private subscribeToRealTimeContacts(pubkeys: string[], observer: Subscriber<Contact[]>): void {
+        this._metadataService.fetchMetadataForMultipleKeys(pubkeys)
+            .then((metadataList: any[]) => {
+                metadataList.forEach((metadata) => {
+                    const contact = this._contacts.value?.find(c => c.pubKey === metadata.pubkey);
+                    if (contact) {
+                        contact.displayName = metadata.name;
+                        contact.picture = metadata.picture;
+                        contact.about = metadata.about;
+                    } else {
+                        const updatedContacts = [...(this._contacts.value || []), {
+                            pubKey: metadata.pubkey,
+                            displayName: metadata.name,
+                            picture: metadata.picture,
+                            about: metadata.about
+                        }];
+                        this._contacts.next(updatedContacts);
+                        observer.next(updatedContacts);
+                    }
+                });
+
+                observer.next(this._contacts.value || []);
+            })
+            .catch((error) => {
+                console.error('Error fetching metadata for contacts:', error);
+                observer.error(error);
+            });
+    }
+
+
 
     /**
      * Fetch the profile metadata using the public key and subscribe to real-time updates

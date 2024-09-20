@@ -38,7 +38,8 @@
                                     @if (profile.picture) {
                                         <img
                                             class="h-full w-full rounded-full object-cover"
-                                            [src]="profile.picture"
+                                            [src]="profile.picture || '/images/avatars/avatar-placeholder.png'"
+                                            onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                                             alt="Profile picture"
                                         />
                                     }
@@ -181,14 +182,15 @@
                                                 "
                                             ></div>
                                         }
-                                        @if (chat.contact.avatar) {
+                                        @if (chat.contact.picture) {
                                             <img
                                                 class="h-full w-full rounded-full object-cover"
-                                                [src]="chat.contact.avatar"
-                                                alt="Contact avatar"
+                                                [src]="chat.contact || '/images/avatars/avatar-placeholder.png'"
+                                                onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                                                alt="Contact picture"
                                             />
                                         }
-                                        @if (!chat.contact.avatar) {
+                                        @if (!chat.contact.picture) {
                                             <div
                                                 class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                             >

@@ -13,30 +13,17 @@ export interface Profile {
 }
 
 export interface Contact {
-    id?: string;
-    avatar?: string;
+    pubKey?: string;
     name?: string;
+    username?: string;
+    picture?: string;
     about?: string;
-    details?: {
-        emails?: {
-            email?: string;
-            label?: string;
-        }[];
-        phoneNumbers?: {
-            country?: string;
-            phoneNumber?: string;
-            label?: string;
-        }[];
-        title?: string;
-        company?: string;
-        birthday?: string;
-        address?: string;
-    };
-    attachments?: {
-        media?: any[];
-        docs?: any[];
-        links?: any[];
-    };
+    displayName?: string;
+    website?: string;
+    banner?: string;
+    lud06?: string;
+    lud16?: string;
+    nip05?: string;
 }
 
 export interface Chat {

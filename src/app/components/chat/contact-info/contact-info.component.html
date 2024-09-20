@@ -10,17 +10,18 @@
     </div>
 
     <div class="overflow-y-auto">
-        <!-- Contact avatar & info -->
+        <!-- Contact picture & info -->
         <div class="mt-8 flex flex-col items-center">
             <div class="h-40 w-40 rounded-full">
-                @if (chat.contact.avatar) {
+                @if (chat.contact.picture) {
                     <img
                         class="h-full w-full rounded-full object-cover"
-                        [src]="chat.contact.avatar"
-                        [alt]="'Contact avatar'"
+                        [src]="chat.contact.picture || '/images/avatars/avatar-placeholder.png'"
+                        onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                        [alt]="'Contact picture'"
                     />
                 }
-                @if (!chat.contact.avatar) {
+                @if (!chat.contact.picture) {
                     <div
                         class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-8xl font-semibold uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                     >
@@ -34,62 +35,6 @@
             </div>
         </div>
 
-        <div class="px-7 py-10">
-            <!-- Media -->
-            <div class="text-lg font-medium">Media</div>
-            <div class="mt-4 grid grid-cols-4 gap-1">
-                @for (media of chat.contact.attachments.media; track media) {
-                    <img class="h-20 rounded object-cover" [src]="media" />
-                }
-            </div>
-            <!-- Details -->
-            <div class="mt-10 space-y-4">
-                <div class="mb-3 text-lg font-medium">Details</div>
-                @if (chat.contact.details.emails.length) {
-                    <div>
-                        <div class="text-secondary font-medium">Email</div>
-                        <div class="">
-                            {{ chat.contact.details.emails[0].email }}
-                        </div>
-                    </div>
-                }
-                @if (chat.contact.details.phoneNumbers.length) {
-                    <div>
-                        <div class="text-secondary font-medium">
-                            Phone number
-                        </div>
-                        <div class="">
-                            {{
-                                chat.contact.details.phoneNumbers[0].phoneNumber
-                            }}
-                        </div>
-                    </div>
-                }
-                @if (chat.contact.details.title) {
-                    <div>
-                        <div class="text-secondary font-medium">Title</div>
-                        <div class="">{{ chat.contact.details.title }}</div>
-                    </div>
-                }
-                @if (chat.contact.details.company) {
-                    <div>
-                        <div class="text-secondary font-medium">Company</div>
-                        <div class="">{{ chat.contact.details.company }}</div>
-                    </div>
-                }
-                @if (chat.contact.details.birthday) {
-                    <div>
-                        <div class="text-secondary font-medium">Birthday</div>
-                        <div class="">{{ chat.contact.details.birthday }}</div>
-                    </div>
-                }
-                @if (chat.contact.details.address) {
-                    <div>
-                        <div class="text-secondary font-medium">Address</div>
-                        <div class="">{{ chat.contact.details.address }}</div>
-                    </div>
-                }
-            </div>
-        </div>
+
     </div>
 </div>

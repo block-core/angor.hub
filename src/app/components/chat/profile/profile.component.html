@@ -30,8 +30,9 @@
             @if (profile.picture) {
                 <img
                     class="h-full w-full rounded-full object-cover"
-                    [src]="profile.picture"
-                    [alt]="'Profile avatar'"
+                    [src]="profile.picture || '/images/avatars/avatar-placeholder.png'"
+                    onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                    [alt]="'Profile picture'"
                 />
             }
             @if (!profile.picture) {
