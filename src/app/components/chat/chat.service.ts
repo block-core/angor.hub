@@ -6,7 +6,7 @@ import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { MetadataService } from 'app/services/metadata.service';
 import { SignerService } from 'app/services/signer.service';
-import { Filter, NostrEvent } from 'nostr-tools';
+import { Filter, nip04, NostrEvent } from 'nostr-tools';
 import { RelayService } from 'app/services/relay.service';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
 import { getEventHash } from 'nostr-tools';
@@ -304,10 +304,59 @@ export class ChatService implements OnDestroy {
     }
 
     // Decrypt received message
-    private async decryptReceivedMessage(event: NostrEvent, useExtension: boolean, decryptedSenderPrivateKey: string, otherPartyPubKey: string): Promise<string> {
-        return 'Decrypted message'; // Implement decryption logic here
-    }
+     private async decryptReceivedMessage(
+        event: NostrEvent,
+        useExtension: boolean,
+        decryptedSenderPrivateKey: string,
+        recipientPublicKey: string
+      ): Promise<string> {
+        if (useExtension) {
+          return await this.decryptMessageWithExtension(event.content, recipientPublicKey);
+        } else {
+          return await this.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
+        }
+      }
 
+  // Messaging (NIP-04)
+  async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
+    try {
+      const gt = globalThis as any;
+      const decryptedMessage = await gt.nostr.nip04.decrypt(senderPubKey, encryptedContent);
+      return decryptedMessage;
+    } catch (error) {
+      console.error('Error decrypting message with extension:', error);
+      throw new Error('Failed to decrypt message with Nostr extension.');
+    }
+  }
+
+
+  async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
+    const gt = globalThis as any;
+    const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
+    return encryptedMessage;
+  }
+
+  async encryptMessage(privateKey: string, recipientPublicKey: string, message: string): Promise<string> {
+    console.log(message);
+    try {
+      const encryptedMessage = await nip04.encrypt(privateKey, recipientPublicKey, message);
+      return encryptedMessage;
+    } catch (error) {
+      console.error('Error encrypting message:', error);
+      throw error;
+    }
+  }
+
+  // NIP-04: Decrypting Direct Messages
+  async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
+    try {
+      const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
+      return decryptedMessage;
+    } catch (error) {
+      console.error('Error decrypting message:', error);
+      throw error;
+    }
+  }
     // Update chat in the chat list
     updateChat(id: string, chat: Chat): Observable<Chat> {
         return this.chats$.pipe(
