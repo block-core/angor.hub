@@ -282,7 +282,7 @@ export class ChatService implements OnDestroy {
 
                 if (new Date(existingChat.lastMessageAt!).getTime() < createdAt) {
                     existingChat.lastMessage = message;
-                    existingChat.lastMessageAt = new Date(createdAt).toISOString();
+                    existingChat.lastMessageAt = new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
                 }
             }
         } else {
@@ -290,16 +290,18 @@ export class ChatService implements OnDestroy {
                 id: pubKey,
                 contact: { pubKey },
                 lastMessage: message,
-                lastMessageAt: new Date(createdAt).toISOString(),
+                lastMessageAt: new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
                 messages: [newMessage]
             };
             this.chatList.push(newChat);
             this.fetchMetadataForPubKey(pubKey);
         }
 
+        // Sort chats by last message time
         this.chatList.sort((a, b) => new Date(b.lastMessageAt!).getTime() - new Date(a.lastMessageAt!).getTime());
         this._chats.next(this.chatList);
     }
+
 
 
     // Fetch metadata for a public key
