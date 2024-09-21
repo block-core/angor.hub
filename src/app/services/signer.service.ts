@@ -218,35 +218,49 @@ export class SignerService {
         }
     }
 
-    async signDMWithExtension(pubkey: string, content: string): Promise<string> {
-        const gt = globalThis as any;
-        if (gt.nostr && gt.nostr.nip04?.encrypt) {
-            return await gt.nostr.nip04.encrypt(pubkey, content);
-        }
-        throw new Error("Failed to Sign with extension");
+  // Messaging (NIP-04)
+  async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
+    try {
+      const gt = globalThis as any;
+      const decryptedMessage = await gt.nostr.nip04.decrypt(senderPubKey, encryptedContent);
+      return decryptedMessage;
+    } catch (error) {
+      console.error('Error decrypting message with extension:', error);
+      throw new Error('Failed to decrypt message with Nostr extension.');
     }
+  }
 
-    async decryptDMWithExtension(pubkey: string, ciphertext: string): Promise<string> {
-        const gt = globalThis as any;
-        if (gt.nostr && gt.nostr.nip04?.decrypt) {
-            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext).catch((error: any) => {
-                return "*Failed to Decrypted Content*";
-            });
-            return decryptedContent;
-        }
-        return "Attempted Nostr Window decryption and failed.";
-    }
 
-    async decryptWithSecretKey(pubkey: string, ciphertext: string, password: string): Promise<string> {
-        try {
-            let secretKey = this.getSecretKey(password);
-            const secretKeyUint8Array = new Uint8Array(Buffer.from((await secretKey).toString(), 'hex'));
-            return await nip04.decrypt(secretKeyUint8Array, pubkey, ciphertext);
-        } catch (error) {
-            console.error("Error during decryption: ", error);
-            return "*Failed to Decrypted Content*";
-        }
+  async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
+    const gt = globalThis as any;
+    const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
+    return encryptedMessage;
+  }
+
+  async encryptMessage(privateKey: string, recipientPublicKey: string, message: string): Promise<string> {
+    console.log(message);
+    try {
+      const encryptedMessage = await nip04.encrypt(privateKey, recipientPublicKey, message);
+      return encryptedMessage;
+    } catch (error) {
+      console.error('Error encrypting message:', error);
+      throw error;
     }
+  }
+
+  // NIP-04: Decrypting Direct Messages
+  async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
+    try {
+      const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
+      return decryptedMessage;
+    } catch (error) {
+      console.error('Error decrypting message:', error);
+      throw error;
+    }
+  }
+
+
+
     getUnsignedEvent(kind: number, tags: string[][], content: string) {
         const eventUnsigned: UnsignedEvent = {
             kind: kind,
