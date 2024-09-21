@@ -1,3 +1,5 @@
+@import '@ctrl/ngx-emoji-mart/picker';
+
 body {
     overflow-x: hidden;
 }
@@ -5,3 +7,9 @@ body {
 .overscroll-y-contain {
     overflow: hidden !important;
 }
+.emoji-picker-container {
+    position: absolute;
+    bottom: 60px; /* Adjust this value to move the picker right above the button */
+    left: 0;
+    z-index: 1000; /* Ensures the picker appears above other elements */
+  }

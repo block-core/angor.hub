@@ -1,5 +1,5 @@
 import { TextFieldModule } from '@angular/cdk/text-field';
-import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
+import { CommonModule, DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -24,6 +24,8 @@ import { ChatService } from 'app/components/chat/chat.service';
 import { Chat } from 'app/components/chat/chat.types';
 import { ContactInfoComponent } from 'app/components/chat/contact-info/contact-info.component';
 import { Subject, takeUntil } from 'rxjs';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { AngorConfigService } from '@angor/services/config';
 
 @Component({
     selector: 'chat-conversation',
@@ -44,6 +46,8 @@ import { Subject, takeUntil } from 'rxjs';
         MatInputModule,
         TextFieldModule,
         DatePipe,
+        PickerComponent,
+        CommonModule
     ],
 })
 export class ConversationComponent implements OnInit, OnDestroy {
@@ -52,13 +56,17 @@ export class ConversationComponent implements OnInit, OnDestroy {
     drawerMode: 'over' | 'side' = 'side';
     drawerOpened: boolean = false;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    showEmojiPicker = false;
+    darkMode: boolean = false;
+
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _chatService: ChatService,
         private _angorMediaWatcherService: AngorMediaWatcherService,
-        private _ngZone: NgZone
-    ) {}
+        private _ngZone: NgZone,
+        private _angorConfigService: AngorConfigService
+    ) { }
 
     @HostListener('input')
     @HostListener('ngModelChange')
@@ -80,8 +88,15 @@ export class ConversationComponent implements OnInit, OnDestroy {
             });
         });
     }
-
     ngOnInit(): void {
+        // Listen to config changes to adjust theme based on the scheme
+        this._angorConfigService.config$.subscribe((config) => {
+            if (config.scheme === 'auto') {
+                this.detectSystemTheme();
+            } else {
+                this.darkMode = config.scheme === 'dark';
+            }
+        });
 
         this._chatService.chat$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -108,6 +123,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
             });
     }
 
+
+
     ngOnDestroy(): void {
 
         this._unsubscribeAll.next(null);
@@ -131,7 +148,16 @@ export class ConversationComponent implements OnInit, OnDestroy {
 
         this._changeDetectorRef.markForCheck();
     }
+    // Function to detect system theme when scheme is set to 'auto'
+    detectSystemTheme() {
+        const darkSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        this.darkMode = darkSchemeMedia.matches;
 
+        // Listen for changes in system theme preference
+        darkSchemeMedia.addEventListener('change', (event) => {
+            this.darkMode = event.matches;
+        });
+    }
     toggleMuteNotifications(): void {
 
         this.chat.muted = !this.chat.muted;
@@ -161,4 +187,21 @@ export class ConversationComponent implements OnInit, OnDestroy {
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }
+
+
+
+
+
+    // Function to add the selected emoji to the text
+    addEmoji(event: any) {
+        this.messageInput.nativeElement.value += event.emoji.native;
+        this.showEmojiPicker = false;
+    }
+
+    // Toggle emoji picker visibility
+    toggleEmojiPicker() {
+        this.showEmojiPicker = !this.showEmojiPicker;
+    }
+
+
 }

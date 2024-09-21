@@ -52,21 +52,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
     themes: Themes;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    /**
-     * Constructor
-     */
+
     constructor(
         private _router: Router,
         private _angorConfigService: AngorConfigService
     ) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * On init
-     */
     ngOnInit(): void {
         // Subscribe to config changes
         this._angorConfigService.config$
@@ -78,24 +70,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
             });
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * Set the layout on the config
-     *
-     * @param layout
-     */
     setLayout(layout: string): void {
         // Clear the 'layout' query param to allow layout changes
         this._router
@@ -111,20 +92,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
             });
     }
 
-    /**
-     * Set the scheme on the config
-     *
-     * @param scheme
-     */
+
     setScheme(scheme: Scheme): void {
         this._angorConfigService.config = { scheme };
     }
 
-    /**
-     * Set the theme on the config
-     *
-     * @param theme
-     */
+ 
     setTheme(theme: Theme): void {
         this._angorConfigService.config = { theme };
     }
