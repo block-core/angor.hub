@@ -53,9 +53,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
     drawerOpened: boolean = false;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    /**
-     * Constructor
-     */
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _chatService: ChatService,
@@ -63,15 +60,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
         private _ngZone: NgZone
     ) {}
 
-
-
-
-
-    /**
-     * Resize on 'input' and 'ngModelChange' events
-     *
-     * @private
-     */
     @HostListener('input')
     @HostListener('ngModelChange')
     private _resizeMessageInput(): void {
@@ -93,13 +81,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
         });
     }
 
-
-
-
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
 
         this._chatService.chat$
@@ -127,18 +108,12 @@ export class ConversationComponent implements OnInit, OnDestroy {
             });
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
 
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
-    /**
-     * Open the contact info
-     */
     openContactInfo(): void {
 
         this.drawerOpened = true;
@@ -147,9 +122,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
         this._changeDetectorRef.markForCheck();
     }
 
-    /**
-     * Reset the chat
-     */
     resetChat(): void {
         this._chatService.resetChat();
 
@@ -160,9 +132,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
         this._changeDetectorRef.markForCheck();
     }
 
-    /**
-     * Toggle mute notifications
-     */
     toggleMuteNotifications(): void {
 
         this.chat.muted = !this.chat.muted;
@@ -171,12 +140,24 @@ export class ConversationComponent implements OnInit, OnDestroy {
         this._chatService.updateChat(this.chat.id, this.chat).subscribe();
     }
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
+    sendMessage(): void {
+        const messageContent = this.messageInput.nativeElement.value.trim();
+
+        if (!messageContent) {
+            console.warn('Cannot send an empty message.');
+            return;
+        }
+
+        this._chatService.sendPrivateMessage(messageContent)
+            .then(() => {
+                this.messageInput.nativeElement.value = '';
+                console.log('Message sent successfully.');
+            })
+            .catch((error) => {
+                console.error('Failed to send message:', error);
+            });
+    }
+
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }

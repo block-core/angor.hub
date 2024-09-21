@@ -91,7 +91,8 @@ export class ChatsComponent implements OnInit, OnDestroy {
 
                 this._changeDetectorRef.markForCheck();
             });
-    }
+
+        }
 
     /**
      * On destroy

@@ -256,14 +256,14 @@
                         class="angor-mat-dense angor-mat-rounded angor-mat-bold ml-4 w-full"
                         subscriptSizing="dynamic"
                     >
-                        <textarea
+                        <textarea class="max-h-20"
                             matInput
                             cdkTextareaAutosize
                             #messageInput
                         ></textarea>
                     </mat-form-field>
                     <div class="my-px ml-4 flex h-11 items-center">
-                        <button mat-icon-button>
+                        <button mat-icon-button (click)="sendMessage()">
                             <mat-icon
                                 [svgIcon]="'heroicons_outline:paper-airplane'"
                             ></mat-icon>

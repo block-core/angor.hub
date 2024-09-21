@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -11,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ChatService } from 'app/components/chat/chat.service';
 import { Contact } from 'app/components/chat/chat.types';
-import { Subject, takeUntil } from 'rxjs';
+import { catchError, Subject, takeUntil, throwError } from 'rxjs';
 
 @Component({
     selector: 'chat-new-chat',
@@ -26,20 +27,9 @@ export class NewChatComponent implements OnInit, OnDestroy {
     contacts: Contact[] = [];
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    /**
-     * Constructor
-     */
-    constructor(private _chatService: ChatService) {}
+    constructor(private _chatService: ChatService, private router: Router) {}
 
-
-
-
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-
         this._chatService.contacts$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((contacts: Contact[]) => {
@@ -47,25 +37,25 @@ export class NewChatComponent implements OnInit, OnDestroy {
             });
     }
 
-    /**
-     * On destroy
-     */
     ngOnDestroy(): void {
-
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
+    openChat(contact: Contact): void {
+        this._chatService.getChatById(contact.pubKey).pipe(
 
+            catchError((error) => {
+                console.error(error);
+                const parentUrl = this.router.url.split('/').slice(0, -1).join('/');
+                this.router.navigateByUrl(parentUrl);
+                return throwError(error);
+            })
+        ).subscribe();
 
+        this.drawer.close();
+    }
 
-
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }

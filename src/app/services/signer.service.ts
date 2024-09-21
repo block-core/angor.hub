@@ -208,56 +208,48 @@ export class SignerService {
         }
     }
 
-    async signEventWithExtension(unsignedEvent: UnsignedEvent): Promise<Event> {
-        const gt = globalThis as any;
-        if (gt.nostr) {
-            const signedEvent = await gt.nostr.signEvent(unsignedEvent);
-            return signedEvent;
-        } else {
-            throw new Error("Tried to sign event with extension but failed");
+
+
+    // Messaging (NIP-04)
+    async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
+        try {
+            const gt = globalThis as any;
+            const decryptedMessage = await gt.nostr.nip04.decrypt(senderPubKey, encryptedContent);
+            return decryptedMessage;
+        } catch (error) {
+            console.error('Error decrypting message with extension:', error);
+            throw new Error('Failed to decrypt message with Nostr extension.');
         }
     }
 
-  // Messaging (NIP-04)
-  async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
-    try {
-      const gt = globalThis as any;
-      const decryptedMessage = await gt.nostr.nip04.decrypt(senderPubKey, encryptedContent);
-      return decryptedMessage;
-    } catch (error) {
-      console.error('Error decrypting message with extension:', error);
-      throw new Error('Failed to decrypt message with Nostr extension.');
+
+    async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
+        const gt = globalThis as any;
+        const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
+        return encryptedMessage;
     }
-  }
 
-
-  async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
-    const gt = globalThis as any;
-    const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
-    return encryptedMessage;
-  }
-
-  async encryptMessage(privateKey: string, recipientPublicKey: string, message: string): Promise<string> {
-    console.log(message);
-    try {
-      const encryptedMessage = await nip04.encrypt(privateKey, recipientPublicKey, message);
-      return encryptedMessage;
-    } catch (error) {
-      console.error('Error encrypting message:', error);
-      throw error;
+    async encryptMessage(privateKey: string, recipientPublicKey: string, message: string): Promise<string> {
+        console.log(message);
+        try {
+            const encryptedMessage = await nip04.encrypt(privateKey, recipientPublicKey, message);
+            return encryptedMessage;
+        } catch (error) {
+            console.error('Error encrypting message:', error);
+            throw error;
+        }
     }
-  }
 
-  // NIP-04: Decrypting Direct Messages
-  async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
-    try {
-      const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
-      return decryptedMessage;
-    } catch (error) {
-      console.error('Error decrypting message:', error);
-      throw error;
+    // NIP-04: Decrypting Direct Messages
+    async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
+        try {
+            const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
+            return decryptedMessage;
+        } catch (error) {
+            console.error('Error decrypting message:', error);
+            throw error;
+        }
     }
-  }
 
 
 
@@ -279,6 +271,56 @@ export class SignerService {
 
         return signedEvent;
     }
+
+
+
+
+    async signEventWithExtension(unsignedEvent: UnsignedEvent): Promise<Event> {
+        const gt = globalThis as any;
+        if (gt.nostr) {
+            const signedEvent = await gt.nostr.signEvent(unsignedEvent)
+            return signedEvent;
+        } else {
+            throw new Error("Tried to sign event with extension but failed");
+        }
+    }
+
+    async signDMWithExtension(pubkey: string, content: string): Promise<string> {
+        const gt = globalThis as any;
+        if (gt.nostr && gt.nostr.nip04?.encrypt) {
+            return await gt.nostr.nip04.encrypt(pubkey, content)
+        }
+        throw new Error("Failed to Sign with extension");
+    }
+
+    async decryptDMWithExtension(pubkey: string, ciphertext: string): Promise<string> {
+        const gt = globalThis as any;
+        if (gt.nostr && gt.nostr.nip04?.decrypt) {
+            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext)
+                .catch((error: any) => {
+                    return "*Failed to Decrypted Content*"
+                });
+            return decryptedContent;
+        }
+        return "Attempted Nostr Window decryption and failed."
+    }
+
+    async decryptWithPrivateKey(pubkey: string, ciphertext: string, password: string): Promise<string> {
+        try {
+            // Get the stored private key in hex format
+            let privateKey = await this.getSecretKey("password");
+
+            // Ensure the private key is in Uint8Array format
+            const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
+
+            // Decrypt the message using the private key and public key
+            return await nip04.decrypt(privateKeyUint8Array, pubkey, ciphertext);
+        } catch (error) {
+            console.error("Error during decryption: ", error);
+            return "*Failed to Decrypted Content*";
+        }
+    }
+
 
     public async isUsingExtension(): Promise<boolean> {
         const globalContext = globalThis as any;
