@@ -120,10 +120,11 @@ export class IndexedDBService {
     }
   }
 
-  async saveUserMetadata(pubkey: string, metadata: any): Promise<void> {
+  async saveUserMetadata(pubKey: string, metadata: any): Promise<void> {
     try {
-      await this.userStore.setItem(pubkey, metadata);
-      this.metadataSubject.next({ pubkey, metadata });
+      metadata.pubKey=pubKey;
+      await this.userStore.setItem(pubKey, metadata);
+      this.metadataSubject.next({ pubKey, metadata });
     } catch (error) {
       console.error('Error saving metadata to IndexedDB:', error);
     }

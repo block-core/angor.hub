@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, throwError, of, Subscriber, from } from 'rxjs';
-import { catchError, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { catchError, concatMap, distinctUntilChanged, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
 import { IndexedDBService } from 'app/services/indexed-db.service';
@@ -10,6 +10,7 @@ import { Filter, nip04, NostrEvent, Relay, UnsignedEvent } from 'nostr-tools';
 import { RelayService } from 'app/services/relay.service';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
 import { getEventHash } from 'nostr-tools';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
@@ -33,10 +34,15 @@ export class ChatService implements OnDestroy {
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService,
         private _relayService: RelayService,
-        private _sanitizer: DomSanitizer
-    ) { }
+        private _sanitizer: DomSanitizer,
+        private router: Router,
 
-    // Getters for observables
+    ) { }
+    get profile$(): Observable<Profile | null> {
+        return this._profile.asObservable();
+    }
+
+
     get chat$(): Observable<Chat | null> {
         return this._chat.asObservable();
     }
@@ -53,67 +59,83 @@ export class ChatService implements OnDestroy {
         return this._contacts.asObservable();
     }
 
-    get profile$(): Observable<Profile | null> {
-        return this._profile.asObservable();
+
+
+// Fetch a contact by public key
+async getContact(pubkey: string): Promise<void> {
+    try {
+        if (!pubkey) {
+            console.error('Public key is undefined.');
+            return;
+        }
+
+        const metadata = await this._metadataService.fetchMetadataWithCache(pubkey);
+        if (metadata) {
+            const contact: Contact = {
+                pubKey: pubkey, // Ensure pubKey is set
+                displayName: metadata.name,
+                picture: metadata.picture,
+                about: metadata.about
+            };
+            this._contact.next(contact);
+
+            // Subscribe to metadata stream for updates
+            this._indexedDBService.getMetadataStream()
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe((updatedMetadata) => {
+                    if (updatedMetadata && updatedMetadata.pubkey === pubkey) {
+                        const updatedContact: Contact = {
+                            pubKey: pubkey, // Ensure pubKey is updated here as well
+                            displayName: updatedMetadata.metadata.name,
+                            picture: updatedMetadata.metadata.picture,
+                            about: updatedMetadata.metadata.about
+                        };
+                        this._contact.next(updatedContact);
+                    }
+                });
+        }
+    } catch (error) {
+        console.error('Error fetching contact metadata:', error);
     }
+}
 
-    // Fetch a contact by public key
-    async getContact(pubkey: string): Promise<void> {
-        try {
-            const metadata = await this._metadataService.fetchMetadataWithCache(pubkey);
-            if (metadata) {
-                const contact: Contact = {
-                    pubKey: pubkey,
-                    displayName: metadata.name,
-                    picture: metadata.picture,
-                    about: metadata.about
-                };
-                this._contact.next(contact);
 
-                // Subscribe to metadata stream for updates
-                this._indexedDBService.getMetadataStream()
-                    .pipe(takeUntil(this._unsubscribeAll))
-                    .subscribe((updatedMetadata) => {
-                        if (updatedMetadata && updatedMetadata.pubkey === pubkey) {
-                            const updatedContact: Contact = {
-                                pubKey: pubkey,
-                                displayName: updatedMetadata.metadata.name,
-                                picture: updatedMetadata.metadata.picture,
-                                about: updatedMetadata.metadata.about
-                            };
-                            this._contact.next(updatedContact);
+// Fetch contacts from IndexedDB and subscribe to real-time updates
+getContacts(): Observable<Contact[]> {
+    return new Observable<Contact[]>((observer) => {
+        this._indexedDBService.getAllUsers()
+            .then((cachedContacts: Contact[]) => {
+                if (cachedContacts.length > 0) {
+                    // Ensure each contact has pubKey set
+                    cachedContacts.forEach(contact => {
+                        if (!contact.pubKey) {
+                            console.error('Contact is missing pubKey:', contact);
                         }
                     });
-            }
-        } catch (error) {
-            console.error('Error fetching contact metadata:', error);
-        }
-    }
 
-    // Fetch contacts from IndexedDB and subscribe to real-time updates
-    getContacts(): Observable<Contact[]> {
-        return new Observable<Contact[]>((observer) => {
-            this._indexedDBService.getAllUsers()
-                .then((cachedContacts: Contact[]) => {
-                    if (cachedContacts.length > 0) {
-                        this._contacts.next(cachedContacts);
-                        observer.next(cachedContacts);
-                    }
-                    const pubkeys = cachedContacts.map(contact => contact.pubKey);
-                    if (pubkeys.length > 0) {
-                        this.subscribeToRealTimeContacts(pubkeys, observer);
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error loading cached contacts from IndexedDB:', error);
-                    observer.error(error);
-                });
+                    this._contacts.next(cachedContacts);
+                    observer.next(cachedContacts);
+                }
 
-            return () => {
-                console.log('Unsubscribing from contacts updates.');
-            };
-        });
-    }
+                const pubkeys = cachedContacts
+                    .map(contact => contact.pubKey)
+                    .filter(pubkey => pubkey); // Filter out undefined pubkeys
+
+                if (pubkeys.length > 0) {
+                    this.subscribeToRealTimeContacts(pubkeys, observer);
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading cached contacts from IndexedDB:', error);
+                observer.error(error);
+            });
+
+        return () => {
+            console.log('Unsubscribing from contacts updates.');
+        };
+    });
+}
+
 
     // Subscribe to real-time updates for contacts
     private subscribeToRealTimeContacts(pubkeys: string[], observer: Subscriber<Contact[]>): void {
@@ -186,8 +208,8 @@ export class ChatService implements OnDestroy {
     subscribeToChatList(pubkey: string, useExtension: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
         this._relayService.ensureConnectedRelays().then(() => {
             const filters: Filter[] = [
-                { kinds: [EncryptedDirectMessage], authors: [pubkey] },
-                { kinds: [EncryptedDirectMessage], '#p': [pubkey] }
+                { kinds: [EncryptedDirectMessage], authors: [pubkey] ,limit:25},
+                { kinds: [EncryptedDirectMessage], '#p': [pubkey] ,limit:25}
             ];
 
             this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), filters, {
@@ -200,7 +222,6 @@ export class ChatService implements OnDestroy {
 
                     const lastTimestamp = this.latestMessageTimestamps[otherPartyPubKey] || 0;
                     if (event.created_at > lastTimestamp) {
-                        this.latestMessageTimestamps[otherPartyPubKey] = event.created_at;
                         this.messageQueue.push(event);
 
                         // Update the real-time chat messages when they are processed
@@ -248,7 +269,11 @@ export class ChatService implements OnDestroy {
                     this.addOrUpdateChatList(otherPartyPubKey, decryptedMessage, messageTimestamp, isSentByUser);
 
                     // Update UI with the latest messages
-                    this._chat.next(this.chatList.find(chat => chat.id === otherPartyPubKey));
+                    const chatToUpdate = this.chatList.find(chat => chat.id === otherPartyPubKey);
+                    if (chatToUpdate) {
+                        this._chat.next(chatToUpdate);
+
+                    }
                 }
             }
         } catch (error) {
@@ -259,48 +284,73 @@ export class ChatService implements OnDestroy {
     }
 
 
+
     // Add or update chat in the chat list, including messages
-    private addOrUpdateChatList(pubKey: string, message: string, createdAt: number, isMine: boolean): void {
-        const existingChat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
+// Add or update chat in the chat list, including messages
+private addOrUpdateChatList(pubKey: string, message: string, createdAt: number, isMine: boolean): void {
+    const existingChat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
 
-        const newMessage = {
-            id: `${pubKey}-${createdAt}`,
-            chatId: pubKey,
-            contactId: pubKey,
-            isMine,
-            value: message,
-            createdAt: new Date(createdAt).toISOString(),
-        };
+    const newMessage = {
+        id: `${pubKey}-${createdAt}`,
+        chatId: pubKey,
+        contactId: pubKey,
+        isMine,
+        value: message,
+        createdAt: new Date(createdAt).toISOString(),
+    };
 
-        if (existingChat) {
-            // Check if the message already exists to avoid duplicates
-            const messageExists = existingChat.messages?.some(m => m.id === newMessage.id);
+    // Save current selected chat
+    const currentChat = this._chat.value;
 
-            if (!messageExists) {
-                existingChat.messages = (existingChat.messages || []).concat(newMessage)
-                    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    if (existingChat) {
+        // Check if the message already exists to avoid duplicates
+        const messageExists = existingChat.messages?.some(m => m.id === newMessage.id);
 
-                if (new Date(existingChat.lastMessageAt!).getTime() < createdAt) {
-                    existingChat.lastMessage = message;
-                    existingChat.lastMessageAt = new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
-                }
+        if (!messageExists) {
+            existingChat.messages = (existingChat.messages || []).concat(newMessage)
+                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+            if (new Date(existingChat.lastMessageAt!).getTime() < createdAt) {
+                existingChat.lastMessage = message;
+                existingChat.lastMessageAt = new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
             }
-        } else {
-            const newChat: Chat = {
-                id: pubKey,
-                contact: { pubKey },
-                lastMessage: message,
-                lastMessageAt: new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
-                messages: [newMessage]
-            };
-            this.chatList.push(newChat);
-            this.fetchMetadataForPubKey(pubKey);
         }
+    } else {
+        const contactInfo = this._contacts.value?.find(contact => contact.pubKey === pubKey) || { pubKey };
 
-        // Sort chats by last message time
-        this.chatList.sort((a, b) => new Date(b.lastMessageAt!).getTime() - new Date(a.lastMessageAt!).getTime());
-        this._chats.next(this.chatList);
+        const newChat: Chat = {
+            id: pubKey,
+            contact: {
+                pubKey: contactInfo.pubKey,
+                name: contactInfo.name || "Unknown",
+                picture: contactInfo.picture || "/images/avatars/avatar-placeholder.png",
+                about: contactInfo.about || "",
+                displayName: contactInfo.displayName || contactInfo.name || "Unknown"
+            },
+            lastMessage: message,
+            lastMessageAt: new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
+            messages: [newMessage]
+        };
+        this.chatList.push(newChat);
+        this.fetchMetadataForPubKey(pubKey);
     }
+
+    // Sort chats by last message time
+    this.chatList.sort((a, b) => new Date(b.lastMessageAt!).getTime() - new Date(a.lastMessageAt!).getTime());
+
+    // Update the chat list and preserve the selected chat
+    this._chats.next(this.chatList);
+
+    // Restore the previously selected chat
+    if (currentChat) {
+        const restoredChat = this.chatList.find(chat => chat.id === currentChat.id);
+        if (restoredChat) {
+            this._chat.next(restoredChat);
+        }
+    }
+}
+
+
 
 
 
@@ -332,7 +382,7 @@ export class ChatService implements OnDestroy {
         recipientPublicKey: string
     ): Promise<string> {
         if (useExtension) {
-            return await this._signerService.decryptMessageWithExtension(event.content, recipientPublicKey);
+            return await this._signerService.decryptDMWithExtension( recipientPublicKey,event.content);
         } else {
             return await this._signerService.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
         }
@@ -343,8 +393,8 @@ export class ChatService implements OnDestroy {
         const myPubKey = this._signerService.getPublicKey();
 
         const historyFilter: Filter[] = [
-            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey] },
-            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey] }
+            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey]},
+            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey]}
         ];
 
         console.log("Subscribing to history for chat with: ", pubKey);
@@ -420,24 +470,88 @@ export class ChatService implements OnDestroy {
     // Get chat by ID
     getChatById(id: string): Observable<Chat> {
         this.recipientPublicKey = id;
+
+        const pubkeyPromise = this._signerService.getPublicKey();
+        const useExtensionPromise = this._signerService.isUsingExtension();
+        const decryptedSenderPrivateKeyPromise = this._signerService.getSecretKey('123');
+
+        return from(Promise.all([pubkeyPromise, useExtensionPromise, decryptedSenderPrivateKeyPromise])).pipe(
+            switchMap(([pubkey, useExtension, decryptedSenderPrivateKey]) => {
+                return this.chats$.pipe(
+                    take(1),
+                    distinctUntilChanged(),
+                    filter((chats: Chat[] | null) => !!chats),
+                    switchMap((chats: Chat[] | null) => {
+                        const cachedChat = chats?.find(chat => chat.id === id);
+                        if (cachedChat) {
+                            this._chat.next(cachedChat);
+                            console.log("Fetching chat history for: ", this.recipientPublicKey);
+
+                            this.loadChatHistory(this.recipientPublicKey);
+                            return of(cachedChat);
+                        }
+
+                        const newChat: Chat = {
+                            id: this.recipientPublicKey,
+                            contact: { pubKey: this.recipientPublicKey, picture: "/images/avatars/avatar-placeholder.png" },
+                            lastMessage: '',
+                            lastMessageAt: new Date().toISOString(),
+                            messages: []
+                        };
+
+                        const updatedChats = chats ? [...chats, newChat] : [newChat];
+                        this._chats.next(updatedChats);
+                        this._chat.next(newChat);
+
+                        console.log("Fetching chat history for: ", this.recipientPublicKey);
+
+                        this.loadChatHistory(this.recipientPublicKey);
+                        return of(newChat);
+                    })
+                );
+            }),
+            catchError((error) => {
+                console.error('Error fetching chat by id from Nostr:', error);
+                return throwError(error);
+            })
+        );
+    }
+
+
+
+    openChat(contact: Contact): Observable<Chat> {
+        if (!contact.pubKey) {
+            console.error('The contact does not have a public key!');
+            return throwError('The contact does not have a public key!');
+        }
+
+        this.recipientPublicKey = contact.pubKey;
+
         const pubkey = this._signerService.getPublicKey();
         const useExtension = this._signerService.isUsingExtension();
         const decryptedSenderPrivateKey = this._signerService.getSecretKey('123');
 
         return this.chats$.pipe(
             take(1),
-            switchMap((chats: Chat[] | null) => {
-                const cachedChat = chats?.find(chat => chat.id === id);
+            distinctUntilChanged(),
+            concatMap((chats: Chat[] | null) => {
+                const cachedChat = chats?.find(chat => chat.id === contact.pubKey);
                 if (cachedChat) {
                     this._chat.next(cachedChat);
-                    console.log("Fetching chat history for: ", this.recipientPublicKey);
-                    this.loadChatHistory(this.recipientPublicKey);
+                    console.log("Fetching chat history for: ", contact.pubKey);
+                    this.loadChatHistory(contact.pubKey);
                     return of(cachedChat);
                 }
 
                 const newChat: Chat = {
-                    id: this.recipientPublicKey,
-                    contact: { pubKey: this.recipientPublicKey, picture: "/images/avatars/avatar-placeholder.png" },
+                    id: contact.pubKey,
+                    contact: {
+                        pubKey: contact.pubKey,
+                        name: contact.name,
+                        picture: contact.picture || "/images/avatars/avatar-placeholder.png",
+                        about: contact.about,
+                        displayName: contact.displayName,
+                    },
                     lastMessage: '',
                     lastMessageAt: new Date().toISOString(),
                     messages: []
@@ -447,16 +561,21 @@ export class ChatService implements OnDestroy {
                 this._chats.next(updatedChats);
                 this._chat.next(newChat);
 
-                console.log("Fetching chat history for: ", this.recipientPublicKey); // Check if this is called
-                this.loadChatHistory(this.recipientPublicKey);
+                console.log("Fetching chat history for: ", contact.pubKey);
+                this.loadChatHistory(contact.pubKey);
+
                 return of(newChat);
             }),
             catchError((error) => {
-                console.error('Error fetching chat by id from Nostr:', error);
+                console.error('Error fetching chat by ID:', error);
+                const parentUrl = this.router.url.split('/').slice(0, -1).join('/');
+                this.router.navigateByUrl(parentUrl);
                 return throwError(error);
             })
         );
     }
+
+
 
     // Reset chat state
     resetChat(): void {

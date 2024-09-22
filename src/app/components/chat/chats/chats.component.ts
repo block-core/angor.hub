@@ -64,13 +64,16 @@ export class ChatsComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
 
         this._chatService.chats$
-            .pipe(takeUntil(this._unsubscribeAll))
-            .subscribe((chats: Chat[]) => {
+        .pipe(takeUntil(this._unsubscribeAll))
+        .subscribe((chats: Chat[]) => {
+            if (chats) {
                 this.chats = this.filteredChats = chats;
+            } else {
+                this.chats = this.filteredChats = [];
+            }
+            this._changeDetectorRef.markForCheck();
+        });
 
-
-                this._changeDetectorRef.markForCheck();
-            });
 
 
         this._chatService.profile$
@@ -83,14 +86,15 @@ export class ChatsComponent implements OnInit, OnDestroy {
             });
 
 
-        this._chatService.chat$
+            this._chatService.chat$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chat: Chat) => {
-                this.selectedChat = chat;
-
-
-                this._changeDetectorRef.markForCheck();
+                if (chat) {
+                    this.selectedChat = chat;
+                    this._changeDetectorRef.markForCheck();
+                }
             });
+
 
         }
 

@@ -11,8 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDrawer } from '@angular/material/sidenav';
 import { ChatService } from 'app/components/chat/chat.service';
-import { Contact } from 'app/components/chat/chat.types';
-import { catchError, Subject, takeUntil, throwError } from 'rxjs';
+import { Chat, Contact } from 'app/components/chat/chat.types';
+import { catchError, of, Subject, switchMap, take, takeUntil, throwError } from 'rxjs';
 
 @Component({
     selector: 'chat-new-chat',
@@ -43,18 +43,17 @@ export class NewChatComponent implements OnInit, OnDestroy {
     }
 
     openChat(contact: Contact): void {
-        this._chatService.getChatById(contact.pubKey).pipe(
+        this._chatService.openChat(contact).subscribe((chat) => {
+            console.log('Chat loaded or created:', chat);
+            this.router.navigate(['/chat', contact.pubKey]);
+        });
 
-            catchError((error) => {
-                console.error(error);
-                const parentUrl = this.router.url.split('/').slice(0, -1).join('/');
-                this.router.navigateByUrl(parentUrl);
-                return throwError(error);
-            })
-        ).subscribe();
-
+        // Close the drawer after selecting the contact
         this.drawer.close();
     }
+
+
+
 
     trackByFn(index: number, item: any): any {
         return item.id || index;

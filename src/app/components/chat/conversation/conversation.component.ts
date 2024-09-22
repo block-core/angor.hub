@@ -59,7 +59,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
     showEmojiPicker = false;
     darkMode: boolean = false;
 
-
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _chatService: ChatService,
@@ -74,22 +73,14 @@ export class ConversationComponent implements OnInit, OnDestroy {
 
         this._ngZone.runOutsideAngular(() => {
             setTimeout(() => {
-
                 this.messageInput.nativeElement.style.height = 'auto';
-
-
                 this._changeDetectorRef.detectChanges();
-
-
                 this.messageInput.nativeElement.style.height = `${this.messageInput.nativeElement.scrollHeight}px`;
-
-
                 this._changeDetectorRef.detectChanges();
             });
         });
     }
     ngOnInit(): void {
-        // Listen to config changes to adjust theme based on the scheme
         this._angorConfigService.config$.subscribe((config) => {
             if (config.scheme === 'auto') {
                 this.detectSystemTheme();
@@ -102,11 +93,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chat: Chat) => {
                 this.chat = chat;
-
-
                 this._changeDetectorRef.markForCheck();
             });
-
 
         this._angorMediaWatcherService.onMediaChange$
             .pipe(takeUntil(this._unsubscribeAll))
@@ -117,47 +105,35 @@ export class ConversationComponent implements OnInit, OnDestroy {
                 } else {
                     this.drawerMode = 'over';
                 }
-
-
                 this._changeDetectorRef.markForCheck();
             });
     }
 
-
-
     ngOnDestroy(): void {
-
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
     openContactInfo(): void {
-
         this.drawerOpened = true;
-
-
         this._changeDetectorRef.markForCheck();
     }
 
     resetChat(): void {
         this._chatService.resetChat();
-
-
         this.drawerOpened = false;
-
-
         this._changeDetectorRef.markForCheck();
     }
-    // Function to detect system theme when scheme is set to 'auto'
+
     detectSystemTheme() {
         const darkSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
         this.darkMode = darkSchemeMedia.matches;
 
-        // Listen for changes in system theme preference
         darkSchemeMedia.addEventListener('change', (event) => {
             this.darkMode = event.matches;
         });
     }
+
     toggleMuteNotifications(): void {
 
         this.chat.muted = !this.chat.muted;
@@ -188,20 +164,12 @@ export class ConversationComponent implements OnInit, OnDestroy {
         return item.id || index;
     }
 
-
-
-
-
-    // Function to add the selected emoji to the text
     addEmoji(event: any) {
         this.messageInput.nativeElement.value += event.emoji.native;
         this.showEmojiPicker = false;
     }
 
-    // Toggle emoji picker visibility
     toggleEmojiPicker() {
         this.showEmojiPicker = !this.showEmojiPicker;
     }
-
-
 }
