@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import localForage from 'localforage';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Project, ProjectStats } from './projects.service';
+import { Chat } from 'app/components/chat/chat.types';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,9 @@ export class IndexedDBService {
   private userStore: LocalForage;
   private projectsStore: LocalForage;
   private projectStatsStore: LocalForage;
+  private chatStore: LocalForage;
+  private timestampStore: LocalForage;
+
 
   constructor() {
 
@@ -40,6 +44,23 @@ export class IndexedDBService {
       storeName: 'projectStats',
       description: 'Store for project statistics',
     });
+
+    this.chatStore = localForage.createInstance({
+        driver: localForage.INDEXEDDB,
+        name: 'angor-hub',
+        version: 1.0,
+        storeName: 'chats',
+        description: 'Store for chat information',
+      });
+
+      this.timestampStore = localForage.createInstance({
+        driver: localForage.INDEXEDDB,
+        name: 'angor-hub',
+        version: 1.0,
+        storeName: 'timestamps',
+        description: 'Store for last update timestamps',
+      });
+
 
     this.loadAllProjectsFromDB();
     this.loadAllProjectStatsFromDB();
@@ -193,15 +214,14 @@ export class IndexedDBService {
   }
 
 
-  async searchUsersByMetadata(query: string): Promise<{ pubkey: string, user: any }[]> {
+   async searchUsersByMetadata(query: string): Promise<{ pubkey: string, user: any }[]> {
     try {
       const matchingUsers: { pubkey: string, user: any }[] = [];
       const searchQuery = query.toLowerCase();
 
       await this.userStore.iterate<any, void>((user, pubkey) => {
-         const userString = JSON.stringify(user).toLowerCase();
-
-         if (userString.includes(searchQuery)) {
+        const userString = JSON.stringify(user).toLowerCase();
+        if (userString.includes(searchQuery)) {
           matchingUsers.push({ pubkey, user });
         }
       });
@@ -214,5 +234,67 @@ export class IndexedDBService {
   }
 
 
+  async saveChat(chat: Chat): Promise<void> {
+    try {
+      await this.chatStore.setItem(chat.id, chat);
+    } catch (error) {
+      console.error('Error saving chat to IndexedDB:', error);
+    }
+  }
 
+  async getChat(pubKey: string): Promise<Chat | null> {
+    try {
+      const chat = await this.chatStore.getItem<Chat>(pubKey);
+      if (chat) {
+        return chat;
+      } else {
+        console.warn(`Chat with pubKey ${pubKey} not found in IndexedDB.`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Error retrieving chat with pubKey ${pubKey} from IndexedDB:`, error);
+      return null;
+    }
+  }
+
+
+  async getAllChats(): Promise<Chat[]> {
+    try {
+      const chats: Chat[] = [];
+      await this.chatStore.iterate<Chat, void>((value) => {
+        chats.push(value);
+      });
+
+      // مرتب‌سازی چت‌ها بر اساس زمان آخرین پیام به‌طوری که آخرین چت‌ها اول نمایش داده شوند
+      chats.sort((a, b) => {
+        const dateA = new Date(a.lastMessageAt!).getTime();
+        const dateB = new Date(b.lastMessageAt!).getTime();
+        return dateB - dateA; // چت‌هایی که تاریخ جدیدتری دارند در ابتدا قرار می‌گیرند
+      });
+
+      return chats;
+    } catch (error) {
+      console.error('Error getting chats from IndexedDB:', error);
+      return [];
+    }
+}
+
+
+   async saveLastSavedTimestamp(timestamp: number): Promise<void> {
+    try {
+      await this.timestampStore.setItem('lastSavedTimestamp', timestamp);
+    } catch (error) {
+      console.error('Error saving last update timestamp in IndexedDB:', error);
+    }
+  }
+
+  async getLastSavedTimestamp(): Promise<number> {
+    try {
+      const timestamp = await this.timestampStore.getItem<number>('lastSavedTimestamp');
+      return timestamp || 0;
+    } catch (error) {
+      console.error('Error getting last saved timestamp from IndexedDB:', error);
+      return 0;
+    }
+  }
 }
