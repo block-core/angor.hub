@@ -109,14 +109,6 @@ export class ChatService implements OnDestroy {
                         this._contacts.next(cachedContacts);
                         observer.next(cachedContacts);
                     }
-
-                    const pubkeys = cachedContacts
-                        .map(contact => contact.pubKey)
-                        .filter(pubkey => pubkey);
-
-                    if (pubkeys.length > 0) {
-                        this.subscribeToRealTimeContacts(pubkeys, observer);
-                    }
                 })
                 .catch((error) => {
                     console.error('Error loading cached contacts from IndexedDB:', error);
@@ -129,35 +121,6 @@ export class ChatService implements OnDestroy {
         });
     }
 
-    private subscribeToRealTimeContacts(pubkeys: string[], observer: Subscriber<Contact[]>): void {
-        this._metadataService.fetchMetadataForMultipleKeys(pubkeys)
-            .then((metadataList: any[]) => {
-                const updatedContacts = [...(this._contacts.value || [])];
-
-                metadataList.forEach((metadata) => {
-                    const contactIndex = updatedContacts.findIndex(c => c.pubKey === metadata.pubkey);
-                    const newContact = {
-                        pubKey: metadata.pubkey,
-                        displayName: metadata.name,
-                        picture: metadata.picture,
-                        about: metadata.about
-                    };
-
-                    if (contactIndex !== -1) {
-                        updatedContacts[contactIndex] = { ...updatedContacts[contactIndex], ...newContact };
-                    } else {
-                        updatedContacts.push(newContact);
-                    }
-                });
-
-                this._contacts.next(updatedContacts);
-                observer.next(updatedContacts);
-            })
-            .catch((error) => {
-                console.error('Error fetching metadata for contacts:', error);
-                observer.error(error);
-            });
-    }
 
     async getProfile(): Promise<void> {
         try {
