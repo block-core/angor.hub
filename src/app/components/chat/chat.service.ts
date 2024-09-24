@@ -67,12 +67,11 @@ export class ChatService implements OnDestroy {
             if (metadata) {
                 const contact: Contact = {
                     pubKey: pubkey,
-                    displayName: metadata.name,
+                    displayName: metadata.name ? metadata.name : 'Unknown',
                     picture: metadata.picture,
                     about: metadata.about
                 };
                 this._contact.next(contact);
-
 
                 this._indexedDBService.getMetadataStream()
                     .pipe(takeUntil(this._unsubscribeAll))
@@ -80,7 +79,7 @@ export class ChatService implements OnDestroy {
                         if (updatedMetadata && updatedMetadata.pubkey === pubkey) {
                             const updatedContact: Contact = {
                                 pubKey: pubkey,
-                                displayName: updatedMetadata.metadata.name,
+                                displayName: updatedMetadata.metadata.name ? updatedMetadata.metadata.name : 'Unknown',
                                 picture: updatedMetadata.metadata.picture,
                                 about: updatedMetadata.metadata.about
                             };
@@ -103,6 +102,7 @@ export class ChatService implements OnDestroy {
                             if (!contact.pubKey) {
                                 console.error('Contact is missing pubKey:', contact);
                             }
+                            contact.name = contact.name ? contact.name : 'Unknown';
                         });
 
                         this._contacts.next(cachedContacts);
@@ -119,6 +119,7 @@ export class ChatService implements OnDestroy {
             };
         });
     }
+
 
 
 

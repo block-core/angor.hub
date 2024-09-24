@@ -12,9 +12,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatDrawer } from '@angular/material/sidenav';
-import { ChatService } from 'app/components/chat/chat.service';
-import { Profile } from 'app/components/chat/chat.types';
 import { Subject, takeUntil } from 'rxjs';
+import { Profile } from '../chat.types';
+import { ChatService } from '../chat.service';
 
 @Component({
     selector: 'chat-profile',
@@ -40,11 +40,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
      */
     constructor(private _chatService: ChatService) {}
 
+    // -----------------------------------------------------------------------------------------------------
+    // @ Lifecycle hooks
+    // -----------------------------------------------------------------------------------------------------
+
     /**
      * On init
      */
     ngOnInit(): void {
-
+        // Profile
         this._chatService.profile$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((profile: Profile) => {
@@ -56,7 +60,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
      * On destroy
      */
     ngOnDestroy(): void {
-
+        // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }

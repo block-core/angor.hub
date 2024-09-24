@@ -16,8 +16,7 @@
                 @if (chat.contact.picture) {
                     <img
                         class="h-full w-full rounded-full object-cover"
-                        [src]="chat.contact.picture || '/images/avatars/avatar-placeholder.png'"
-                        onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                        [src]="chat.contact.picture"
                         [alt]="'Contact picture'"
                     />
                 }
@@ -25,8 +24,7 @@
                     <div
                         class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-8xl font-semibold uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                     >
-                    {{ chat?.contact?.name ? chat.contact.name.charAt(0) : '' }}
-
+                        {{ chat.contact.name.charAt(0) }}
                     </div>
                 }
             </div>

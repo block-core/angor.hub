@@ -7,8 +7,8 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDrawer } from '@angular/material/sidenav';
-import { Chat } from 'app/components/chat/chat.types';
-
+import { Chat } from '../chat.types';
+ 
 @Component({
     selector: 'chat-contact-info',
     templateUrl: './contact-info.component.html',

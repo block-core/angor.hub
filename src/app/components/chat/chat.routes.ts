@@ -8,9 +8,9 @@ import {
 import { ChatComponent } from 'app/components/chat/chat.component';
 import { ChatService } from 'app/components/chat/chat.service';
 import { ChatsComponent } from 'app/components/chat/chats/chats.component';
-import { ConversationComponent } from 'app/components/chat/conversation/conversation.component';
-import { EmptyConversationComponent } from 'app/components/chat/empty-conversation/empty-conversation.component';
+ import { EmptyConversationComponent } from 'app/components/chat/empty-conversation/empty-conversation.component';
 import { catchError, throwError } from 'rxjs';
+import { ConversationComponent } from './conversation/conversation.component';
 
 /**
  * Conversation resolver

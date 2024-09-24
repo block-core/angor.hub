@@ -38,8 +38,7 @@
                                     @if (profile.picture) {
                                         <img
                                             class="h-full w-full rounded-full object-cover"
-                                            [src]="profile.picture || '/images/avatars/avatar-placeholder.png'"
-                                            onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                                            [src]="profile.picture"
                                             alt="Profile picture"
                                         />
                                     }
@@ -47,7 +46,7 @@
                                         <div
                                             class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                         >
-                                            {{ profile.name ? profile.name.charAt(0) : '' }}
+                                            {{ profile.name.charAt(0) }}
                                         </div>
                                     }
                                 </div>
@@ -185,8 +184,7 @@
                                         @if (chat.contact.picture) {
                                             <img
                                                 class="h-full w-full rounded-full object-cover"
-                                                [src]="chat.contact.picture || '/images/avatars/avatar-placeholder.png'"
-                                                onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                                                [src]="chat.contact.picture"
                                                 alt="Contact picture"
                                             />
                                         }
@@ -194,8 +192,9 @@
                                             <div
                                                 class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                             >
-                                            {{ chat?.contact?.name ? chat.contact.name.charAt(0) : ''}}
-
+                                                {{
+                                                    chat.contact.name.charAt(0)
+                                                }}
                                             </div>
                                         }
                                     </div>
@@ -220,10 +219,11 @@
                                     <div
                                         class="ml-auto flex flex-col items-end self-start pl-2"
                                     >
-                                    <div class="text-secondary text-sm leading-5 whitespace-nowrap overflow-hidden">
-                                        {{ chat.lastMessageAt | ago }}
-                                    </div>
-
+                                        <div
+                                            class="text-secondary text-sm leading-5"
+                                        >
+                                            {{ chat.lastMessageAt | ago}}
+                                        </div>
                                         @if (chat.muted) {
                                             <mat-icon
                                                 class="text-hint icon-size-5"

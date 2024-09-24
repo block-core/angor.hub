@@ -14,7 +14,7 @@
         <div
             class="bg-card mx-auto flex w-full max-w-5xl flex-0 flex-col items-center px-8 lg:h-18 lg:flex-row"
         >
-            <!-- Avatar -->
+            <!-- picture -->
             <div class="-mt-26 rounded-full lg:-mt-22">
                  <ng-container *ngIf="metadata?.picture; else defaultAvatar">
                     <img class="ring-bg-card h-32 w-32 rounded-full ring-4 object-cover" [src]="getSafeUrl(metadata?.picture)" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />

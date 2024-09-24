@@ -1,4 +1,3 @@
-import { Router } from '@angular/router';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -10,9 +9,10 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDrawer } from '@angular/material/sidenav';
-import { ChatService } from 'app/components/chat/chat.service';
-import { Chat, Contact } from 'app/components/chat/chat.types';
-import { catchError, of, Subject, switchMap, take, takeUntil, throwError } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
+import { Contact } from '../chat.types';
+import { ChatService } from '../chat.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'chat-new-chat',
@@ -27,9 +27,20 @@ export class NewChatComponent implements OnInit, OnDestroy {
     contacts: Contact[] = [];
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
+    /**
+     * Constructor
+     */
     constructor(private _chatService: ChatService, private router: Router) {}
 
+    // -----------------------------------------------------------------------------------------------------
+    // @ Lifecycle hooks
+    // -----------------------------------------------------------------------------------------------------
+
+    /**
+     * On init
+     */
     ngOnInit(): void {
+        // Contacts
         this._chatService.contacts$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((contacts: Contact[]) => {
@@ -37,9 +48,27 @@ export class NewChatComponent implements OnInit, OnDestroy {
             });
     }
 
+    /**
+     * On destroy
+     */
     ngOnDestroy(): void {
+        // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
+    }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Public methods
+    // -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Track by function for ngFor loops
+     *
+     * @param index
+     * @param item
+     */
+    trackByFn(index: number, item: any): any {
+        return item.id || index;
     }
 
     openChat(contact: Contact): void {
@@ -50,12 +79,5 @@ export class NewChatComponent implements OnInit, OnDestroy {
 
         // Close the drawer after selecting the contact
         this.drawer.close();
-    }
-
-
-
-
-    trackByFn(index: number, item: any): any {
-        return item.id || index;
     }
 }

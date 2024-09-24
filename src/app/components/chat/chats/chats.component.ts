@@ -14,12 +14,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { ChatService } from 'app/components/chat/chat.service';
-import { Chat, Profile } from 'app/components/chat/chat.types';
-import { NewChatComponent } from 'app/components/chat/new-chat/new-chat.component';
-import { ProfileComponent } from 'app/components/chat/profile/profile.component';
-import { AgoPipe } from 'app/shared/ago.pipe';
 import { Subject, takeUntil } from 'rxjs';
+import { ChatService } from '../chat.service';
+import { Chat, Profile } from '../chat.types';
+import { NewChatComponent } from '../new-chat/new-chat.component';
+import { ProfileComponent } from '../profile/profile.component';
+import { AgoPipe } from 'app/shared/ago.pipe';
+
 
 @Component({
     selector: 'chat-chats',
@@ -59,42 +60,42 @@ export class ChatsComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef
     ) {}
 
+    // -----------------------------------------------------------------------------------------------------
+    // @ Lifecycle hooks
+    // -----------------------------------------------------------------------------------------------------
 
     /**
      * On init
      */
     ngOnInit(): void {
-
+        // Chats
         this._chatService.chats$
-        .pipe(takeUntil(this._unsubscribeAll))
-        .subscribe((chats: Chat[]) => {
-            if (chats) {
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((chats: Chat[]) => {
                 this.chats = this.filteredChats = chats;
-            } else {
-                this.chats = this.filteredChats = [];
-            }
-            this._changeDetectorRef.markForCheck();
-        });
 
+                // Mark for check
+                this._changeDetectorRef.markForCheck();
+            });
 
-
+        // Profile
         this._chatService.profile$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((profile: Profile) => {
                 this.profile = profile;
 
-
+                // Mark for check
                 this._changeDetectorRef.markForCheck();
             });
 
-
-            this._chatService.chat$
+        // Selected chat
+        this._chatService.chat$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chat: Chat) => {
-                if (chat) {
-                    this.selectedChat = chat;
-                    this._changeDetectorRef.markForCheck();
-                }
+                this.selectedChat = chat;
+
+                // Mark for check
+                this._changeDetectorRef.markForCheck();
             });
 
 
@@ -104,13 +105,17 @@ export class ChatsComponent implements OnInit, OnDestroy {
      * On destroy
      */
     ngOnDestroy(): void {
-
+        // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
 
-
+        // Reset the chat
         this._chatService.resetChat();
     }
+
+    // -----------------------------------------------------------------------------------------------------
+    // @ Public methods
+    // -----------------------------------------------------------------------------------------------------
 
     /**
      * Filter the chats
@@ -118,16 +123,15 @@ export class ChatsComponent implements OnInit, OnDestroy {
      * @param query
      */
     filterChats(query: string): void {
-
+        // Reset the filter
         if (!query) {
             this.filteredChats = this.chats;
             return;
         }
 
         this.filteredChats = this.chats.filter((chat) =>
-            (chat.contact.name ? chat.contact.name.toLowerCase() : '').includes(query.toLowerCase())
+            chat.contact.name.toLowerCase().includes(query.toLowerCase())
         );
-
     }
 
     /**
@@ -137,7 +141,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
         this.drawerComponent = 'new-chat';
         this.drawerOpened = true;
 
-
+        // Mark for check
         this._changeDetectorRef.markForCheck();
     }
 
@@ -148,7 +152,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
         this.drawerComponent = 'profile';
         this.drawerOpened = true;
 
-
+        // Mark for check
         this._changeDetectorRef.markForCheck();
     }
 
