@@ -219,9 +219,7 @@
                                     <div
                                         class="ml-auto flex flex-col items-end self-start pl-2"
                                     >
-                                        <div
-                                            class="text-secondary text-sm leading-5"
-                                        >
+                                    <div class="text-secondary text-sm leading-5 whitespace-nowrap overflow-hidden">
                                             {{ chat.lastMessageAt | ago}}
                                         </div>
                                         @if (chat.muted) {
