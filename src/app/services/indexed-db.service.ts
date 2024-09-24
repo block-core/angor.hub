@@ -261,15 +261,15 @@ export class IndexedDBService {
   async getAllChats(): Promise<Chat[]> {
     try {
       const chats: Chat[] = [];
+
       await this.chatStore.iterate<Chat, void>((value) => {
         chats.push(value);
       });
 
-      // مرتب‌سازی چت‌ها بر اساس زمان آخرین پیام به‌طوری که آخرین چت‌ها اول نمایش داده شوند
       chats.sort((a, b) => {
-        const dateA = new Date(a.lastMessageAt!).getTime();
-        const dateB = new Date(b.lastMessageAt!).getTime();
-        return dateB - dateA; // چت‌هایی که تاریخ جدیدتری دارند در ابتدا قرار می‌گیرند
+        const dateA = Number(a.lastMessageAt);
+        const dateB = Number(b.lastMessageAt);
+        return dateB - dateA;
       });
 
       return chats;
@@ -277,7 +277,8 @@ export class IndexedDBService {
       console.error('Error getting chats from IndexedDB:', error);
       return [];
     }
-}
+  }
+
 
 
    async saveLastSavedTimestamp(timestamp: number): Promise<void> {

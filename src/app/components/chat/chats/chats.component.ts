@@ -18,6 +18,7 @@ import { ChatService } from 'app/components/chat/chat.service';
 import { Chat, Profile } from 'app/components/chat/chat.types';
 import { NewChatComponent } from 'app/components/chat/new-chat/new-chat.component';
 import { ProfileComponent } from 'app/components/chat/profile/profile.component';
+import { AgoPipe } from 'app/shared/ago.pipe';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -38,6 +39,7 @@ import { Subject, takeUntil } from 'rxjs';
         NgClass,
         RouterLink,
         RouterOutlet,
+        AgoPipe
     ],
 })
 export class ChatsComponent implements OnInit, OnDestroy {

@@ -53,6 +53,7 @@ export class MetadataService {
               const metadata = JSON.parse(event.content);
               await this.indexedDBService.saveUserMetadata(event.pubkey, metadata);
               metadataList.push({ pubkey: event.pubkey, metadata });
+              
             } catch (error) {
               console.error('Error parsing metadata:', error);
             }

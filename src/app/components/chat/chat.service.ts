@@ -60,7 +60,6 @@ export class ChatService implements OnDestroy {
     async getContact(pubkey: string): Promise<void> {
         try {
             if (!pubkey) {
-                console.error('Public key is undefined.');
                 return;
             }
 
@@ -122,6 +121,7 @@ export class ChatService implements OnDestroy {
     }
 
 
+
     async getProfile(): Promise<void> {
         try {
             const publicKey = this._signerService.getPublicKey();
@@ -143,23 +143,60 @@ export class ChatService implements OnDestroy {
         }
     }
 
+    private updateContactInChats(pubKey: string, updatedMetadata: any): void {
+        const chatToUpdate = this.chatList.find(chat => chat.contact.pubKey === pubKey);
+
+        if (chatToUpdate) {
+            chatToUpdate.contact = {
+                ...chatToUpdate.contact,
+                ...updatedMetadata
+            };
+
+            this.chatList = this.chatList.map(chat => chat.contact.pubKey === pubKey ? chatToUpdate : chat);
+
+            this._chats.next(this.chatList);
+
+            this._indexedDBService.saveChat(chatToUpdate);
+        }
+    }
+
+
     async getChats(): Promise<Observable<Chat[]>> {
         const pubkey = this._signerService.getPublicKey();
         const useExtension = await this._signerService.isUsingExtension();
         const decryptedPrivateKey = await this._signerService.getSecretKey("123");
+
+        const storedChats = await this._indexedDBService.getAllChats();
+        if (storedChats && storedChats.length > 0) {
+            this.chatList = storedChats;
+            this._chats.next(this.chatList);
+        }
+
+        setTimeout(async () => {
+            try {
+                if (storedChats && storedChats.length > 0) {
+                    const pubkeys = storedChats.map(chat => chat.contact.pubKey);
+
+                    const metadataList = await this._metadataService.fetchMetadataForMultipleKeys(pubkeys);
+                    metadataList.forEach(metadata => {
+                        this.updateContactInChats(metadata.pubkey, metadata.metadata);
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating chat contacts metadata:', error);
+            }
+        }, 0);
         this.subscribeToChatList(pubkey, useExtension, decryptedPrivateKey);
-
-
-        this.chatList.forEach(chat => this.loadChatHistory(chat.id!));
-
         return this.getChatListStream();
     }
 
     subscribeToChatList(pubkey: string, useExtension: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
-        this._relayService.ensureConnectedRelays().then(() => {
+        this._relayService.ensureConnectedRelays().then(async () => {
+            const lastSavedTimestamp = await this._indexedDBService.getLastSavedTimestamp();
+
             const filters: Filter[] = [
-                { kinds: [EncryptedDirectMessage], authors: [pubkey], limit: 25 },
-                { kinds: [EncryptedDirectMessage], '#p': [pubkey], limit: 25 }
+                { kinds: [EncryptedDirectMessage], authors: [pubkey], since: Math.floor(lastSavedTimestamp / 1000) },
+                { kinds: [EncryptedDirectMessage], '#p': [pubkey], since: Math.floor(lastSavedTimestamp / 1000) }
             ];
 
             this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), filters, {
@@ -173,7 +210,6 @@ export class ChatService implements OnDestroy {
                     const lastTimestamp = this.latestMessageTimestamps[otherPartyPubKey] || 0;
                     if (event.created_at > lastTimestamp) {
                         this.messageQueue.push(event);
-
 
                         await this.processNextMessage(pubkey, useExtension, decryptedSenderPrivateKey);
                     }
@@ -213,14 +249,14 @@ export class ChatService implements OnDestroy {
                 );
 
                 if (decryptedMessage) {
-                    const messageTimestamp = event.created_at * 1000;
+                    const messageTimestamp = event.created_at;
                     this.addOrUpdateChatList(otherPartyPubKey, decryptedMessage, messageTimestamp, isSentByUser);
-
 
                     const chatToUpdate = this.chatList.find(chat => chat.id === otherPartyPubKey);
                     if (chatToUpdate) {
+                        await this._indexedDBService.saveChat(chatToUpdate);
+                        await this._indexedDBService.saveLastSavedTimestamp(messageTimestamp * 1000);
                         this._chat.next(chatToUpdate);
-
                     }
                 }
             }
@@ -231,6 +267,7 @@ export class ChatService implements OnDestroy {
         }
     }
 
+
     private addOrUpdateChatList(pubKey: string, message: string, createdAt: number, isMine: boolean): void {
         const existingChat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
 
@@ -240,23 +277,21 @@ export class ChatService implements OnDestroy {
             contactId: pubKey,
             isMine,
             value: message,
-            createdAt: new Date(createdAt).toISOString(),
+            createdAt: new Date(createdAt * 1000).toISOString(),
         };
 
-
-        const currentChat = this._chat.value;
-
         if (existingChat) {
-
             const messageExists = existingChat.messages?.some(m => m.id === newMessage.id);
 
             if (!messageExists) {
                 existingChat.messages = (existingChat.messages || []).concat(newMessage)
                     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-                if (new Date(existingChat.lastMessageAt!).getTime() < createdAt) {
+                const lastMessageAtTimestamp = Number(existingChat.lastMessageAt) || 0;
+
+                if (lastMessageAtTimestamp < createdAt) {
                     existingChat.lastMessage = message;
-                    existingChat.lastMessageAt = new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
+                    existingChat.lastMessageAt = createdAt.toString();
                 }
             }
         } else {
@@ -272,27 +307,18 @@ export class ChatService implements OnDestroy {
                     displayName: contactInfo.displayName || contactInfo.name || "Unknown"
                 },
                 lastMessage: message,
-                lastMessageAt: new Date(createdAt).toLocaleDateString() + ' ' + new Date(createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                lastMessageAt: createdAt.toString(),
                 messages: [newMessage]
             };
             this.chatList.push(newChat);
             this.fetchMetadataForPubKey(pubKey);
         }
 
-
-        this.chatList.sort((a, b) => new Date(b.lastMessageAt!).getTime() - new Date(a.lastMessageAt!).getTime());
-
+        this.chatList.sort((a, b) => Number(b.lastMessageAt!) - Number(a.lastMessageAt!));
 
         this._chats.next(this.chatList);
-
-
-        if (currentChat) {
-            const restoredChat = this.chatList.find(chat => chat.id === currentChat.id);
-            if (restoredChat) {
-                this._chat.next(restoredChat);
-            }
-        }
     }
+
 
     private fetchMetadataForPubKey(pubKey: string): void {
         this._metadataService.fetchMetadataWithCache(pubKey)
@@ -329,16 +355,14 @@ export class ChatService implements OnDestroy {
         const myPubKey = this._signerService.getPublicKey();
 
         const historyFilter: Filter[] = [
-            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey] },
-            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey] }
+            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey], limit: 10 },
+            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey], limit: 10 }
         ];
 
-        console.log("Subscribing to history for chat with: ", pubKey);
 
         this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), historyFilter, {
             onevent: async (event: NostrEvent) => {
-                console.log("Received historical event: ", event);
-                const isSentByMe = event.pubkey === myPubKey;
+                 const isSentByMe = event.pubkey === myPubKey;
                 const senderOrRecipientPubKey = isSentByMe ? pubKey : event.pubkey;
                 const decryptedMessage = await this.decryptReceivedMessage(
                     event,
@@ -348,7 +372,7 @@ export class ChatService implements OnDestroy {
                 );
 
                 if (decryptedMessage) {
-                    const messageTimestamp = event.created_at * 1000;
+                    const messageTimestamp = Math.floor(event.created_at / 1000);
 
 
                     this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
@@ -418,8 +442,6 @@ export class ChatService implements OnDestroy {
                         const cachedChat = chats?.find(chat => chat.id === id);
                         if (cachedChat) {
                             this._chat.next(cachedChat);
-                            console.log("Fetching chat history for: ", this.recipientPublicKey);
-
                             this.loadChatHistory(this.recipientPublicKey);
                             return of(cachedChat);
                         }
@@ -435,9 +457,6 @@ export class ChatService implements OnDestroy {
                         const updatedChats = chats ? [...chats, newChat] : [newChat];
                         this._chats.next(updatedChats);
                         this._chat.next(newChat);
-
-                        console.log("Fetching chat history for: ", this.recipientPublicKey);
-
                         this.loadChatHistory(this.recipientPublicKey);
                         return of(newChat);
                     })
@@ -469,7 +488,6 @@ export class ChatService implements OnDestroy {
                 const cachedChat = chats?.find(chat => chat.id === contact.pubKey);
                 if (cachedChat) {
                     this._chat.next(cachedChat);
-                    console.log("Fetching chat history for: ", contact.pubKey);
                     this.loadChatHistory(contact.pubKey);
                     return of(cachedChat);
                 }
@@ -491,8 +509,6 @@ export class ChatService implements OnDestroy {
                 const updatedChats = chats ? [...chats, newChat] : [newChat];
                 this._chats.next(updatedChats);
                 this._chat.next(newChat);
-
-                console.log("Fetching chat history for: ", contact.pubKey);
                 this.loadChatHistory(contact.pubKey);
 
                 return of(newChat);
@@ -539,7 +555,6 @@ export class ChatService implements OnDestroy {
                 const published = await this._relayService.publishEventToRelays(signedEvent);
 
                 if (published) {
-                    console.log('Message sent successfully!');
                     this.message = '';
                 } else {
                     console.error('Failed to send the message.');
@@ -569,7 +584,6 @@ export class ChatService implements OnDestroy {
             const published = await this._relayService.publishEventToRelays(signedEvent);
 
             if (published) {
-                console.log('Message sent successfully with extension!');
                 this.message = '';
             } else {
                 console.error('Failed to send the message with extension.');
