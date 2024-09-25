@@ -346,7 +346,6 @@ export class SignerService {
             const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
             return decryptedMessage;
         } catch (error) {
-            console.error('Error decrypting message:', error);
             throw error; // Re-throw or handle the error
         }
     }

@@ -20,7 +20,7 @@ export class ChatService implements OnDestroy {
     private isDecrypting = false;
     private recipientPublicKey: string;
     private message: string;
-    private decryptedPrivateKey:string="";
+    private decryptedPrivateKey: string = "";
     private _chat: BehaviorSubject<Chat | null> = new BehaviorSubject(null);
     private _chats: BehaviorSubject<Chat[] | null> = new BehaviorSubject(null);
     private _contact: BehaviorSubject<Contact | null> = new BehaviorSubject(null);
@@ -119,11 +119,57 @@ export class ChatService implements OnDestroy {
                     observer.complete();
                 });
 
-            return { unsubscribe() {} };
+            return { unsubscribe() { } };
         });
     }
 
+    async updateChatListMetadata(): Promise<void> {
+        const pubKeys = this.chatList.map(chat => chat.contact?.pubKey).filter(pubKey => pubKey);
+        if (pubKeys.length > 0) {
+            const metadataList = await this._metadataService.fetchMetadataForMultipleKeys(pubKeys);
 
+            metadataList.forEach(metadata => {
+                const contact = this._contacts.value?.find(contact => contact.pubKey === metadata.pubkey);
+                if (contact) {
+                    contact.displayName = metadata.metadata.name || 'Unknown';
+                    contact.picture = metadata.metadata.picture || contact.picture;
+                    contact.about = metadata.metadata.about || contact.about;
+                }
+
+                const chat = this.chatList.find(chat => chat.contact?.pubKey === metadata.pubkey);
+                if (chat) {
+                    chat.contact.displayName = metadata.metadata.name || 'Unknown';
+                    chat.contact.picture = metadata.metadata.picture || chat.contact.picture;
+                    chat.contact.about = metadata.metadata.about || chat.contact.about;
+                }
+            });
+
+            this._chats.next(this.chatList);
+            this._contacts.next(this._contacts.value || []);
+        }
+    }
+
+    private subscribeToRealTimeMetadataUpdates(pubKey: string): void {
+        this._metadataService.getMetadataStream()
+            .pipe(filter(updatedMetadata => updatedMetadata && updatedMetadata.pubkey === pubKey))
+            .subscribe(updatedMetadata => {
+                const chat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
+                if (chat) {
+                    chat.contact.displayName = updatedMetadata.metadata.name || 'Unknown';
+                    chat.contact.picture = updatedMetadata.metadata.picture || chat.contact.picture;
+                    chat.contact.about = updatedMetadata.metadata.about || chat.contact.about;
+                    this._chats.next(this.chatList);
+                }
+
+                const contact = this._contacts.value?.find(contact => contact.pubKey === pubKey);
+                if (contact) {
+                    contact.displayName = updatedMetadata.metadata.name || 'Unknown';
+                    contact.picture = updatedMetadata.metadata.picture || contact.picture;
+                    contact.about = updatedMetadata.metadata.about || contact.about;
+                    this._contacts.next(this._contacts.value || []);
+                }
+            });
+    }
 
 
     async getProfile(): Promise<void> {
@@ -151,18 +197,19 @@ export class ChatService implements OnDestroy {
         return this.getChatListStream();
     }
 
-    async InitSubscribeToChatList(): Promise<Observable<Chat[]>>
-    {
+    async InitSubscribeToChatList(): Promise<Observable<Chat[]>> {
         const pubkey = this._signerService.getPublicKey();
         const useExtension = await this._signerService.isUsingExtension();
         const useSecretKey = await this._signerService.isUsingSecretKey();
+        await this.updateChatListMetadata(); // Fetch and update metadata before subscribing to chats
 
-        if (useSecretKey){this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
-}
-        return this.subscribeToChatList(pubkey, useExtension,useSecretKey, this.decryptedPrivateKey);
+        if (useSecretKey) {
+            this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
+        }
+        return this.subscribeToChatList(pubkey, useExtension, useSecretKey, this.decryptedPrivateKey);
     }
 
-    subscribeToChatList(pubkey: string, useExtension: boolean, useSecretKey:boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
+    subscribeToChatList(pubkey: string, useExtension: boolean, useSecretKey: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
         this._relayService.ensureConnectedRelays().then(async () => {
 
             const filters: Filter[] = [
@@ -182,7 +229,7 @@ export class ChatService implements OnDestroy {
                     if (event.created_at > lastTimestamp) {
                         this.messageQueue.push(event);
 
-                        await this.processNextMessage(pubkey, useExtension,useSecretKey, decryptedSenderPrivateKey);
+                        await this.processNextMessage(pubkey, useExtension, useSecretKey, decryptedSenderPrivateKey);
                     }
                 },
                 oneose: () => {
@@ -229,8 +276,7 @@ export class ChatService implements OnDestroy {
                 }
             }
         } catch (error) {
-            console.error('Failed to decrypt message:', error);
-        } finally {
+         } finally {
             this.isDecrypting = false;
         }
     }
@@ -280,7 +326,7 @@ export class ChatService implements OnDestroy {
                 messages: [newMessage]
             };
             this.chatList.push(newChat);
-         }
+        }
 
         this.chatList.sort((a, b) => Number(b.lastMessageAt!) - Number(a.lastMessageAt!));
 
@@ -297,13 +343,13 @@ export class ChatService implements OnDestroy {
     private async decryptReceivedMessage(
         event: NostrEvent,
         useExtension: boolean,
-        useSecretKey:boolean,
+        useSecretKey: boolean,
         decryptedSenderPrivateKey: string,
         recipientPublicKey: string
     ): Promise<string> {
         if (useExtension) {
             return await this._signerService.decryptMessageWithExtension(recipientPublicKey, event.content);
-        } else if(useSecretKey){
+        } else if (useSecretKey) {
             return await this._signerService.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
         }
     }
