@@ -166,16 +166,12 @@ export class ChatService implements OnDestroy {
 
 
     async getChats(): Promise<Observable<Chat[]>> {
-        const pubkey = this._signerService.getPublicKey();
-        const useExtension = await this._signerService.isUsingExtension();
-        this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
 
         const storedChats = await this._indexedDBService.getAllChats();
         if (storedChats && storedChats.length > 0) {
             this.chatList = storedChats;
             this._chats.next(this.chatList);
         }
-
         setTimeout(async () => {
             try {
                 if (storedChats && storedChats.length > 0) {
@@ -190,8 +186,19 @@ export class ChatService implements OnDestroy {
                 console.error('Error updating chat contacts metadata:', error);
             }
         }, 0);
-        this.subscribeToChatList(pubkey, useExtension, this.decryptedPrivateKey);
         return this.getChatListStream();
+    }
+
+
+    async InitSubscribeToChatList(): Promise<Observable<Chat[]>>
+    {
+        const pubkey = this._signerService.getPublicKey();
+        const useExtension = await this._signerService.isUsingExtension();
+        //this._signerService.getDecryptedSecretKey() = open password dialog or extension window
+        this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
+
+
+        return this.subscribeToChatList(pubkey, useExtension, this.decryptedPrivateKey);
     }
 
     subscribeToChatList(pubkey: string, useExtension: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {

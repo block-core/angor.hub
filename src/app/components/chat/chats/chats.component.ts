@@ -98,7 +98,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.markForCheck();
             });
 
-
+            this._chatService.InitSubscribeToChatList();
         }
 
     /**

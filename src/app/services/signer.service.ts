@@ -148,16 +148,16 @@ export class SignerService {
         return await this.securityService.decryptData(encryptedSecretKey, password);
     }
 
-     async getDecryptedSecretKey(): Promise<string | null> {
+    async getDecryptedSecretKey(): Promise<string | null> {
         try {
-            const storedPassword = this.getPassword();
+            const storedPassword = this.getPassword(); // Ensure this retrieves a valid password
             if (storedPassword) {
-                return await this.getSecretKey(storedPassword);
+                return await this.getSecretKey(storedPassword); // Ensure getSecretKey returns a valid private key
             }
 
-            const result = await this.requestPassword();
+            const result = await this.requestPassword(); // Prompt user for password if not stored
             if (result?.password) {
-                const decryptedPrivateKey = await this.getSecretKey(result.password);
+                const decryptedPrivateKey = await this.getSecretKey(result.password); // Check that the private key is decrypted properly
                 if (result.duration !== 0) {
                     this.savePassword(result.password, result.duration);
                 }
@@ -166,7 +166,6 @@ export class SignerService {
 
             console.error('Password not provided');
             return null;
-
         } catch (error) {
             console.error('Error decrypting private key:', error);
             return null;
@@ -341,13 +340,17 @@ export class SignerService {
     // NIP-04: Decrypting Direct Messages
     async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
         try {
+            if (!privateKey) {
+                throw new Error('Private key is missing or undefined.');
+            }
             const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
             return decryptedMessage;
         } catch (error) {
             console.error('Error decrypting message:', error);
-            throw error;
+            throw error; // Re-throw or handle the error
         }
     }
+
 
 
 
