@@ -20,7 +20,7 @@ export class ChatService implements OnDestroy {
     private isDecrypting = false;
     private recipientPublicKey: string;
     private message: string;
-
+    private decryptedPrivateKey:string;
     private _chat: BehaviorSubject<Chat | null> = new BehaviorSubject(null);
     private _chats: BehaviorSubject<Chat[] | null> = new BehaviorSubject(null);
     private _contact: BehaviorSubject<Contact | null> = new BehaviorSubject(null);
@@ -92,31 +92,34 @@ export class ChatService implements OnDestroy {
         }
     }
 
+
     getContacts(): Observable<Contact[]> {
         return new Observable<Contact[]>((observer) => {
             this._indexedDBService.getAllUsers()
                 .then((cachedContacts: Contact[]) => {
-                    if (cachedContacts.length > 0) {
-
-                        cachedContacts.forEach(contact => {
+                    if (cachedContacts && cachedContacts.length > 0) {
+                        const validatedContacts = cachedContacts.map(contact => {
                             if (!contact.pubKey) {
                                 console.error('Contact is missing pubKey:', contact);
                             }
                             contact.name = contact.name ? contact.name : 'Unknown';
+                            return contact;
                         });
 
-                        this._contacts.next(cachedContacts);
-                        observer.next(cachedContacts);
+                        this._contacts.next(validatedContacts);
+                        observer.next(validatedContacts);
+                    } else {
+                        observer.next([]);
                     }
+                    observer.complete();
                 })
                 .catch((error) => {
                     console.error('Error loading cached contacts from IndexedDB:', error);
-                    observer.error(error);
+                    observer.next([]);
+                    observer.complete();
                 });
 
-            return () => {
-                console.log('Unsubscribing from contacts updates.');
-            };
+            return { unsubscribe() {} };
         });
     }
 
@@ -165,7 +168,7 @@ export class ChatService implements OnDestroy {
     async getChats(): Promise<Observable<Chat[]>> {
         const pubkey = this._signerService.getPublicKey();
         const useExtension = await this._signerService.isUsingExtension();
-        const decryptedPrivateKey = await this._signerService.getSecretKey("123");
+        this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
 
         const storedChats = await this._indexedDBService.getAllChats();
         if (storedChats && storedChats.length > 0) {
@@ -187,7 +190,7 @@ export class ChatService implements OnDestroy {
                 console.error('Error updating chat contacts metadata:', error);
             }
         }, 0);
-        this.subscribeToChatList(pubkey, useExtension, decryptedPrivateKey);
+        this.subscribeToChatList(pubkey, useExtension, this.decryptedPrivateKey);
         return this.getChatListStream();
     }
 
@@ -346,7 +349,7 @@ export class ChatService implements OnDestroy {
         recipientPublicKey: string
     ): Promise<string> {
         if (useExtension) {
-            return await this._signerService.decryptDMWithExtension(recipientPublicKey, event.content);
+            return await this._signerService.decryptMessageWithExtension(recipientPublicKey, event.content);
         } else {
             return await this._signerService.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
         }
@@ -368,12 +371,12 @@ export class ChatService implements OnDestroy {
                 const decryptedMessage = await this.decryptReceivedMessage(
                     event,
                     await this._signerService.isUsingExtension(),
-                    await this._signerService.getSecretKey("123"),
+                    this.decryptedPrivateKey,
                     senderOrRecipientPubKey
                 );
 
                 if (decryptedMessage) {
-                    const messageTimestamp = Math.floor(event.created_at / 1000);
+                    const messageTimestamp = Math.floor(event.created_at  );
 
 
                     this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
@@ -430,11 +433,9 @@ export class ChatService implements OnDestroy {
         this.recipientPublicKey = id;
 
         const pubkeyPromise = this._signerService.getPublicKey();
-        const useExtensionPromise = this._signerService.isUsingExtension();
-        const decryptedSenderPrivateKeyPromise = this._signerService.getSecretKey('123');
 
-        return from(Promise.all([pubkeyPromise, useExtensionPromise, decryptedSenderPrivateKeyPromise])).pipe(
-            switchMap(([pubkey, useExtension, decryptedSenderPrivateKey]) => {
+        return from(Promise.all([pubkeyPromise])).pipe(
+            switchMap(() => {
                 return this.chats$.pipe(
                     take(1),
                     distinctUntilChanged(),
@@ -478,9 +479,7 @@ export class ChatService implements OnDestroy {
 
         this.recipientPublicKey = contact.pubKey;
 
-        const pubkey = this._signerService.getPublicKey();
-        const useExtension = this._signerService.isUsingExtension();
-        const decryptedSenderPrivateKey = this._signerService.getSecretKey('123');
+
 
         return this.chats$.pipe(
             take(1),
@@ -536,7 +535,7 @@ export class ChatService implements OnDestroy {
             if (useExtension) {
                 await this.handleMessageSendingWithExtension();
             } else {
-                const decryptedSenderPrivateKey = await this._signerService.getSecretKey("123");
+
 
                 if (!this.isValidMessageSetup()) {
                     console.error('Message, sender private key, or recipient public key is not properly set.');
@@ -544,14 +543,14 @@ export class ChatService implements OnDestroy {
                 }
 
                 const encryptedMessage = await this._signerService.encryptMessage(
-                    decryptedSenderPrivateKey,
+                    this.decryptedPrivateKey,
                     this.recipientPublicKey,
                     this.message
                 );
 
                 const messageEvent = this._signerService.getUnsignedEvent(4, [['p', this.recipientPublicKey]], encryptedMessage);
 
-                const signedEvent = this._signerService.getSignedEvent(messageEvent, decryptedSenderPrivateKey);
+                const signedEvent = this._signerService.getSignedEvent(messageEvent, this.decryptedPrivateKey);
 
                 const published = await this._relayService.publishEventToRelays(signedEvent);
 

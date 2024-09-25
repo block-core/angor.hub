@@ -4,6 +4,8 @@ import { Buffer } from 'buffer';
 import { privateKeyFromSeedWords } from 'nostr-tools/nip06';
 import { SecurityService } from './security.service';
 import { hexToBytes } from '@noble/hashes/utils';
+import { MatDialog } from '@angular/material/dialog';
+import { PasswordDialogComponent } from 'app/shared/password-dialog/password-dialog.component';
 
 @Injectable({
     providedIn: 'root'
@@ -14,8 +16,68 @@ export class SignerService {
     localStoragePublicKeyName: string = "publicKey";
     localStorageNpubName: string = "npub";
     localStorageNsecName: string = "nsec";
+    private storageKey = 'userPassword';
 
-    constructor(private securityService: SecurityService) { }
+    constructor(
+        private securityService: SecurityService,
+        private dialog: MatDialog
+    ) { }
+
+    savePassword(password: string, durationInMinutes: number): void {
+        const expirationTime = Date.now() + durationInMinutes * 60 * 1000;
+        const passwordData = {
+            password,
+            expirationTime
+        };
+        sessionStorage.setItem(this.storageKey, JSON.stringify(passwordData));
+    }
+
+    getPassword(): string | null {
+        const passwordData = sessionStorage.getItem(this.storageKey);
+        if (!passwordData) return null;
+
+        const { password, expirationTime } = JSON.parse(passwordData);
+
+        if (Date.now() > expirationTime) {
+            this.clearPassword();
+            return null;
+        }
+
+        return password;
+    }
+
+    clearPassword(): void {
+        sessionStorage.removeItem(this.storageKey);
+    }
+
+    async changePassword(currentPassword: string, newPassword: string , savePassword:boolean): Promise<boolean> {
+        try {
+            const secretKey = await this.getSecretKey(currentPassword);
+            if (!secretKey) {
+                throw new Error('Incorrect current password.');
+            }
+
+            await this.setSecretKey(secretKey, newPassword);
+
+            const nsec = await this.getNsec(currentPassword);
+            if (nsec) {
+                await this.setNsec(nsec, newPassword);
+            }
+
+            this.clearPassword();
+
+            if (savePassword) {
+                this.savePassword(newPassword, 60);
+            }
+
+            return true;
+        } catch (error) {
+            console.error("Failed to change password: ", error);
+            return false;
+        }
+    }
+
+
 
     getUsername(pubkey: string) {
         if (pubkey.startsWith("npub")) {
@@ -29,6 +91,15 @@ export class SignerService {
         return nip19.npubEncode(pubkey);
     }
 
+    async requestPassword(): Promise<any> {
+        const dialogRef = this.dialog.open(PasswordDialogComponent, {
+            width: '300px',
+            disableClose: true
+        });
+
+        return dialogRef.afterClosed().toPromise();
+    }
+
     async nsec(password: string) {
         if (this.usingSecretKey()) {
             let secretKey = await this.getSecretKey(password);
@@ -37,6 +108,7 @@ export class SignerService {
         }
         return "";
     }
+
 
     pubkey(npub: string) {
         return nip19.decode(npub).data.toString();
@@ -74,6 +146,31 @@ export class SignerService {
             return null;
         }
         return await this.securityService.decryptData(encryptedSecretKey, password);
+    }
+
+     async getDecryptedSecretKey(): Promise<string | null> {
+        try {
+            const storedPassword = this.getPassword();
+            if (storedPassword) {
+                return await this.getSecretKey(storedPassword);
+            }
+
+            const result = await this.requestPassword();
+            if (result?.password) {
+                const decryptedPrivateKey = await this.getSecretKey(result.password);
+                if (result.duration !== 0) {
+                    this.savePassword(result.password, result.duration);
+                }
+                return decryptedPrivateKey;
+            }
+
+            console.error('Password not provided');
+            return null;
+
+        } catch (error) {
+            console.error('Error decrypting private key:', error);
+            return null;
+        }
     }
 
     //nsec===============
@@ -210,24 +307,6 @@ export class SignerService {
 
 
 
-    // Messaging (NIP-04)
-    async decryptMessageWithExtension(encryptedContent: string, senderPubKey: string): Promise<string> {
-        try {
-            const gt = globalThis as any;
-            const decryptedMessage = await gt.nostr.nip04.decrypt(senderPubKey, encryptedContent);
-            return decryptedMessage;
-        } catch (error) {
-            console.error('Error decrypting message with extension:', error);
-            throw new Error('Failed to decrypt message with Nostr extension.');
-        }
-    }
-
-
-    async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
-        const gt = globalThis as any;
-        const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
-        return encryptedMessage;
-    }
 
     async encryptMessage(privateKey: string, recipientPublicKey: string, message: string): Promise<string> {
         console.log(message);
@@ -240,6 +319,25 @@ export class SignerService {
         }
     }
 
+    async encryptMessageWithExtension(content: string, pubKey: string): Promise<string> {
+        const gt = globalThis as any;
+        const encryptedMessage = await gt.nostr.nip04.encrypt(pubKey, content);
+        return encryptedMessage;
+    }
+
+
+    // Messaging (NIP-04)
+    async decryptMessageWithExtension(pubkey: string, ciphertext: string): Promise<string> {
+        const gt = globalThis as any;
+        if (gt.nostr && gt.nostr.nip04?.decrypt) {
+            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext)
+                .catch((error: any) => {
+                    return "*Failed to Decrypted Content*"
+                });
+            return decryptedContent;
+        }
+        return "Attempted Nostr Window decryption and failed."
+    }
     // NIP-04: Decrypting Direct Messages
     async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
         try {
@@ -293,41 +391,13 @@ export class SignerService {
         throw new Error("Failed to Sign with extension");
     }
 
-    async decryptDMWithExtension(pubkey: string, ciphertext: string): Promise<string> {
-        const gt = globalThis as any;
-        if (gt.nostr && gt.nostr.nip04?.decrypt) {
-            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext)
-                .catch((error: any) => {
-                    return "*Failed to Decrypted Content*"
-                });
-            return decryptedContent;
-        }
-        return "Attempted Nostr Window decryption and failed."
-    }
-
-    async decryptWithPrivateKey(pubkey: string, ciphertext: string, password: string): Promise<string> {
-        try {
-            // Get the stored private key in hex format
-            let privateKey = await this.getSecretKey("password");
-
-            // Ensure the private key is in Uint8Array format
-            const privateKeyUint8Array = new Uint8Array(Buffer.from(privateKey, 'hex'));
-
-            // Decrypt the message using the private key and public key
-            return await nip04.decrypt(privateKeyUint8Array, pubkey, ciphertext);
-        } catch (error) {
-            console.error("Error during decryption: ", error);
-            return "*Failed to Decrypted Content*";
-        }
-    }
-
-
     public async isUsingExtension(): Promise<boolean> {
         const globalContext = globalThis as any;
         if (globalContext.nostr && globalContext.nostr.getPublicKey) {
             try {
-                const pubkey = await globalContext.nostr.getPublicKey();
-                return !!pubkey;
+                const secretKey = localStorage.getItem(this.localStorageSecretKeyName);
+                return !secretKey;
+
             } catch (error) {
                 console.error("Failed to check Nostr extension:", error);
                 return false;

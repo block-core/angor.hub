@@ -16,8 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { PasswordService } from 'app/services/password.service';
-import { SignerService } from 'app/services/signer.service';
+ import { SignerService } from 'app/services/signer.service';
 
 @Component({
     selector: 'settings-security',
@@ -43,8 +42,7 @@ export class SettingsSecurityComponent implements OnInit {
      */
     constructor(
         private _formBuilder: UntypedFormBuilder,
-        private _passwordService: PasswordService,
-        private _signerService: SignerService
+         private _signerService: SignerService
     ) {}
 
     /**
@@ -80,7 +78,7 @@ export class SettingsSecurityComponent implements OnInit {
         const savePassword = this.securityForm.get('savePassword')?.value;
 
         try {
-            const success = await this._passwordService.changePassword(
+            const success = await this._signerService.changePassword(
                 currentPassword,
                 newPassword,
                 savePassword // Save password toggle value

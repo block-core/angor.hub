@@ -16,8 +16,7 @@ import { RelayService } from 'app/services/relay.service';
 import { SignerService } from 'app/services/signer.service';
 import { UnsignedEvent, NostrEvent, finalizeEvent } from 'nostr-tools';
 import { PasswordDialogComponent } from 'app/shared/password-dialog/password-dialog.component';
-import { PasswordService } from 'app/services/password.service';
-
+ 
 @Component({
     selector: 'settings-profile',
     templateUrl: './profile.component.html',
@@ -48,8 +47,7 @@ export class SettingsProfileComponent implements OnInit {
         private relayService: RelayService,
         private router: Router,
         private dialog: MatDialog,
-        private password: PasswordService
-    ) { }
+     ) { }
 
     ngOnInit(): void {
         this.profileForm = this.fb.group({
@@ -99,7 +97,7 @@ export class SettingsProfileComponent implements OnInit {
         this.content = JSON.stringify(profileData);
 
         if (this.signerService.isUsingSecretKey()) {
-            const storedPassword = this.password.getPassword();
+            const storedPassword = this.signerService.getPassword();
             if (storedPassword) {
                 try {
                     const privateKey = await this.signerService.getSecretKey(storedPassword);
@@ -107,8 +105,6 @@ export class SettingsProfileComponent implements OnInit {
                 } catch (error) {
                     console.error(error);
                 }
-
-
             } else {
                 const dialogRef = this.dialog.open(PasswordDialogComponent, {
                     width: '300px',
@@ -121,7 +117,7 @@ export class SettingsProfileComponent implements OnInit {
                             const privateKey = await this.signerService.getSecretKey(result.password);
                             this.signEvent(privateKey);
                             if (result.duration != 0) {
-                                this.password.savePassword(result.password, result.duration);
+                                this.signerService.savePassword(result.password, result.duration);
                             }
                         } catch (error) {
                             console.error(error);

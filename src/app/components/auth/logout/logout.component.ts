@@ -42,6 +42,7 @@ export class LogoutComponent implements OnInit, OnDestroy {
     }
 
     logout(): void {
+        this._signerService.clearPassword();
         this._signerService.logout();
         console.log("User logged out and keys removed from localStorage.");
     }
