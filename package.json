@@ -13,6 +13,7 @@
         "deploy": "ng deploy"
     },
     "dependencies": {
+        "@angular-builders/custom-webpack": "^18.0.0",
         "@angular/animations": "18.2.4",
         "@angular/cdk": "18.2.4",
         "@angular/common": "18.2.4",
@@ -46,7 +47,13 @@
         "nostr-tools": "^2.7.2",
         "perfect-scrollbar": "1.5.5",
         "quill": "2.0.2",
-        "rxjs": "7.8.1",
+        "cropperjs": "^1.6.2",
+        "crypto-browserify": "^3.12.0",
+        "process": "^0.11.10",
+        "qrcode": "^1.5.4",
+        "rxjs": "~7.8.1",
+        "stream": "^0.0.3",
+        "stream-browserify": "^3.0.0",
         "tslib": "2.7.0",
         "zone.js": "0.15.0"
     },
