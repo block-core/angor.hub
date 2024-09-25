@@ -31,6 +31,7 @@
                 <img
                     class="h-full w-full rounded-full object-cover"
                     [src]="profile.picture"
+                    onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                     [alt]="'Profile picture'"
                 />
             }

@@ -15,8 +15,6 @@ export class IndexedDBService {
   private userStore: LocalForage;
   private projectsStore: LocalForage;
   private projectStatsStore: LocalForage;
-  private chatStore: LocalForage;
-  private timestampStore: LocalForage;
 
 
   constructor() {
@@ -44,22 +42,6 @@ export class IndexedDBService {
       storeName: 'projectStats',
       description: 'Store for project statistics',
     });
-
-    this.chatStore = localForage.createInstance({
-        driver: localForage.INDEXEDDB,
-        name: 'angor-hub',
-        version: 1.0,
-        storeName: 'chats',
-        description: 'Store for chat information',
-      });
-
-      this.timestampStore = localForage.createInstance({
-        driver: localForage.INDEXEDDB,
-        name: 'angor-hub',
-        version: 1.0,
-        storeName: 'timestamps',
-        description: 'Store for last update timestamps',
-      });
 
 
     this.loadAllProjectsFromDB();
@@ -233,99 +215,4 @@ export class IndexedDBService {
     }
   }
 
-
-  async saveChat(chat: Chat): Promise<void> {
-    try {
-      await this.chatStore.setItem(chat.id, chat);
-    } catch (error) {
-      console.error('Error saving chat to IndexedDB:', error);
-    }
-  }
-
-  async getChat(pubKey: string): Promise<Chat | null> {
-    try {
-      const chat = await this.chatStore.getItem<Chat>(pubKey);
-      if (chat) {
-        return chat;
-      } else {
-        console.warn(`Chat with pubKey ${pubKey} not found in IndexedDB.`);
-        return null;
-      }
-    } catch (error) {
-      console.error(`Error retrieving chat with pubKey ${pubKey} from IndexedDB:`, error);
-      return null;
-    }
-  }
-
-
-  async getAllChats(): Promise<Chat[]> {
-    try {
-      const chats: Chat[] = [];
-
-      await this.chatStore.iterate<Chat, void>((value) => {
-        chats.push(value);
-      });
-
-      chats.sort((a, b) => {
-        const dateA = Number(a.lastMessageAt);
-        const dateB = Number(b.lastMessageAt);
-        return dateB - dateA;
-      });
-
-      return chats;
-    } catch (error) {
-      console.error('Error getting chats from IndexedDB:', error);
-      return [];
-    }
-  }
-
-
-  async getAllChatsWithLastMessage(): Promise<Chat[]> {
-    try {
-        const chats: Chat[] = [];
-
-        await this.chatStore.iterate<Chat, void>((value) => {
-            const lastMessage = value.messages[value.messages.length - 1];
-
-            const chatWithLastMessage = {
-                ...value,
-                messages: [lastMessage]
-            };
-
-            chats.push(chatWithLastMessage);
-        });
-
-        chats.sort((a, b) => {
-            const dateA = Number(a.lastMessageAt);
-            const dateB = Number(b.lastMessageAt);
-            return dateB - dateA;
-        });
-
-        return chats;
-    } catch (error) {
-        console.error('Error getting chats with last message from IndexedDB:', error);
-        return [];
-    }
-}
-
-
-
-
-   async saveLastSavedTimestamp(timestamp: number): Promise<void> {
-    try {
-      await this.timestampStore.setItem('lastSavedTimestamp', timestamp);
-    } catch (error) {
-      console.error('Error saving last update timestamp in IndexedDB:', error);
-    }
-  }
-
-  async getLastSavedTimestamp(): Promise<number> {
-    try {
-      const timestamp = await this.timestampStore.getItem<number>('lastSavedTimestamp');
-      return timestamp || 0;
-    } catch (error) {
-      console.error('Error getting last saved timestamp from IndexedDB:', error);
-      return 0;
-    }
-  }
-}
+ }

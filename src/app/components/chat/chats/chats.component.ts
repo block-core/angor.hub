@@ -1,4 +1,4 @@
-import { NgClass } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -40,7 +40,8 @@ import { AgoPipe } from 'app/shared/ago.pipe';
         NgClass,
         RouterLink,
         RouterOutlet,
-        AgoPipe
+        AgoPipe,
+        CommonModule
     ],
 })
 export class ChatsComponent implements OnInit, OnDestroy {
@@ -97,8 +98,8 @@ export class ChatsComponent implements OnInit, OnDestroy {
                 // Mark for check
                 this._changeDetectorRef.markForCheck();
             });
-
             this._chatService.InitSubscribeToChatList();
+
         }
 
     /**

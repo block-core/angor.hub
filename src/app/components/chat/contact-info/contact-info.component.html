@@ -17,6 +17,7 @@
                     <img
                         class="h-full w-full rounded-full object-cover"
                         [src]="chat.contact.picture"
+                        onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                         [alt]="'Contact picture'"
                     />
                 }

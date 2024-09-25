@@ -43,6 +43,7 @@
                             <img
                                 class="h-full w-full object-cover"
                                 [src]="contact.picture"
+                                onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                                 alt="Contact picture"
                             />
                         }
