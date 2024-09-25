@@ -280,6 +280,36 @@ export class IndexedDBService {
   }
 
 
+  async getAllChatsWithLastMessage(): Promise<Chat[]> {
+    try {
+        const chats: Chat[] = [];
+
+        await this.chatStore.iterate<Chat, void>((value) => {
+            const lastMessage = value.messages[value.messages.length - 1];
+
+            const chatWithLastMessage = {
+                ...value,
+                messages: [lastMessage]
+            };
+
+            chats.push(chatWithLastMessage);
+        });
+
+        chats.sort((a, b) => {
+            const dateA = Number(a.lastMessageAt);
+            const dateB = Number(b.lastMessageAt);
+            return dateB - dateA;
+        });
+
+        return chats;
+    } catch (error) {
+        console.error('Error getting chats with last message from IndexedDB:', error);
+        return [];
+    }
+}
+
+
+
 
    async saveLastSavedTimestamp(timestamp: number): Promise<void> {
     try {

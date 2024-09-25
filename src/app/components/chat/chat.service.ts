@@ -147,6 +147,45 @@ export class ChatService implements OnDestroy {
         }
     }
 
+    async getChats(): Promise<Observable<Chat[]>> {
+        try {
+            const storedChats = await this._indexedDBService.getAllChatsWithLastMessage();
+
+            if (storedChats && storedChats.length > 0) {
+                this.chatList = storedChats;
+                this._chats.next(this.chatList);
+
+                const pubkeys = storedChats.map(chat => chat.contact.pubKey);
+                console.log(pubkeys);
+
+                this.updateMetadataInChunks(pubkeys);
+            }
+        } catch (error) {
+            console.error('Error fetching or updating chats:', error);
+        }
+
+        return this.getChatListStream();
+    }
+
+    private async updateMetadataInChunks(pubkeys: string[]): Promise<void> {
+        try {
+            const chunkSize = 20;
+            for (let i = 0; i < pubkeys.length; i += chunkSize) {
+                const chunk = pubkeys.slice(i, i + chunkSize);
+
+                const metadataList = await this._metadataService.fetchMetadataForMultipleKeys(chunk);
+
+                metadataList.forEach(metadata => {
+                    this.updateContactInChats(metadata.pubkey, metadata.metadata);
+                });
+
+                await this.sleep(2000);
+            }
+        } catch (error) {
+            console.error('Error updating metadata for chats:', error);
+        }
+    }
+
     private updateContactInChats(pubKey: string, updatedMetadata: any): void {
         const chatToUpdate = this.chatList.find(chat => chat.contact.pubKey === pubKey);
 
@@ -164,40 +203,15 @@ export class ChatService implements OnDestroy {
         }
     }
 
-
-    async getChats(): Promise<Observable<Chat[]>> {
-
-        const storedChats = await this._indexedDBService.getAllChats();
-        if (storedChats && storedChats.length > 0) {
-            this.chatList = storedChats;
-            this._chats.next(this.chatList);
-        }
-        setTimeout(async () => {
-            try {
-                if (storedChats && storedChats.length > 0) {
-                    const pubkeys = storedChats.map(chat => chat.contact.pubKey);
-
-                    const metadataList = await this._metadataService.fetchMetadataForMultipleKeys(pubkeys);
-                    metadataList.forEach(metadata => {
-                        this.updateContactInChats(metadata.pubkey, metadata.metadata);
-                    });
-                }
-            } catch (error) {
-                console.error('Error updating chat contacts metadata:', error);
-            }
-        }, 0);
-        return this.getChatListStream();
+    private sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
-
 
     async InitSubscribeToChatList(): Promise<Observable<Chat[]>>
     {
         const pubkey = this._signerService.getPublicKey();
         const useExtension = await this._signerService.isUsingExtension();
-        //this._signerService.getDecryptedSecretKey() = open password dialog or extension window
         this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
-
-
         return this.subscribeToChatList(pubkey, useExtension, this.decryptedPrivateKey);
     }
 
@@ -370,11 +384,11 @@ export class ChatService implements OnDestroy {
             { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey], limit: 10 }
         ];
 
-
         this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), historyFilter, {
             onevent: async (event: NostrEvent) => {
-                 const isSentByMe = event.pubkey === myPubKey;
+                const isSentByMe = event.pubkey === myPubKey;
                 const senderOrRecipientPubKey = isSentByMe ? pubKey : event.pubkey;
+
                 const decryptedMessage = await this.decryptReceivedMessage(
                     event,
                     await this._signerService.isUsingExtension(),
@@ -383,8 +397,7 @@ export class ChatService implements OnDestroy {
                 );
 
                 if (decryptedMessage) {
-                    const messageTimestamp = Math.floor(event.created_at  );
-
+                    const messageTimestamp = Math.floor(event.created_at);
 
                     this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
                     this._chat.next(this.chatList.find(chat => chat.id === pubKey));
@@ -395,6 +408,7 @@ export class ChatService implements OnDestroy {
             }
         });
     }
+
 
     updateChat(id: string, chat: Chat): Observable<Chat> {
         return this.chats$.pipe(
@@ -449,9 +463,11 @@ export class ChatService implements OnDestroy {
                     filter((chats: Chat[] | null) => !!chats),
                     switchMap((chats: Chat[] | null) => {
                         const cachedChat = chats?.find(chat => chat.id === id);
-                        if (cachedChat) {
+                        if (cachedChat && cachedChat.messages.length > 0) {
                             this._chat.next(cachedChat);
+
                             this.loadChatHistory(this.recipientPublicKey);
+
                             return of(cachedChat);
                         }
 
@@ -466,7 +482,9 @@ export class ChatService implements OnDestroy {
                         const updatedChats = chats ? [...chats, newChat] : [newChat];
                         this._chats.next(updatedChats);
                         this._chat.next(newChat);
+
                         this.loadChatHistory(this.recipientPublicKey);
+
                         return of(newChat);
                     })
                 );
@@ -478,6 +496,8 @@ export class ChatService implements OnDestroy {
         );
     }
 
+
+
     openChat(contact: Contact): Observable<Chat> {
         if (!contact.pubKey) {
             console.error('The contact does not have a public key!');
@@ -486,8 +506,6 @@ export class ChatService implements OnDestroy {
 
         this.recipientPublicKey = contact.pubKey;
 
-
-
         return this.chats$.pipe(
             take(1),
             distinctUntilChanged(),
@@ -495,7 +513,9 @@ export class ChatService implements OnDestroy {
                 const cachedChat = chats?.find(chat => chat.id === contact.pubKey);
                 if (cachedChat) {
                     this._chat.next(cachedChat);
+
                     this.loadChatHistory(contact.pubKey);
+
                     return of(cachedChat);
                 }
 
@@ -516,6 +536,7 @@ export class ChatService implements OnDestroy {
                 const updatedChats = chats ? [...chats, newChat] : [newChat];
                 this._chats.next(updatedChats);
                 this._chat.next(newChat);
+
                 this.loadChatHistory(contact.pubKey);
 
                 return of(newChat);

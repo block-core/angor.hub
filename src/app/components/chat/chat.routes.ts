@@ -25,16 +25,24 @@ const conversationResolver = (
     const chatService = inject(ChatService);
     const router = inject(Router);
 
-    return chatService.getChatById(route.paramMap.get('id')).pipe(
+    const chatId = route.paramMap.get('id');
 
+    if (!chatId) {
+        const parentUrl = state.url.split('/').slice(0, -1).join('/');
+        router.navigateByUrl(parentUrl);
+        return throwError('No chat ID provided');
+    }
+
+    return chatService.getChatById(chatId).pipe(
         catchError((error) => {
-            console.error(error);
+            console.error('Error fetching conversation:', error);
             const parentUrl = state.url.split('/').slice(0, -1).join('/');
             router.navigateByUrl(parentUrl);
             return throwError(error);
         })
     );
 };
+
 
 export default [
     {
