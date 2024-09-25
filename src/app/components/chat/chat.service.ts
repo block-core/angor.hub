@@ -194,8 +194,17 @@ export class ChatService implements OnDestroy {
     }
 
     async getChats(): Promise<Observable<Chat[]>> {
-        return this.getChatListStream();
+        return this.getChatListStream().pipe(
+            tap(chats => {
+                chats.forEach(chat => {
+                    if (chat.contact?.pubKey) {
+                        this.subscribeToRealTimeMetadataUpdates(chat.contact.pubKey);
+                    }
+                });
+            })
+        );
     }
+
 
     async InitSubscribeToChatList(): Promise<Observable<Chat[]>> {
         const pubkey = this._signerService.getPublicKey();
