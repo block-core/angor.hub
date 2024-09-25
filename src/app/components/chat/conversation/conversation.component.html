@@ -245,13 +245,13 @@
                     <div *ngIf="showEmojiPicker" class="emoji-picker-container">
                         <emoji-mart (emojiClick)="addEmoji($event)" [darkMode]="darkMode"></emoji-mart>
                     </div>
-                    <button class="ml-0.5" mat-icon-button>
-                        <mat-icon [svgIcon]="'heroicons_outline:paper-clip'"></mat-icon>
+                    <button mat-icon-button (click)="toggleSpeechRecognition()">
+                        <mat-icon [ngClass]="{'active': isListening}" [svgIcon]="isListening ? 'heroicons_solid:microphone' : 'heroicons_outline:microphone'"></mat-icon>
                     </button>
                 </div>
                 <mat-form-field class="angor-mat-dense angor-mat-rounded angor-mat-bold ml-4 w-full"
                     subscriptSizing="dynamic">
-                    <textarea class="max-h-20" matInput cdkTextareaAutosize #messageInput></textarea>
+                    <textarea class="max-h-20" matInput cdkTextareaAutosize #messageInput (keydown)="handleKeyDown($event)"></textarea>
                 </mat-form-field>
                 <div class="my-px ml-4 flex h-11 items-center">
                     <button mat-icon-button (click)="sendMessage()">
