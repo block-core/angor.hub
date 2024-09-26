@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: Build, Test and Release
+    name: Build and Release
     runs-on: ubuntu-latest
 
     env:
@@ -24,9 +24,10 @@ jobs:
         with:
           submodules: true
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v2
         with:
           node-version: 20
+          registry-url: "https://registry.npmjs.org"
 
       - name: Variables
         run: |
@@ -50,7 +51,7 @@ jobs:
           rm -rf dist
 
       - name: Upload AngorHub
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: ${{env.ANGOR_HUB}}-preview-${{env.VERSION}}
           path: "${{env.RELEASE_NAME_ANGOR_HUB}}"
