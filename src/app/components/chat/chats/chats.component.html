@@ -123,7 +123,7 @@
                             }
                             <!-- If contact has a picture -->
                             <img *ngIf="chat.contact?.picture" class="h-full w-full rounded-full object-cover"
-                                [src]="chat.contact.picture" (error)="
+                                [src]="chat.contact?.picture" (error)="
                                                 this.src =
                                                     '/images/avatars/avatar-placeholder.png'
                                             " alt="Contact picture" />
@@ -136,7 +136,7 @@
                         </div>
                         <div class="ml-4 min-w-0">
                             <div class="truncate font-medium leading-5">
-                                {{ chat.contact.name }}
+                                {{ chat.contact?.name }}
                             </div>
                             <div class="text-secondary truncate leading-5" [class.text-primary]="
                                                 chat.unreadCount > 0

@@ -55,7 +55,7 @@ export class NewChatComponent implements OnInit, OnDestroy {
     }
 
     openChat(contact: Contact): void {
-        this._chatService.openChat(contact).subscribe({
+        this._chatService.getChatById(contact.pubKey, contact).subscribe({
             next: (chat) => {
                 console.log('Chat loaded or created:', chat);
                 this.router.navigate(['/chat', contact.pubKey]);

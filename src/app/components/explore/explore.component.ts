@@ -23,7 +23,6 @@ import { Project } from 'app/interface/project.interface';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Contact } from '../chat/chat.types';
 import { ChatService } from '../chat/chat.service';
-import { __metadata } from 'tslib';
 
 @Component({
   selector: 'explore',
@@ -288,30 +287,27 @@ export class ExploreComponent implements OnInit, OnDestroy {
     return /\.(jpeg|jpg|gif|png|svg|bmp|webp|tiff|ico)$/i.test(url);
   }
 
-
   async openChat(publicKey: string): Promise<void> {
-    const metadata = await this.metadataService.getUserMetadata(publicKey);
+    try {
+         const metadata = await this.metadataService.fetchMetadataWithCache(publicKey);
 
-    if (metadata) {
-        const contact: Contact = {
-            pubKey: publicKey,
-            name: metadata.name,
-            username: metadata.username,
-            picture: metadata.picture,
-            about: metadata.about,
-            displayName: metadata.displayName,
-            website: metadata.website,
-            banner: metadata.banner,
-            lud06: metadata.lud06,
-            lud16: metadata.lud16,
-            nip05: metadata.nip05
-        };
+        if (metadata) {
+            const contact: Contact = {
+                pubKey: publicKey,
+                name: metadata.name || 'Unknown',
+                picture: metadata.picture || '/images/avatars/avatar-placeholder.png',
+                about: metadata.about || '',
+                displayName: metadata.displayName || metadata.name || 'Unknown',
+            };
 
-        this._chatService.openChat(contact).subscribe((chat) => {
-            this.router.navigate(['/chat', contact.pubKey]);
-        });
-    } else {
-        console.error('No metadata found for the public key:', publicKey);
+             this._chatService.getChatById(contact.pubKey, contact).subscribe((chat) => {
+                 this.router.navigate(['/chat', contact.pubKey]);
+            });
+        } else {
+            console.error('No metadata found for the public key:', publicKey);
+        }
+    } catch (error) {
+        console.error('Error opening chat:', error);
     }
 }
 

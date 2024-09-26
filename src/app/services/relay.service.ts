@@ -61,7 +61,7 @@ export class RelayService {
             relay.retries = 0;
             clearTimeout(relay.retryTimeout);
             this.saveRelaysToLocalStorage();
-            console.log(`Connected to relay: ${relay.url}`);
+            //console.log(`Connected to relay: ${relay.url}`);
         };
 
         relay.ws.onerror = () => {

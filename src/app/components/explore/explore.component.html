@@ -66,12 +66,15 @@
                                         {{ project.about || 'No description available' }}
                                     </div>
                                 </div>
+                                @if (project.displayName ||project.name) {
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full border">
                                     <button mat-icon-button (click)="openChat(project.nostrPubKey)">
                                         <mat-icon class="icon-size-5"
                                             [svgIcon]="'heroicons_outline:chat-bubble-left-right'"></mat-icon>
                                     </button>
                                 </div>
+                                }
+
                             </div>
                             <hr class="my-6 w-full border-t" />
                             <div class="flex items-center justify-between">
@@ -79,13 +82,12 @@
                                     {{ project.totalInvestmentsCount || 0 }} investors
                                 </div>
                                 <div class="flex items-center">
-                                    <ng-container *ngFor="let investor of [].constructor(project.totalInvestmentsCount || 0); let i = index">
-                                        <img
-                                            class="text-card ring-bg-card m-0.5 h-6 w-6 rounded-full ring-2"
+                                    <ng-container
+                                        *ngFor="let investor of [].constructor(project.totalInvestmentsCount || 0); let i = index">
+                                        <img class="text-card ring-bg-card m-0.5 h-6 w-6 rounded-full ring-2"
                                             [ngClass]="{'-ml-3': project.totalInvestmentsCount > 1 && i > 0}"
                                             [src]="'images/avatars/avatar-placeholder.png'"
-                                            alt="Investor avatar {{ i + 1 }}"
-                                        />
+                                            alt="Investor avatar {{ i + 1 }}" />
                                     </ng-container>
                                 </div>
                             </div>

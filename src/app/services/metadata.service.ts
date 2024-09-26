@@ -108,7 +108,7 @@ export class MetadataService {
     const metadata = await this.indexedDBService.getUserMetadata(pubkey);
     if (metadata) {
       this.metadataSubject.next(metadata);
-    } else {
+     } else {
       this.enqueueRequest(pubkey);
     }
 

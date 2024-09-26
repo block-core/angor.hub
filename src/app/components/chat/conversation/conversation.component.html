@@ -45,26 +45,26 @@
                         <div
                             class="relative flex h-10 w-10 flex-0 items-center justify-center"
                         >
-                            @if (chat.contact.picture) {
+                            @if (chat.contact?.picture) {
                                 <img
                                     class="h-full w-full rounded-full object-cover"
-                                    [src]="chat.contact.picture"
+                                    [src]="chat.contact?.picture"
                                     onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                                     alt="Contact picture"
                                 />
                             }
-                            @if (!chat.contact.picture) {
+                            @if (!chat.contact?.picture) {
                                 <div
                                     class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
                                 >
-                                    {{ chat.contact.name.charAt(0) }}
+                                    {{ chat.contact?.name.charAt(0) }}
                                 </div>
                             }
                         </div>
                         <div
                             class="ml-4 truncate text-lg font-medium leading-5"
                         >
-                            {{ chat.contact.name }}
+                            {{ chat.contact?.name }}
                         </div>
                     </div>
 

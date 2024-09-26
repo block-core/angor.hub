@@ -102,8 +102,7 @@ export class ChatService implements OnDestroy {
                             if (!contact.pubKey) {
                                 console.error('Contact is missing pubKey:', contact);
                             }
-                            contact.name = contact.name ? contact.name : 'Unknown';
-                            return contact;
+                             return contact;
                         });
 
                         this._contacts.next(validatedContacts);
@@ -196,6 +195,10 @@ export class ChatService implements OnDestroy {
     async getChats(): Promise<Observable<Chat[]>> {
         return this.getChatListStream().pipe(
             tap(chats => {
+                if (chats && chats.length === 0) {
+                    return;
+                }
+
                 const pubKeys = chats
                     .filter(chat => chat.contact?.pubKey)
                     .map(chat => chat.contact!.pubKey);
@@ -251,8 +254,11 @@ export class ChatService implements OnDestroy {
                     }
                 },
                 oneose: () => {
-                    console.log('Subscription closed');
-                    this._chats.next(this.chatList);
+
+                     const currentChats = this.chatList || [];
+                    if (currentChats.length > 0) {
+                        this._chats.next(this.chatList);
+                    }
                 }
             });
         });
@@ -440,42 +446,26 @@ export class ChatService implements OnDestroy {
         );
     }
 
-    getChatById(id: string): Observable<Chat> {
+    getChatById(id: string, contact: Contact = null): Observable<Chat> {
         this.recipientPublicKey = id;
 
-        const pubkeyPromise = this._signerService.getPublicKey();
-
-        return from(Promise.all([pubkeyPromise])).pipe(
+        return from(Promise.all([this._signerService.getPublicKey()])).pipe(
             switchMap(() => {
                 return this.chats$.pipe(
                     take(1),
-                    distinctUntilChanged(),
-                    filter((chats: Chat[] | null) => !!chats),
                     switchMap((chats: Chat[] | null) => {
-                        const cachedChat = chats?.find(chat => chat.id === id);
-                        if (cachedChat && cachedChat.messages.length > 0) {
+                        if (!chats || chats.length === 0) {
+                            return this.createNewChat(id, contact);
+                        }
+
+                        const cachedChat = chats.find(chat => chat.id === id);
+                        if (cachedChat) {
                             this._chat.next(cachedChat);
-
                             this.loadChatHistory(this.recipientPublicKey);
-
                             return of(cachedChat);
                         }
 
-                        const newChat: Chat = {
-                            id: this.recipientPublicKey,
-                            contact: { pubKey: this.recipientPublicKey, picture: "/images/avatars/avatar-placeholder.png" },
-                            lastMessage: '',
-                            lastMessageAt: new Date().toISOString(),
-                            messages: []
-                        };
-
-                        const updatedChats = chats ? [...chats, newChat] : [newChat];
-                        this._chats.next(updatedChats);
-                        this._chat.next(newChat);
-
-                        this.loadChatHistory(this.recipientPublicKey);
-
-                        return of(newChat);
+                        return this.createNewChat(id, contact);
                     })
                 );
             }),
@@ -486,63 +476,29 @@ export class ChatService implements OnDestroy {
         );
     }
 
+     createNewChat(id: string, contact: Contact = null): Observable<Chat> {
+        const newChat: Chat = {
+            id: id,
+            contact: contact || { pubKey: id,name: "Unknown", picture: "/images/avatars/avatar-placeholder.png" },
+            lastMessage: '...',
+            lastMessageAt:  Math.floor(Date.now() / 1000).toString(),
+            messages: []
+        };
 
+         const updatedChats = this._chats.value ? [...this._chats.value, newChat] : [newChat];
+        this._chats.next(updatedChats);
+        this._chat.next(newChat);
 
-    openChat(contact: Contact): Observable<Chat> {
-        if (!contact.pubKey) {
-            console.error('The contact does not have a public key!');
-            return throwError('The contact does not have a public key!');
-        }
+         this.loadChatHistory(id);
 
-        this.recipientPublicKey = contact.pubKey;
-
-        return this.chats$.pipe(
-            take(1),
-            distinctUntilChanged(),
-            concatMap((chats: Chat[] | null) => {
-                const cachedChat = chats?.find(chat => chat.id === contact.pubKey);
-                if (cachedChat) {
-                    this._chat.next(cachedChat);
-
-                    this.loadChatHistory(contact.pubKey);
-
-                    return of(cachedChat);
-                }
-
-                const newChat: Chat = {
-                    id: contact.pubKey,
-                    contact: {
-                        pubKey: contact.pubKey,
-                        name: contact.name,
-                        picture: contact.picture || "/images/avatars/avatar-placeholder.png",
-                        about: contact.about,
-                        displayName: contact.displayName,
-                    },
-                    lastMessage: '',
-                    lastMessageAt: new Date().toISOString(),
-                    messages: []
-                };
-
-                const updatedChats = chats ? [...chats, newChat] : [newChat];
-                this._chats.next(updatedChats);
-                this._chat.next(newChat);
-
-                this.loadChatHistory(contact.pubKey);
-
-                return of(newChat);
-            }),
-            catchError((error) => {
-                console.error('Error fetching chat by ID:', error);
-                const parentUrl = this.router.url.split('/').slice(0, -1).join('/');
-                this.router.navigateByUrl(parentUrl);
-                return throwError(error);
-            })
-        );
+        return of(newChat);
     }
+
 
     resetChat(): void {
         this._chat.next(null);
     }
+
 
     public async sendPrivateMessage(message: string): Promise<void> {
         try {
