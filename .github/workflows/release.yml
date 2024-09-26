@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build, Test and Release
+    runs-on: ubuntu-latest
+
+    env:
+      ANGOR_HUB: "angor-hub"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          submodules: true
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Variables
+        run: |
+          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
+        shell: bash
+
+      - name: Package Name
+        run: |
+          echo RELEASE_NAME_ANGOR_HUB=${{ env.ANGOR_HUB }}-${{ env.VERSION }}.zip >> $GITHUB_ENV
+        shell: bash
+
+      - name: Setup
+        run: npm ci
+
+      - name: Package AngorHub
+        run: |
+          npm run build
+          cd dist
+          zip -r ../../${{env.RELEASE_NAME_ANGOR_HUB}} "./"
+          cd ../../
+          rm -rf dist
+
+      - name: Upload AngorHub
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{env.ANGOR_HUB}}-preview-${{env.VERSION}}
+          path: "${{env.RELEASE_NAME_ANGOR_HUB}}"
+
+      - name: Create/Update Draft Release
+        uses: sondreb/action-release@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: "${{env.RELEASE_NAME_ANGOR_HUB}}"
+          draft: true
+          prerelease: false
+          name: "Angor Hub (${{env.VERSION}})"
+          tag: ${{env.VERSION}}
