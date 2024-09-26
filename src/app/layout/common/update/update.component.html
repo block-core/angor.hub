@@ -1,5 +1,7 @@
 <!-- Update toggle -->
-<button *ngIf="updateService.isNewVersionAvailable" mat-icon-button (click)="applyUpdate()">
-    <mat-icon [svgIcon]="'heroicons_outline:cloud-arrow-down'"></mat-icon>
-</button>
+@if (updateService.isNewVersionAvailable) {
+    <button mat-icon-button (click)="applyUpdate()">
+        <mat-icon [svgIcon]="'heroicons_outline:cloud-arrow-down'"></mat-icon>
+    </button>
+}
 

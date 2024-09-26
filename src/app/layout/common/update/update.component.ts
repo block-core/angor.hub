@@ -2,11 +2,9 @@ import { CommonModule, DatePipe, NgClass, NgTemplateOutlet } from '@angular/comm
 import {
     ChangeDetectionStrategy,
     Component,
-    inject,
-
     ViewEncapsulation,
 } from '@angular/core';
-import { MatButton, MatButtonModule } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
@@ -31,9 +29,13 @@ import { NewVersionCheckerService } from 'app/services/update.service';
     ],
 })
 export class UpdateComponent   {
-    public updateService = inject(NewVersionCheckerService);
+    public updateService: NewVersionCheckerService;
+
+    constructor(updateService: NewVersionCheckerService) {
+        this.updateService = updateService;
+    }
 
     applyUpdate(): void {
         this.updateService.applyUpdate();
-      }
+    }
 }

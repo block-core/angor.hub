@@ -315,7 +315,4 @@ export class ExploreComponent implements OnInit, OnDestroy {
     }
 }
 
-
-
-
 }
