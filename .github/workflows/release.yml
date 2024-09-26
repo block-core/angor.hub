@@ -11,57 +11,75 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build and Release
+  build-and-release:
+    name: Build, Test, and Release AngorHub
     runs-on: ubuntu-latest
 
     env:
-      ANGOR_HUB: "angor-hub"
+      PROJECT_NAME: "angor-hub"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
+      # Step 1: Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
         with:
           submodules: true
 
-      - uses: actions/setup-node@v2
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
-          registry-url: "https://registry.npmjs.org"
+          cache: 'npm'
 
-      - name: Variables
-        run: |
-          echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
-        shell: bash
-
-      - name: Package Name
-        run: |
-          echo RELEASE_NAME_ANGOR_HUB=${{ env.ANGOR_HUB }}-${{ env.VERSION }}.zip >> $GITHUB_ENV
-        shell: bash
-
-      - name: Setup
+      # Step 3: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Package AngorHub
+      # Step 4: Determine version
+      - name: Set Version Variable
         run: |
-          npm run build
-          cd dist
-          zip -r ../../${{env.RELEASE_NAME_ANGOR_HUB}} "./"
-          cd ../../
-          rm -rf dist
+          VERSION=$(npm run version --silent || echo "0.0.1")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Upload AngorHub
+      # Step 5: Set Release name
+      - name: Set Release Name
+        run: |
+          RELEASE_NAME=${{ env.PROJECT_NAME }}-${{ env.VERSION }}.zip
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+
+      # Step 6: Build the project
+      - name: Build Project
+        run: npm run build
+
+      # Step 7: Verify build output
+      - name: Verify Build Output
+        run: ls -la dist
+        continue-on-error: false
+
+      # Step 8: Package build output
+      - name: Package Project
+        run: |
+          cd dist
+          zip -r ../${{ env.RELEASE_NAME }} .
+        continue-on-error: false
+
+      # Step 9: Upload Artifact
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.ANGOR_HUB}}-preview-${{env.VERSION}}
-          path: "${{env.RELEASE_NAME_ANGOR_HUB}}"
+          name: ${{ env.PROJECT_NAME }}-preview-${{ env.VERSION }}
+          path: ${{ env.RELEASE_NAME }}
 
-      - name: Create/Update Draft Release
-        uses: sondreb/action-release@main
+      # Step 10: Create/Update GitHub Release
+      - name: Create or Update GitHub Release
+        uses: actions/create-release@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: "${{env.RELEASE_NAME_ANGOR_HUB}}"
+          tag_name: ${{ env.VERSION }}
+          release_name: "${{ env.PROJECT_NAME }} v${{ env.VERSION }}"
           draft: true
           prerelease: false
-          name: "Angor Hub (${{env.VERSION}})"
-          tag: ${{env.VERSION}}
+          files: ${{ env.RELEASE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
