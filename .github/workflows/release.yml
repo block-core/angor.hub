@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-and-release:
-    name: Build, Test, and Release AngorHub
+    name: Build and Release AngorHub
     runs-on: ubuntu-latest
 
     env:
@@ -71,15 +71,9 @@ jobs:
           name: ${{ env.PROJECT_NAME }}-preview-${{ env.VERSION }}
           path: ${{ env.RELEASE_NAME }}
 
-      # Step 10: Create/Update GitHub Release
-      - name: Create or Update GitHub Release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ env.VERSION }}
-          release_name: "${{ env.PROJECT_NAME }} v${{ env.VERSION }}"
-          draft: true
-          prerelease: false
-          files: ${{ env.RELEASE_NAME }}
+      # Step 10: Create/Update GitHub Release using GitHub CLI
+      - name: Create GitHub Release
+        run: |
+          gh release create ${{ env.VERSION }} ${{ env.RELEASE_NAME }} --title "${{ env.PROJECT_NAME }} v${{ env.VERSION }}" --draft --notes "Auto-generated release for version ${{ env.VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
