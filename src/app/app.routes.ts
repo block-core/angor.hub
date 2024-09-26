@@ -83,6 +83,10 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/components/profile/profile.routes')
             },
             {
+                path: 'profile/:pubkey',
+                loadChildren: () => import('app/components/profile/profile.routes')
+            },
+            {
                 path: 'settings',
                 loadChildren: () => import('app/components/settings/settings.routes')
             },
