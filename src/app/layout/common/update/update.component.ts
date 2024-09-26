@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
+import { CommonModule, DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -27,10 +27,12 @@ import { NewVersionCheckerService } from 'app/services/update.service';
         NgTemplateOutlet,
         RouterLink,
         DatePipe,
+        CommonModule
     ],
 })
 export class UpdateComponent   {
     public updateService = inject(NewVersionCheckerService);
+
     applyUpdate(): void {
         this.updateService.applyUpdate();
       }
