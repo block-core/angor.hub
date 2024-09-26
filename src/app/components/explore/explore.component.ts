@@ -21,6 +21,9 @@ import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { Project } from 'app/interface/project.interface';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Contact } from '../chat/chat.types';
+import { ChatService } from '../chat/chat.service';
+import { __metadata } from 'tslib';
 
 @Component({
   selector: 'explore',
@@ -50,6 +53,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private indexedDBService: IndexedDBService,
     private changeDetectorRef: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
+    private _chatService: ChatService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -283,6 +287,35 @@ export class ExploreComponent implements OnInit, OnDestroy {
   private isImageUrl(url: string): boolean {
     return /\.(jpeg|jpg|gif|png|svg|bmp|webp|tiff|ico)$/i.test(url);
   }
+
+
+  async openChat(publicKey: string): Promise<void> {
+    const metadata = await this.metadataService.getUserMetadata(publicKey);
+
+    if (metadata) {
+        const contact: Contact = {
+            pubKey: publicKey,
+            name: metadata.name,
+            username: metadata.username,
+            picture: metadata.picture,
+            about: metadata.about,
+            displayName: metadata.displayName,
+            website: metadata.website,
+            banner: metadata.banner,
+            lud06: metadata.lud06,
+            lud16: metadata.lud16,
+            nip05: metadata.nip05
+        };
+
+        this._chatService.openChat(contact).subscribe((chat) => {
+            this.router.navigate(['/chat', contact.pubKey]);
+        });
+    } else {
+        console.error('No metadata found for the public key:', publicKey);
+    }
+}
+
+
 
 
 }
