@@ -19,7 +19,7 @@ import { ChatService } from '../chat.service';
 import { Chat, Profile } from '../chat.types';
 import { NewChatComponent } from '../new-chat/new-chat.component';
 import { ProfileComponent } from '../profile/profile.component';
-import { AgoPipe } from 'app/shared/ago.pipe';
+import { AgoPipe } from 'app/shared/pipes/ago.pipe';
 
 
 @Component({
