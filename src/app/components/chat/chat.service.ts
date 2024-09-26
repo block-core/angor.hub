@@ -196,31 +196,41 @@ export class ChatService implements OnDestroy {
     async getChats(): Promise<Observable<Chat[]>> {
         return this.getChatListStream().pipe(
             tap(chats => {
-                chats.forEach(chat => {
-                    if (chat.contact?.pubKey) {
-                        this.subscribeToRealTimeMetadataUpdates(chat.contact.pubKey);
-                    }
-                });
+                const pubKeys = chats
+                    .filter(chat => chat.contact?.pubKey)
+                    .map(chat => chat.contact!.pubKey);
+
+                // Subscribe to all metadata updates in parallel
+                this.subscribeToRealTimeMetadataUpdatesBatch(pubKeys);
             })
         );
     }
-
 
     async InitSubscribeToChatList(): Promise<Observable<Chat[]>> {
         const pubkey = this._signerService.getPublicKey();
         const useExtension = await this._signerService.isUsingExtension();
         const useSecretKey = await this._signerService.isUsingSecretKey();
-        await this.updateChatListMetadata(); // Fetch and update metadata before subscribing to chats
 
-        if (useSecretKey) {
-            this.decryptedPrivateKey = await this._signerService.getDecryptedSecretKey();
-        }
-        return this.subscribeToChatList(pubkey, useExtension, useSecretKey, this.decryptedPrivateKey);
+        this.decryptedPrivateKey = useSecretKey ? await this._signerService.getDecryptedSecretKey() : '';
+
+        // Perform metadata and chat loading in parallel for speed
+        await Promise.all([
+            this.updateChatListMetadata(),
+            this.subscribeToChatList(pubkey, useExtension, useSecretKey, this.decryptedPrivateKey)
+        ]);
+
+        return this.getChatListStream();
+    }
+
+    private subscribeToRealTimeMetadataUpdatesBatch(pubKeys: string[]): void {
+        // Batch subscribe to all pubKeys metadata updates for efficiency
+        pubKeys.forEach(pubKey => {
+            this.subscribeToRealTimeMetadataUpdates(pubKey);
+        });
     }
 
     subscribeToChatList(pubkey: string, useExtension: boolean, useSecretKey: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
         this._relayService.ensureConnectedRelays().then(async () => {
-
             const filters: Filter[] = [
                 { kinds: [EncryptedDirectMessage], authors: [pubkey] },
                 { kinds: [EncryptedDirectMessage], '#p': [pubkey] }
@@ -237,8 +247,7 @@ export class ChatService implements OnDestroy {
                     const lastTimestamp = this.latestMessageTimestamps[otherPartyPubKey] || 0;
                     if (event.created_at > lastTimestamp) {
                         this.messageQueue.push(event);
-
-                        await this.processNextMessage(pubkey, useExtension, useSecretKey, decryptedSenderPrivateKey);
+                        this.processNextMessage(pubkey, useExtension, useSecretKey, decryptedSenderPrivateKey);
                     }
                 },
                 oneose: () => {
@@ -268,7 +277,6 @@ export class ChatService implements OnDestroy {
 
                 if (!otherPartyPubKey) continue;
 
-
                 const decryptedMessage = await this.decryptReceivedMessage(
                     event,
                     useExtension,
@@ -278,19 +286,15 @@ export class ChatService implements OnDestroy {
                 );
 
                 if (decryptedMessage) {
-                    const messageTimestamp = event.created_at;
-                    this.addOrUpdateChatList(otherPartyPubKey, decryptedMessage, messageTimestamp, isSentByUser);
-
-
+                    this.addOrUpdateChatList(otherPartyPubKey, decryptedMessage, event.created_at, isSentByUser);
                 }
             }
         } catch (error) {
-         } finally {
+            console.error(error);
+        } finally {
             this.isDecrypting = false;
         }
     }
-
-
 
     private addOrUpdateChatList(pubKey: string, message: string, createdAt: number, isMine: boolean): void {
         const existingChat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
@@ -308,12 +312,10 @@ export class ChatService implements OnDestroy {
             const messageExists = existingChat.messages?.some(m => m.id === newMessage.id);
 
             if (!messageExists) {
-                existingChat.messages = (existingChat.messages || []).concat(newMessage)
+                existingChat.messages = [...(existingChat.messages || []), newMessage]
                     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-                const lastMessageAtTimestamp = Number(existingChat.lastMessageAt) || 0;
-
-                if (lastMessageAtTimestamp < createdAt) {
+                if (Number(existingChat.lastMessageAt) < createdAt) {
                     existingChat.lastMessage = message;
                     existingChat.lastMessageAt = createdAt.toString();
                 }
@@ -338,9 +340,9 @@ export class ChatService implements OnDestroy {
         }
 
         this.chatList.sort((a, b) => Number(b.lastMessageAt!) - Number(a.lastMessageAt!));
-
         this._chats.next(this.chatList);
     }
+
 
 
 
@@ -356,9 +358,9 @@ export class ChatService implements OnDestroy {
         decryptedSenderPrivateKey: string,
         recipientPublicKey: string
     ): Promise<string> {
-        if (useExtension) {
+        if (useExtension && !useSecretKey) {
             return await this._signerService.decryptMessageWithExtension(recipientPublicKey, event.content);
-        } else if (useSecretKey) {
+        } else if (useSecretKey && !useExtension) {
             return await this._signerService.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
         }
     }
@@ -546,18 +548,15 @@ export class ChatService implements OnDestroy {
         try {
             this.message = message;
 
-            const useExtension = await this._signerService.isUsingExtension();
-
-            if (useExtension) {
+             const useExtension = await this._signerService.isUsingExtension();
+            const useSecretKey = await this._signerService.isUsingSecretKey();
+            if (useExtension && !useSecretKey) {
                 await this.handleMessageSendingWithExtension();
-            } else {
-
-
+            } else if (!useExtension && useSecretKey) {
                 if (!this.isValidMessageSetup()) {
                     console.error('Message, sender private key, or recipient public key is not properly set.');
                     return;
                 }
-
                 const encryptedMessage = await this._signerService.encryptMessage(
                     this.decryptedPrivateKey,
                     this.recipientPublicKey,
