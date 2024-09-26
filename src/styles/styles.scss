@@ -9,7 +9,10 @@ body {
 }
 .emoji-picker-container {
     position: absolute;
-    bottom: 60px; /* Adjust this value to move the picker right above the button */
+    bottom: 60px;
     left: 0;
-    z-index: 1000; /* Ensures the picker appears above other elements */
+    z-index: 1000;
   }
+  input, textarea, select, button {
+    font-size: 16px;
+}
