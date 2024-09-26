@@ -32,13 +32,7 @@ export class NewChatComponent implements OnInit, OnDestroy {
      */
     constructor(private _chatService: ChatService, private router: Router) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * On init
-     */
     ngOnInit(): void {
         // Contacts
         this._chatService.contacts$
@@ -48,36 +42,31 @@ export class NewChatComponent implements OnInit, OnDestroy {
             });
     }
 
-    /**
-     * On destroy
-     */
+
     ngOnDestroy(): void {
         // Unsubscribe from all subscriptions
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
-     */
     trackByFn(index: number, item: any): any {
         return item.id || index;
     }
 
     openChat(contact: Contact): void {
-        this._chatService.openChat(contact).subscribe((chat) => {
-            console.log('Chat loaded or created:', chat);
-            this.router.navigate(['/chat', contact.pubKey]);
+        this._chatService.openChat(contact).subscribe({
+            next: (chat) => {
+                console.log('Chat loaded or created:', chat);
+                this.router.navigate(['/chat', contact.pubKey]);
+            },
+            error: (error) => {
+                console.error('Error loading or creating chat:', error);
+            },
+            complete: () => {
+                this.drawer.close();
+            }
         });
-
-        // Close the drawer after selecting the contact
-        this.drawer.close();
     }
+
 }
