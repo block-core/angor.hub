@@ -15,7 +15,7 @@
             <!-- Logo -->
             <div class="flex h-20 items-center px-8 pt-6">
                 <img
-                    class="w-24 h-10"
+                    class="h-10 w-24"
                     src="images/logo/logo-text-on-dark.svg"
                     alt="Angor Hub"
                 />
@@ -35,11 +35,11 @@
             <div class="mx-2 flex items-center lg:mr-8">
                 <div class="hidden lg:flex">
                     <img
-                        class="w-24 h-10 dark:hidden"
+                        class="h-10 w-24 dark:hidden"
                         src="images/logo/logo-text.svg"
                     />
                     <img
-                        class="hidden w-24 h-10 dark:flex"
+                        class="hidden h-10 w-24 dark:flex"
                         src="images/logo/logo-text-on-dark.svg"
                     />
                 </div>
@@ -64,6 +64,7 @@
         <!-- Components -->
         <div class="ml-auto flex items-center space-x-0.5 pl-2 sm:space-x-2">
             <!-- <languages></languages> -->
+            <update></update>
             <angor-fullscreen class="hidden md:block"></angor-fullscreen>
             <search [appearance]="'bar'"></search>
             <notifications></notifications>
@@ -81,18 +82,16 @@
     </div>
 
     <div class="flex w-full flex-auto flex-col">
-
         @if (true) {
             <router-outlet></router-outlet>
         }
     </div>
 
-
     <div
         class="bg-card relative z-49 flex h-14 w-full flex-0 items-center border-t px-4 dark:bg-transparent sm:h-20 md:px-6 print:hidden"
     >
         <span class="text-secondary font-medium"
-            >Angor &copy; {{ currentYear }} - version {{version}}</span
+            >Angor &copy; {{ currentYear }} - version {{ version }}</span
         >
     </div>
 </div>

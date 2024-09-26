@@ -17,6 +17,7 @@ import { SearchComponent } from 'app/layout/common/search/search.component';
 import { UserComponent } from 'app/layout/common/user/user.component';
 import { Subject, takeUntil } from 'rxjs';
 import { ANGOR_VERSION } from '@angor/version';
+import { UpdateComponent } from "../../../common/update/update.component";
 
 @Component({
     selector: 'classic-layout',
@@ -24,17 +25,18 @@ import { ANGOR_VERSION } from '@angor/version';
     encapsulation: ViewEncapsulation.None,
     standalone: true,
     imports: [
-        AngorLoadingBarComponent,
-        AngorVerticalNavigationComponent,
-        MatButtonModule,
-        MatIconModule,
-        AngorFullscreenComponent,
-        SearchComponent,
-        NotificationsComponent,
-        UserComponent,
-        RouterOutlet,
-        QuickChatComponent,
-    ],
+    AngorLoadingBarComponent,
+    AngorVerticalNavigationComponent,
+    MatButtonModule,
+    MatIconModule,
+    AngorFullscreenComponent,
+    SearchComponent,
+    NotificationsComponent,
+    UserComponent,
+    RouterOutlet,
+    QuickChatComponent,
+    UpdateComponent
+],
 })
 export class ClassicLayoutComponent implements OnInit, OnDestroy {
     isScreenSmall: boolean;

@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { APP_INITIALIZER, ApplicationConfig, inject } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, inject, isDevMode } from '@angular/core';
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
 import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -16,14 +16,29 @@ import { provideIcons } from 'app/core/icons/icons.provider';
 import { mockApiServices } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
+import { provideServiceWorker } from '@angular/service-worker';
+import { HashService } from './services/hash.service';
 
-/**
- * Application configuration and providers
- */
+export function initializeApp(hashService: HashService) {
+    console.log('initializeApp. Getting hashService.load.');
+    return (): Promise<void> => hashService.load();
+}
+
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
         provideHttpClient(),
+        provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+        })
+        ,
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeApp,
+            deps: [HashService],
+            multi: true,
+        },
         provideRouter(
             appRoutes,
             withPreloading(PreloadAllModules),

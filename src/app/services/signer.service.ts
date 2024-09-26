@@ -328,27 +328,54 @@ export class SignerService {
     // Messaging (NIP-04)
     async decryptMessageWithExtension(pubkey: string, ciphertext: string): Promise<string> {
         const gt = globalThis as any;
-        if (gt.nostr && gt.nostr.nip04?.decrypt) {
-            const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext)
-                .catch((error: any) => {
-                    return "*Failed to Decrypted Content*"
-                });
-            return decryptedContent;
+
+        // Check if Nostr extension and decrypt function are available
+        if (gt.nostr && typeof gt.nostr.nip04?.decrypt === 'function') {
+            try {
+                // Attempt to decrypt the message using the Nostr extension
+                const decryptedContent = await gt.nostr.nip04.decrypt(pubkey, ciphertext);
+                return decryptedContent;
+            } catch (error) {
+                console.error('Decryption failed:', error);
+                return "*Failed to decrypt content: " + error.message + "*";
+            }
         }
-        return "Attempted Nostr Window decryption and failed."
+
+        // If the Nostr extension is not available
+        console.warn('Nostr extension or decrypt method is unavailable');
+        return "Attempted Nostr Window decryption and failed.";
     }
+
+
     // NIP-04: Decrypting Direct Messages
     async decryptMessage(privateKey: string, senderPublicKey: string, encryptedMessage: string): Promise<string> {
         try {
-            if (!privateKey) {
-                throw new Error('Private key is missing or undefined.');
+            // Check if privateKey, senderPublicKey, and encryptedMessage are provided
+            if (!privateKey || !senderPublicKey || !encryptedMessage) {
+                throw new Error('Private key, public key, or encrypted message is missing or undefined.');
             }
+
+            // Log for debugging purposes (ensure these are correct)
+            // console.log('Decrypting message...');
+            // console.log('Private Key:', privateKey);
+            // console.log('Sender Public Key:', senderPublicKey);
+            // console.log('Encrypted Message:', encryptedMessage);
+
+            // Attempt to decrypt the message using nip04.decrypt
             const decryptedMessage = await nip04.decrypt(privateKey, senderPublicKey, encryptedMessage);
+
+            // Check if the decrypted message is valid
+            if (!decryptedMessage) {
+                throw new Error('Decryption returned an empty message.');
+            }
+
             return decryptedMessage;
         } catch (error) {
-            throw error; // Re-throw or handle the error
+            console.error('Decryption failed:', error.message);
+            throw error; // Re-throw or handle the error further if necessary
         }
     }
+
 
 
 
