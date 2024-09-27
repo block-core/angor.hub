@@ -165,7 +165,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
         };
 
         this.recognition.onend = () => {
-            console.log('Speech recognition service disconnected');
             this.isListening = false;
         };
     }
@@ -191,7 +190,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
 
 
     ngOnDestroy(): void {
-        
+
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
@@ -255,7 +254,6 @@ export class ConversationComponent implements OnInit, OnDestroy {
                 .then(() => {
                     this.messageInput.nativeElement.value = '';
                     this.finalTranscript = '';
-                    console.log('Message sent successfully.');
                 })
                 .catch((error) => {
                     console.error('Failed to send message:', error);

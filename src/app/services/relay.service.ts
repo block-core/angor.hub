@@ -97,7 +97,6 @@ export class RelayService {
 
         relay.retryTimeout = setTimeout(() => {
             this.connectToRelay(relay);
-            console.log(`Retrying connection to relay: ${relay.url} (Attempt ${relay.retries})`);
         }, retryInterval);
     }
 
@@ -153,7 +152,6 @@ export class RelayService {
         writeRelays.forEach((relay) => {
             if (relay.connected && relay.ws?.readyState === WebSocket.OPEN) {
                 relay.ws.send(JSON.stringify(event));
-                console.log(`Event published to ${relay.url}`);
             }
         });
     }
@@ -170,7 +168,6 @@ export class RelayService {
         const publishPromises = connectedRelays.map(async (relayUrl) => {
           try {
             await pool.publish([relayUrl], event);
-            console.log(`Event published to relay: ${relayUrl}`);
             this.eventSubject.next(event); // Emit the event to subscribers
             return event;
           } catch (error) {
@@ -204,8 +201,6 @@ export class RelayService {
             this.relays.push(newRelay);
             this.connectToRelay(newRelay);
             this.saveRelaysToLocalStorage();
-        } else {
-            console.log(`Relay with URL ${url} already exists.`);
         }
     }
 

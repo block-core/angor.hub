@@ -58,8 +58,6 @@ export class ChatService implements OnDestroy {
     checkCurrentChatOnPageRefresh(chatIdFromURL: string): void {
         if (chatIdFromURL) {
             const currentChat = this._chat.value;
-            console.log(currentChat);
-
             this.getChatById(chatIdFromURL).subscribe(chat => {
                 if (chat) {
                     this._chat.next(chat);
@@ -249,8 +247,8 @@ export class ChatService implements OnDestroy {
     subscribeToChatList(pubkey: string, useExtension: boolean, useSecretKey: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
         this._relayService.ensureConnectedRelays().then(async () => {
             const filters: Filter[] = [
-                { kinds: [EncryptedDirectMessage], authors: [pubkey] },
-                { kinds: [EncryptedDirectMessage], '#p': [pubkey] }
+                { kinds: [EncryptedDirectMessage], authors: [pubkey] , limit:1500},
+                { kinds: [EncryptedDirectMessage], '#p': [pubkey] , limit:1500}
             ];
 
             this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), filters, {
@@ -458,7 +456,6 @@ export class ChatService implements OnDestroy {
                 }
             },
             oneose: () => {
-                console.log('Subscription closed');
             }
         });
 

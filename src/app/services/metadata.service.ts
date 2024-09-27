@@ -60,7 +60,6 @@ export class MetadataService {
           }
         },
         oneose: () => {
-          console.log('Relay connection closed.');
         }
       });
 
@@ -171,7 +170,6 @@ export class MetadataService {
   async refreshAllStoredMetadata(): Promise<void> {
     const storedUsers = await this.indexedDBService.getAllUsers();
     if (!storedUsers || storedUsers.length === 0) {
-      console.log('No stored users found in IndexedDB');
       return;
     }
 

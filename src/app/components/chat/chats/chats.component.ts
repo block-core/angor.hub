@@ -107,23 +107,6 @@ export class ChatsComponent implements OnInit, OnDestroy {
         }
     }
 
-    loadChat(id: string): void {
-        this._chatService.getChatById(id).pipe(
-            catchError((error) => {
-                console.error('Error loading chat:', error);
-                return of(null);
-            })
-        ).subscribe(chat => {
-            if (chat) {
-                console.log('Chat loaded:', chat);
-            }
-        });
-
-
-
-    }
-
-
     ngOnDestroy(): void {
         // Unsubscribe from all observables
         this._unsubscribeAll.next();
