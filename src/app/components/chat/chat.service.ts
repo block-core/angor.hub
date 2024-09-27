@@ -544,8 +544,8 @@ export class ChatService implements OnDestroy {
         // }
         const newChat: Chat = {
             id: id,
-            contact: contact || { pubKey: id, name: "Unknown", picture: "/images/avatars/avatar-placeholder.png" },
-            lastMessage: '...',
+            contact: contact || { pubKey: id, name: contact.name, picture: contact.picture },
+            lastMessage: 'new chat...',
             lastMessageAt: Math.floor(Date.now() / 1000).toString(),
             messages: []
         };
