@@ -13,14 +13,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { RouterLink, RouterOutlet } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
+import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { ChatService } from '../chat.service';
 import { Chat, Profile } from '../chat.types';
 import { NewChatComponent } from '../new-chat/new-chat.component';
 import { ProfileComponent } from '../profile/profile.component';
 import { AgoPipe } from 'app/shared/pipes/ago.pipe';
-
 
 @Component({
     selector: 'chat-chats',
@@ -41,129 +40,150 @@ import { AgoPipe } from 'app/shared/pipes/ago.pipe';
         RouterLink,
         RouterOutlet,
         AgoPipe,
-        CommonModule
+        CommonModule,
     ],
 })
 export class ChatsComponent implements OnInit, OnDestroy {
-    chats: Chat[];
-    drawerComponent: 'profile' | 'new-chat';
-    drawerOpened: boolean = false;
-    filteredChats: Chat[];
+    // Variables to store chat list, filtered chats, user profile, and selected chat
+    chats: Chat[] = [];
+    filteredChats: Chat[] = [];
     profile: Profile;
     selectedChat: Chat;
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
+
+    // Drawer management for profile and new chat views
+    drawerComponent: 'profile' | 'new-chat';
+    drawerOpened: boolean = false;
+
+    // Subject for managing unsubscriptions
+    private _unsubscribeAll: Subject<void> = new Subject<void>();
 
     /**
-     * Constructor
+     * Constructor for ChatsComponent
+     * @param _chatService - The service managing chats
+     * @param _changeDetectorRef - Reference for change detection in Angular
      */
     constructor(
         private _chatService: ChatService,
-        private _changeDetectorRef: ChangeDetectorRef
-    ) {}
+        private _changeDetectorRef: ChangeDetectorRef,
+        private route: ActivatedRoute,
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
+    ) { }
 
     /**
-     * On init
+     * Angular lifecycle hook (ngOnInit) for component initialization.
+     * Subscribes to chat list, profile, and selected chat updates, and initializes the chat list subscription.
      */
     ngOnInit(): void {
-        // Chats
+        // Subscribe to chat updates
         this._chatService.chats$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chats: Chat[]) => {
                 this.chats = this.filteredChats = chats;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
+                this._markForCheck();
             });
 
-        // Profile
+        // Subscribe to profile updates
         this._chatService.profile$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((profile: Profile) => {
                 this.profile = profile;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
+                this._markForCheck();
             });
 
-        // Selected chat
+        // Subscribe to selected chat updates
         this._chatService.chat$
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((chat: Chat) => {
                 this.selectedChat = chat;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
+                this._markForCheck();
             });
-            this._chatService.InitSubscribeToChatList();
 
+         this._chatService.InitSubscribeToChatList();
+
+        const savedChatId = localStorage.getItem('currentChatId');
+
+        if (savedChatId) {
+            this._chatService.checkCurrentChatOnPageRefresh(savedChatId);
         }
+    }
 
-    /**
-     * On destroy
-     */
+    loadChat(id: string): void {
+        this._chatService.getChatById(id).pipe(
+            catchError((error) => {
+                console.error('Error loading chat:', error);
+                return of(null);
+            })
+        ).subscribe(chat => {
+            if (chat) {
+                console.log('Chat loaded:', chat);
+            }
+        });
+
+
+
+    }
+
+
     ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
+        // Unsubscribe from all observables
+        this._unsubscribeAll.next();
         this._unsubscribeAll.complete();
 
-        // Reset the chat
+        // Reset the selected chat in the service
         this._chatService.resetChat();
+        localStorage.removeItem('currentChatId');
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
     /**
-     * Filter the chats
-     *
-     * @param query
+     * Filters the chat list based on a search query.
+     * @param query - The string query to filter chats by name
      */
     filterChats(query: string): void {
-        // Reset the filter
         if (!query) {
             this.filteredChats = this.chats;
-            return;
+        } else {
+            const lowerCaseQuery = query.toLowerCase();
+            this.filteredChats = this.chats.filter(chat =>
+                chat.contact?.name.toLowerCase().includes(lowerCaseQuery)
+            );
         }
-
-        this.filteredChats = this.chats.filter((chat) =>
-            chat.contact?.name.toLowerCase().includes(query.toLowerCase())
-        );
+        this._markForCheck();
     }
 
     /**
-     * Open the new chat sidebar
+     * Opens the drawer with the New Chat component.
      */
     openNewChat(): void {
         this.drawerComponent = 'new-chat';
         this.drawerOpened = true;
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
+        this._markForCheck();
     }
 
     /**
-     * Open the profile sidebar
+     * Opens the drawer with the Profile component.
      */
     openProfile(): void {
         this.drawerComponent = 'profile';
         this.drawerOpened = true;
-
-        // Mark for check
-        this._changeDetectorRef.markForCheck();
+        this._markForCheck();
     }
 
     /**
-     * Track by function for ngFor loops
-     *
-     * @param index
-     * @param item
+     * TrackBy function to optimize performance when rendering chat items in the template.
+     * @param index - The index of the item in the loop
+     * @param item - The item (Chat) being tracked
      */
-    trackByFn(index: number, item: any): any {
+    trackByFn(index: number, item: Chat): string | number {
         return item.id || index;
     }
+
+    /**
+     * Marks the component for change detection.
+     * This is necessary when using OnPush change detection strategy to manually trigger updates.
+     */
+    private _markForCheck(): void {
+        this._changeDetectorRef.markForCheck();
+    }
+
+
 }

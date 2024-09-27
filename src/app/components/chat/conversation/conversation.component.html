@@ -127,7 +127,7 @@
                 </div>
 
                 <!-- Conversation -->
-                <div class="flex flex-col-reverse overflow-y-auto h-full">
+                <div class="flex h-full flex-col-reverse overflow-y-auto">
                     <div
                         class="bg-card flex flex-auto shrink flex-col p-6 dark:bg-transparent"
                     >
@@ -158,107 +158,142 @@
                                     <div class="flex-auto border-b"></div>
                                 </div>
                             }
-                            <div
-                                class="flex flex-col"
-                                [ngClass]="{
-                                    'items-end': message.isMine,
-                                    'items-start': !message.isMine,
-                                    'mt-0.5':
-                                        i > 0 &&
-                                        chat.messages[i - 1].isMine ===
-                                            message.isMine,
-                                    'mt-3':
-                                        i > 0 &&
-                                        chat.messages[i - 1].isMine !==
-                                            message.isMine,
-                                }"
-                            >
-                                <!-- Bubble -->
+                            <div *ngIf="!message.id.includes('new-chat')">
                                 <div
-                                    class="relative max-w-3/4 rounded-lg px-3 py-2"
+                                    class="flex flex-col"
                                     [ngClass]="{
-                                        'bg-blue-500 text-blue-50':
-                                            message.isMine,
-                                        'bg-gray-500 text-gray-50':
-                                            !message.isMine,
+                                        'items-end': message.isMine,
+                                        'items-start': !message.isMine,
+                                        'mt-0.5':
+                                            i > 0 &&
+                                            chat.messages[i - 1].isMine ===
+                                                message.isMine,
+                                        'mt-3':
+                                            i > 0 &&
+                                            chat.messages[i - 1].isMine !==
+                                                message.isMine,
                                     }"
                                 >
-                                    <!-- Speech bubble tail -->
-                                    @if (
-                                        last ||
-                                        chat.messages[i + 1].isMine !==
-                                            message.isMine
-                                    ) {
-                                        <div
-                                            class="absolute bottom-0 w-3"
-                                            [ngClass]="{
-                                                '-right-1 -mr-px mb-px text-blue-500':
-                                                    message.isMine,
-                                                '-left-1 -ml-px mb-px -scale-x-1 text-gray-500':
-                                                    !message.isMine,
-                                            }"
-                                        >
-                                            <ng-container
-                                                *ngTemplateOutlet="
-                                                    speechBubbleExtension
-                                                "
-                                            ></ng-container>
-                                        </div>
-                                    }
-                                    <!-- Message -->
+                                    <!-- Bubble -->
                                     <div
-                                        class="min-w-4 leading-5"
-                                        [innerHTML]="message.value"
-                                    ></div>
-                                </div>
-                                <!-- Time -->
-                                @if (
-                                    first ||
-                                    last ||
-                                    chat.messages[i + 1].isMine !==
-                                        message.isMine ||
-                                    chat.messages[i + 1].createdAt !==
-                                        message.createdAt
-                                ) {
-                                    <div
-                                        class="text-secondary my-0.5 text-sm font-medium"
+                                        class="relative max-w-3/4 rounded-lg px-3 py-2"
                                         [ngClass]="{
-                                            'mr-3': message.isMine,
-                                            'ml-3': !message.isMine,
+                                            'bg-blue-500 text-blue-50':
+                                                message.isMine,
+                                            'bg-gray-500 text-gray-50':
+                                                !message.isMine,
                                         }"
                                     >
-                                        {{ message.createdAt | date: 'HH:mm' }}
+                                        <!-- Speech bubble tail -->
+                                        @if (
+                                            last ||
+                                            chat.messages[i + 1].isMine !==
+                                                message.isMine
+                                        ) {
+                                            <div
+                                                class="absolute bottom-0 w-3"
+                                                [ngClass]="{
+                                                    '-right-1 -mr-px mb-px text-blue-500':
+                                                        message.isMine,
+                                                    '-left-1 -ml-px mb-px -scale-x-1 text-gray-500':
+                                                        !message.isMine,
+                                                }"
+                                            >
+                                                <ng-container
+                                                    *ngTemplateOutlet="
+                                                        speechBubbleExtension
+                                                    "
+                                                ></ng-container>
+                                            </div>
+                                        }
+                                        <!-- Message -->
+                                        <div
+                                            class="min-w-4 leading-5"
+                                            [innerHTML]="message.value"
+                                        ></div>
                                     </div>
-                                }
+                                    <!-- Time -->
+                                    @if (
+                                        first ||
+                                        last ||
+                                        chat.messages[i + 1].isMine !==
+                                            message.isMine ||
+                                        chat.messages[i + 1].createdAt !==
+                                            message.createdAt
+                                    ) {
+                                        <div
+                                            class="text-secondary my-0.5 text-sm font-medium"
+                                            [ngClass]="{
+                                                'mr-3': message.isMine,
+                                                'ml-3': !message.isMine,
+                                            }"
+                                        >
+                                            {{
+                                                message.createdAt
+                                                    | date: 'HH:mm'
+                                            }}
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
                 </div>
 
-            <!-- Message field -->
-            <div class="flex items-end border-t bg-gray-50 p-4 dark:bg-transparent">
-                <div class="my-px flex h-11 items-center">
-                    <button mat-icon-button (click)="toggleEmojiPicker()">
-                        <mat-icon [svgIcon]="'heroicons_outline:face-smile'"></mat-icon>
-                    </button>
-                    <!-- Emoji picker, only visible when showEmojiPicker is true -->
-                    <div *ngIf="showEmojiPicker" class="emoji-picker-container">
-                        <emoji-mart (emojiClick)="addEmoji($event)" [darkMode]="darkMode"></emoji-mart>
+                <!-- Message field -->
+                <div
+                    class="flex items-end border-t bg-gray-50 p-4 dark:bg-transparent"
+                >
+                    <div class="my-px flex h-11 items-center">
+                        <button mat-icon-button (click)="toggleEmojiPicker()">
+                            <mat-icon
+                                [svgIcon]="'heroicons_outline:face-smile'"
+                            ></mat-icon>
+                        </button>
+                        <!-- Emoji picker, only visible when showEmojiPicker is true -->
+                        <div
+                            *ngIf="showEmojiPicker"
+                            class="emoji-picker-container"
+                        >
+                            <emoji-mart
+                                (emojiClick)="addEmoji($event)"
+                                [darkMode]="darkMode"
+                            ></emoji-mart>
+                        </div>
+                        <button
+                            mat-icon-button
+                            (click)="toggleSpeechRecognition()"
+                        >
+                            <mat-icon
+                                [ngClass]="{ active: isListening }"
+                                [svgIcon]="
+                                    isListening
+                                        ? 'heroicons_solid:microphone'
+                                        : 'heroicons_outline:microphone'
+                                "
+                            ></mat-icon>
+                        </button>
                     </div>
-                    <button mat-icon-button (click)="toggleSpeechRecognition()">
-                        <mat-icon [ngClass]="{'active': isListening}" [svgIcon]="isListening ? 'heroicons_solid:microphone' : 'heroicons_outline:microphone'"></mat-icon>
-                    </button>
+                    <mat-form-field
+                        class="angor-mat-dense angor-mat-rounded angor-mat-bold ml-4 w-full"
+                        subscriptSizing="dynamic"
+                    >
+                        <textarea
+                            class="max-h-20"
+                            matInput
+                            cdkTextareaAutosize
+                            #messageInput
+                            (keydown)="handleKeyDown($event)"
+                        ></textarea>
+                    </mat-form-field>
+                    <div class="my-px ml-4 flex h-11 items-center">
+                        <button mat-icon-button (click)="sendMessage()">
+                            <mat-icon
+                                [svgIcon]="'heroicons_outline:paper-airplane'"
+                            ></mat-icon>
+                        </button>
+                    </div>
                 </div>
-                <mat-form-field class="angor-mat-dense angor-mat-rounded angor-mat-bold ml-4 w-full"
-                    subscriptSizing="dynamic">
-                    <textarea class="max-h-20" matInput cdkTextareaAutosize #messageInput (keydown)="handleKeyDown($event)"></textarea>
-                </mat-form-field>
-                <div class="my-px ml-4 flex h-11 items-center">
-                    <button mat-icon-button (click)="sendMessage()">
-                        <mat-icon [svgIcon]="'heroicons_outline:paper-airplane'"></mat-icon>
-                    </button>
-                </div>
-            </div>
             </mat-drawer-content>
         </mat-drawer-container>
     } @else {
@@ -284,7 +319,9 @@
     <ng-template #speechBubbleExtension>
         <svg width="100%" height="100%" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
             <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                <path d="M1.01522827,0.516204834 C-8.83532715,54.3062744 61.7609863,70.5215302 64.8009949,64.3061218 C68.8074951,54.8859711 30.1663208,52.9997559 37.5036011,0.516204834 L1.01522827,0.516204834 Z" fill="currentColor" fill-rule="nonzero"></path>
+                <path
+                    d="M1.01522827,0.516204834 C-8.83532715,54.3062744 61.7609863,70.5215302 64.8009949,64.3061218 C68.8074951,54.8859711 30.1663208,52.9997559 37.5036011,0.516204834 L1.01522827,0.516204834 Z"
+                    fill="currentColor" fill-rule="nonzero"></path>
             </g>
         </svg>
     </ng-template>

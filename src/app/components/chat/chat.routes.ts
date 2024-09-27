@@ -8,7 +8,7 @@ import {
 import { ChatComponent } from 'app/components/chat/chat.component';
 import { ChatService } from 'app/components/chat/chat.service';
 import { ChatsComponent } from 'app/components/chat/chats/chats.component';
- import { EmptyConversationComponent } from 'app/components/chat/empty-conversation/empty-conversation.component';
+import { EmptyConversationComponent } from 'app/components/chat/empty-conversation/empty-conversation.component';
 import { catchError, throwError } from 'rxjs';
 import { ConversationComponent } from './conversation/conversation.component';
 
@@ -25,13 +25,15 @@ const conversationResolver = (
     const chatService = inject(ChatService);
     const router = inject(Router);
 
-    const chatId = route.paramMap.get('id');
+    let chatId = route.paramMap.get('id') || localStorage.getItem('currentChatId');
 
     if (!chatId) {
         const parentUrl = state.url.split('/').slice(0, -1).join('/');
         router.navigateByUrl(parentUrl);
         return throwError('No chat ID provided');
     }
+
+    localStorage.setItem('currentChatId', chatId);
 
     return chatService.getChatById(chatId).pipe(
         catchError((error) => {

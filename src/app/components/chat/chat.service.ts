@@ -1,16 +1,14 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, throwError, of, Subscriber, from } from 'rxjs';
-import { catchError, concatMap, distinctUntilChanged, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
-import { DomSanitizer } from '@angular/platform-browser';
+import { catchError, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { MetadataService } from 'app/services/metadata.service';
 import { SignerService } from 'app/services/signer.service';
-import { Filter, nip04, NostrEvent, Relay, UnsignedEvent } from 'nostr-tools';
+import { Filter, NostrEvent } from 'nostr-tools';
 import { RelayService } from 'app/services/relay.service';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
 import { getEventHash } from 'nostr-tools';
-import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
@@ -33,8 +31,7 @@ export class ChatService implements OnDestroy {
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService,
         private _relayService: RelayService,
-        private _sanitizer: DomSanitizer,
-        private router: Router,
+
 
     ) { }
     get profile$(): Observable<Profile | null> {
@@ -56,6 +53,23 @@ export class ChatService implements OnDestroy {
     get contacts$(): Observable<Contact[] | null> {
         return this._contacts.asObservable();
     }
+
+
+    checkCurrentChatOnPageRefresh(chatIdFromURL: string): void {
+        if (chatIdFromURL) {
+            const currentChat = this._chat.value;
+            console.log(currentChat);
+
+            this.getChatById(chatIdFromURL).subscribe(chat => {
+                if (chat) {
+                    this._chat.next(chat);
+                    this.loadChatHistory(chatIdFromURL);
+                }
+            });
+
+        }
+    }
+
 
     async getContact(pubkey: string): Promise<void> {
         try {
@@ -102,7 +116,7 @@ export class ChatService implements OnDestroy {
                             if (!contact.pubKey) {
                                 console.error('Contact is missing pubKey:', contact);
                             }
-                             return contact;
+                            return contact;
                         });
 
                         this._contacts.next(validatedContacts);
@@ -255,7 +269,7 @@ export class ChatService implements OnDestroy {
                 },
                 oneose: () => {
 
-                     const currentChats = this.chatList || [];
+                    const currentChats = this.chatList || [];
                     if (currentChats.length > 0) {
                         this._chats.next(this.chatList);
                     }
@@ -349,10 +363,6 @@ export class ChatService implements OnDestroy {
         this._chats.next(this.chatList);
     }
 
-
-
-
-
     getChatListStream(): Observable<Chat[]> {
         return this._chats.asObservable();
     }
@@ -405,6 +415,57 @@ export class ChatService implements OnDestroy {
         });
     }
 
+    private async fetchChatHistory(pubKey: string): Promise<any[]> {
+        const myPubKey = this._signerService.getPublicKey();
+
+        const historyFilter: Filter[] = [
+            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey], limit: 10 },
+            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey], limit: 10 }
+        ];
+
+        const messages: any[] = [];
+
+        this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), historyFilter, {
+            onevent: async (event: NostrEvent) => {
+                const isSentByMe = event.pubkey === myPubKey;
+                const senderOrRecipientPubKey = isSentByMe ? pubKey : event.pubkey;
+                const useExtension = await this._signerService.isUsingExtension();
+                const useSecretKey = await this._signerService.isUsingSecretKey();
+                const decryptedMessage = await this.decryptReceivedMessage(
+                    event,
+                    useExtension,
+                    useSecretKey,
+                    this.decryptedPrivateKey,
+                    senderOrRecipientPubKey
+                );
+
+                if (decryptedMessage) {
+                    const messageTimestamp = Math.floor(event.created_at);
+
+                    const message = {
+                        id: event.id,
+                        chatId: pubKey,
+                        contactId: senderOrRecipientPubKey,
+                        isMine: isSentByMe,
+                        value: decryptedMessage,
+                        createdAt: new Date(messageTimestamp * 1000).toISOString(),
+                    };
+
+                    messages.push(message);
+
+                    this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
+                    this._chat.next(this.chatList.find(chat => chat.id === pubKey));
+                }
+            },
+            oneose: () => {
+                console.log('Subscription closed');
+            }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        return messages;
+    }
 
     updateChat(id: string, chat: Chat): Observable<Chat> {
         return this.chats$.pipe(
@@ -476,23 +537,63 @@ export class ChatService implements OnDestroy {
         );
     }
 
-     createNewChat(id: string, contact: Contact = null): Observable<Chat> {
+    createNewChat(id: string, contact: Contact = null): Observable<Chat> {
         const newChat: Chat = {
             id: id,
-            contact: contact || { pubKey: id,name: "Unknown", picture: "/images/avatars/avatar-placeholder.png" },
+            contact: contact || { pubKey: id, name: "Unknown", picture: "/images/avatars/avatar-placeholder.png" },
             lastMessage: '...',
-            lastMessageAt:  Math.floor(Date.now() / 1000).toString(),
+            lastMessageAt: Math.floor(Date.now() / 1000).toString(),
             messages: []
         };
 
-         const updatedChats = this._chats.value ? [...this._chats.value, newChat] : [newChat];
-        this._chats.next(updatedChats);
-        this._chat.next(newChat);
+        return from(this._metadataService.fetchMetadataWithCache(id)).pipe(
+            map((metadata: any) => {
+                newChat.contact = {
+                    pubKey: id,
+                    name: metadata?.name || "Unknown",
+                    picture: metadata?.picture || "/images/avatars/avatar-placeholder.png",
+                    about: metadata?.about || "",
+                    displayName: metadata?.displayName || metadata?.name || "Unknown"
+                };
 
-         this.loadChatHistory(id);
+                return newChat;
+            }),
+            switchMap((chat) => {
+                return from(this.fetchChatHistory(id)).pipe(
+                    map((messages: any[]) => {
+                        if (messages.length === 0) {
+                            const testMessage = {
+                                id: `${id}-new-chat`,
+                                chatId: id,
+                                contactId: id,
+                                isMine: true,
+                                value: "new chat...",
+                                createdAt: Math.floor(Date.now() / 1000).toString(),
+                            };
 
-        return of(newChat);
+                            messages.push(testMessage);
+                        }
+
+                        newChat.messages = messages;
+
+                        if (messages.length > 0) {
+                            const lastMessage = messages[messages.length - 1];
+                            newChat.lastMessage = lastMessage.value;
+                            newChat.lastMessageAt = lastMessage.createdAt;
+                        }
+
+                        const updatedChatsWithMessages = this._chats.value ? [...this._chats.value, newChat] : [newChat];
+                        this._chats.next(updatedChatsWithMessages);
+                        this._chat.next(newChat);
+
+                        return newChat;
+                    })
+                );
+            })
+        );
     }
+
+
 
 
     resetChat(): void {
@@ -504,7 +605,7 @@ export class ChatService implements OnDestroy {
         try {
             this.message = message;
 
-             const useExtension = await this._signerService.isUsingExtension();
+            const useExtension = await this._signerService.isUsingExtension();
             const useSecretKey = await this._signerService.isUsingSecretKey();
             if (useExtension && !useSecretKey) {
                 await this.handleMessageSendingWithExtension();
