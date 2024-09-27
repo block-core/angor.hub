@@ -17,10 +17,10 @@
             <!-- picture -->
             <div class="-mt-26 rounded-full lg:-mt-22">
                  <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4 object-cover" [src]="getSafeUrl(metadata?.picture)" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                    <img class="ring-bg-card min-h-32 min-w-32 h-32 w-32 rounded-full ring-4 object-cover max-w-fit" [src]="getSafeUrl(metadata?.picture)" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                 </ng-container>
                 <ng-template #defaultAvatar>
-                    <img class="ring-bg-card h-32 w-32 rounded-full ring-4" src="/images/avatars/avatar-placeholder.png" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                    <img class="ring-bg-card min-h-32 min-w-32 h-32 w-32 rounded-full ring-4 object-cover" src="/images/avatars/avatar-placeholder.png" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                 </ng-template>
             </div>
 
@@ -28,8 +28,8 @@
             <div
                 class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start"
             >
-                <div class="text-lg font-bold leading-none">{{metadata?.display_name || metadata?.name || 'Unknown User'}}</div>
-                <div class="text-secondary">{{metadata?.username || metadata?.name}}</div>
+                <div class="text-lg font-bold leading-tight truncate max-w-44">{{metadata?.display_name || metadata?.name || 'Unknown User'}}</div>
+                <div class="text-secondary leading-tight truncate max-w-44">{{metadata?.username || metadata?.name}}</div>
             </div>
 
             <!-- Separator -->
@@ -55,10 +55,8 @@
             <div
                 class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto"
             >
-                <a class="font-medium" [routerLink]="['./']"> Notes </a>
+                <a class="font-medium" [routerLink]="['./']"> Events </a>
                 <a class="text-secondary" [routerLink]="['./']"> About </a>
-                <a class="text-secondary" [routerLink]="['./']"> Followers </a>
-                <a class="text-secondary" [routerLink]="['./']"> Gallery </a>
             </div>
         </div>
     </div>
@@ -668,7 +666,7 @@
                 <div class="text-xl font-semibold">Create Post</div>
                 <div class="mt-8 flex flex-col items-start sm:flex-row">
                     <div class="mb-6 flex items-center sm:mb-0">
-                             <img class="mr-4 h-12 w-12 min-w-12 rounded-full" [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                             <img class="mr-4 h-12 w-12 min-w-12 rounded-full object-cover" [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'" onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';" alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
                         <div class="sm:hidden">{{metadata?.name || 'Unknown User'}}</div>
                     </div>
                     <mat-form-field

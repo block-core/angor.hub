@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AngorCardComponent } from '@angor/components/card';
 import { SignerService } from 'app/services/signer.service';
 import { MetadataService } from 'app/services/metadata.service';
@@ -45,29 +45,45 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-    user: any;
+    profile: any;
     isLoading: boolean = true;
     errorMessage: string | null = null;
     metadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
+    private projectPubKey;
+    private userPubKey;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _metadataService: MetadataService,
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService,
-        private _sanitizer: DomSanitizer
-
+        private _sanitizer: DomSanitizer,
+        private route: ActivatedRoute,
     ) { }
 
     ngOnInit(): void {
-        this.loadUserProfile();
+
+
+        this.route.paramMap.subscribe((params) => {
+            this.projectPubKey = params.get('pubkey') || '';
+            if (this.projectPubKey != '') {
+                this.loadProfile(this.projectPubKey);
+            }
+            else
+            {
+                 this.userPubKey  = this._signerService.getPublicKey();
+                this.loadProfile(this.userPubKey);
+
+            }
+        });
+
 
 
         this._indexedDBService.getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((updatedMetadata) => {
-                if (updatedMetadata && updatedMetadata.pubkey === this.user?.pubkey) {
+                if (updatedMetadata && updatedMetadata.pubkey === this.profile?.pubkey) {
                     this.metadata = updatedMetadata.metadata;
                     this._changeDetectorRef.detectChanges();
                 }
@@ -79,10 +95,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
-    private async loadUserProfile(): Promise<void> {
+    private async loadProfile(publicKey :string): Promise<void> {
         this.isLoading = true;
         this.errorMessage = null;
-        const publicKey = this._signerService.getPublicKey();
 
         if (!publicKey) {
             this.errorMessage = 'No public key found. Please log in again.';
@@ -92,7 +107,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
 
 
-        this.user = { pubkey: publicKey };
+        this.profile = { pubkey: publicKey };
 
         try {
 
@@ -123,5 +138,5 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     getSafeUrl(url: string): SafeUrl {
         return this._sanitizer.bypassSecurityTrustUrl(url);
-      }
+    }
 }

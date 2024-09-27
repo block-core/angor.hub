@@ -59,7 +59,7 @@
                         <div class="flex flex-col px-8 pb-6 pt-4">
                             <div class="flex items-center justify-between">
                                 <div class="mr-4 flex-1 min-w-0">
-                                    <div class="text-2xl font-semibold leading-tight truncate">
+                                    <div class="text-2xl font-semibold leading-tight truncate" role="button" (click)="goToProjectDetails(project)">
                                         {{ project.displayName || project.nostrPubKey }}
                                     </div>
                                     <div class="text-secondary mt-1 leading-tight truncate">

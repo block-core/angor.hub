@@ -243,7 +243,7 @@ export class ExploreComponent implements OnInit, OnDestroy {
   }
 
   goToProjectDetails(project: Project): void {
-    this.router.navigate(['/projects', project.projectIdentifier]);
+    this.router.navigate(['/profile', project.nostrPubKey]);
   }
 
   filterByQuery(query: string): void {
