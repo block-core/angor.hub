@@ -24,6 +24,8 @@ export class RelayService {
     private loadRelaysFromLocalStorage(): { url: string, connected: boolean, retries: number, retryTimeout: any, accessType: string, ws?: WebSocket }[] {
         const storedRelays = JSON.parse(localStorage.getItem('nostrRelays') || '[]');
         const defaultRelays = [
+            { url: 'wss://relay.primal.net', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
+            { url: 'wss://relay.damus.io', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
             { url: 'wss://relay.angor.io', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
             { url: 'wss://relay2.angor.io', connected: false, retries: 0, retryTimeout: null, accessType: 'read-write', ws: undefined },
         ];

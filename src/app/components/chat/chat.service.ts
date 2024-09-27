@@ -537,7 +537,14 @@ export class ChatService implements OnDestroy {
         );
     }
 
+
+
     createNewChat(id: string, contact: Contact = null): Observable<Chat> {
+        // const existingChat = this._chats.value?.find(chat => chat.id === id);
+
+        // if (existingChat) {
+        //      return of(existingChat);
+        // }
         const newChat: Chat = {
             id: id,
             contact: contact || { pubKey: id, name: "Unknown", picture: "/images/avatars/avatar-placeholder.png" },
@@ -545,7 +552,9 @@ export class ChatService implements OnDestroy {
             lastMessageAt: Math.floor(Date.now() / 1000).toString(),
             messages: []
         };
-
+        // const updatedChats = this._chats.value ? [...this._chats.value, newChat] : [newChat];
+        // this._chats.next(updatedChats);
+        // this._chat.next(newChat);
         return from(this._metadataService.fetchMetadataWithCache(id)).pipe(
             map((metadata: any) => {
                 newChat.contact = {
