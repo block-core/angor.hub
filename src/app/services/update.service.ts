@@ -1,78 +1,92 @@
 import { Injectable, NgZone } from '@angular/core';
-import { SwUpdate } from '@angular/service-worker';
-import { Subscription, interval } from 'rxjs';
+import { SwUpdate, VersionEvent } from '@angular/service-worker';
+import { BehaviorSubject, Subscription, interval } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NewVersionCheckerService {
-    isNewVersionAvailable: boolean = false;
-    newVersionSubscription?: Subscription;
-    intervalSource = interval(15 * 60 * 1000); // every 15 mins
-    intervalSubscription?: Subscription;
+    private newVersionAvailableSubject = new BehaviorSubject<boolean>(false);
+    isNewVersionAvailable$ = this.newVersionAvailableSubject.asObservable();
+    private newVersionSubscription?: Subscription;
+    private intervalSource = interval(15 * 60 * 1000);
+    private intervalSubscription?: Subscription;
 
     constructor(
         private swUpdate: SwUpdate,
         private zone: NgZone,
     ) {
-        this.checkForUpdateOnInterval();
         this.checkForUpdateOnLoad();
+        this.checkForUpdateOnInterval();
     }
 
     applyUpdate(): void {
-        // Reload the page to update to the latest version after the new version is activated
         this.swUpdate
             .activateUpdate()
             .then(() => document.location.reload())
             .catch((error) => console.error('Failed to apply updates:', error));
     }
 
-    checkForUpdateOnInterval(): void {
-        this.intervalSubscription?.unsubscribe();
+    private checkForUpdateOnInterval(): void {
+        this.unsubscribeInterval();
+
         if (!this.swUpdate.isEnabled) {
+            console.log('Service worker updates are disabled.');
             return;
         }
 
         this.zone.runOutsideAngular(() => {
             this.intervalSubscription = this.intervalSource.subscribe(async () => {
-                if (!this.isNewVersionAvailable) {
-                    try {
-                        this.isNewVersionAvailable = await this.swUpdate.checkForUpdate();
-                        console.log(this.isNewVersionAvailable ? 'A new version is available.' : 'Already on the latest version.');
-                    } catch (error) {
-                        console.error('Failed to check for updates:', error);
+                try {
+                    const updateAvailable = await this.swUpdate.checkForUpdate();
+                    console.log(updateAvailable ? 'A new version is available.' : 'Already on the latest version.');
+                    if (updateAvailable) {
+                        this.newVersionAvailableSubject.next(true);
                     }
-                } else {
-                    // Check for updates at interval, which will keep the
-                    // browser updating to latest version as long as it's being kept open.
-                    await this.swUpdate.checkForUpdate();
+                } catch (error) {
+                    console.error('Failed to check for updates:', error);
                 }
             });
         });
     }
 
-    checkForUpdateOnLoad(): void {
-        this.newVersionSubscription?.unsubscribe();
+    private checkForUpdateOnLoad(): void {
+        this.unsubscribeNewVersion();
+
         if (!this.swUpdate.isEnabled) {
             console.log('Service worker updates are disabled for this app.');
             return;
         }
-        this.newVersionSubscription = this.swUpdate.versionUpdates.subscribe((evt) => {
-            console.log('New version update event:');
-            console.log(evt);
+
+        this.newVersionSubscription = this.swUpdate.versionUpdates.subscribe((evt: VersionEvent) => {
+            console.log('New version update event:', evt);
             switch (evt.type) {
                 case 'VERSION_DETECTED':
                     console.log(`Downloading new app version: ${evt.version.hash}`);
                     break;
                 case 'VERSION_READY':
-                    console.log(`Current app version: ${evt.currentVersion.hash}`);
-                    console.log(`New app version ready for use: ${evt.latestVersion.hash}`);
-                    this.isNewVersionAvailable = true;
+                    console.log(`New app version is ready for use: ${evt.latestVersion.hash}`);
+                    this.newVersionAvailableSubject.next(true);
                     break;
                 case 'VERSION_INSTALLATION_FAILED':
-                    console.log(`Failed to install app version '${evt.version.hash}': ${evt.error}`);
+                    console.error(`Failed to install app version '${evt.version.hash}': ${evt.error}`);
                     break;
+                default:
+                    console.log('Unknown version event type:', evt.type);
             }
         });
 
         console.log('Subscribed to new version updates.');
+    }
+
+
+    private unsubscribeInterval(): void {
+        if (this.intervalSubscription) {
+            this.intervalSubscription.unsubscribe();
+        }
+    }
+
+    private unsubscribeNewVersion(): void {
+        if (this.newVersionSubscription) {
+            this.newVersionSubscription.unsubscribe();
+        }
     }
 }

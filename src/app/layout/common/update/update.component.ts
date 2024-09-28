@@ -1,6 +1,7 @@
 import { CommonModule, DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     inject,
     Input,
@@ -30,13 +31,22 @@ import { NewVersionCheckerService } from 'app/services/update.service';
         CommonModule
     ],
 })
-export class UpdateComponent   {
+export class UpdateComponent {
     @Input() tooltip: string;
 
-    constructor(public updateService:NewVersionCheckerService) {
+    constructor(
+        public updateService: NewVersionCheckerService,
+        private cdr: ChangeDetectorRef // Injecting ChangeDetectorRef
+    ) {
+        // Listen to the update available event and trigger change detection
+        this.updateService.isNewVersionAvailable$.subscribe((isAvailable) => {
+            if (isAvailable) {
+                this.cdr.detectChanges(); // Trigger change detection
+            }
+        });
     }
 
-     applyUpdate(): void {
+    applyUpdate(): void {
         this.updateService.applyUpdate();
     }
 }
