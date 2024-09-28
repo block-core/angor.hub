@@ -16,12 +16,19 @@
   ],
   "screenshots": [
     {
-      "src": "app-icons/hub-screenshot.png",
+      "src": "app-icons/hub-screenshot-0.png",
       "sizes": "1024x768",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Community Discovery screen"
-    }
+      "label": "Angor hub"
+    },
+    {
+        "src": "app-icons/hub-screenshot-1.png",
+        "sizes": "1024x768",
+        "type": "image/png",
+        "form_factor": "wide",
+        "label": "Angor hub"
+      }
   ],
   "icons": [
     {
