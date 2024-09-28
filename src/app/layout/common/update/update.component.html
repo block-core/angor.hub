@@ -1,7 +1,7 @@
 <!-- Update toggle -->
-@if (updateService.isNewVersionAvailable) {
-    <button mat-icon-button (click)="applyUpdate()">
+<!-- @if (updateService.isNewVersionAvailable) { -->
+    <button mat-icon-button [matTooltip]="tooltip || 'Update App'" (click)="applyUpdate()">
         <mat-icon [svgIcon]="'heroicons_outline:cloud-arrow-down'"></mat-icon>
     </button>
-}
+<!-- } -->
 

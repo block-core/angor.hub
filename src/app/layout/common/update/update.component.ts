@@ -3,6 +3,7 @@ import {
     ChangeDetectionStrategy,
     Component,
     inject,
+    Input,
     ViewEncapsulation,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -30,6 +31,7 @@ import { NewVersionCheckerService } from 'app/services/update.service';
     ],
 })
 export class UpdateComponent   {
+    @Input() tooltip: string;
 
     public updateService = inject(NewVersionCheckerService);
 
