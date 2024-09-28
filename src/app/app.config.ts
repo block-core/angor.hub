@@ -17,8 +17,12 @@ import { mockApiServices } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { provideServiceWorker } from '@angular/service-worker';
+import { HashService } from './services/hash.service';
 
-
+export function initializeApp(hashService: HashService) {
+    console.log('initializeApp. Getting hashService.load.');
+    return (): Promise<void> => hashService.load();
+  }
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
@@ -27,6 +31,12 @@ export const appConfig: ApplicationConfig = {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
         }),
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeApp,
+            deps: [HashService],
+            multi: true,
+          },
         provideRouter(
             appRoutes,
             withPreloading(PreloadAllModules),

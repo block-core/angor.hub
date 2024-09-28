@@ -33,7 +33,8 @@ import { NewVersionCheckerService } from 'app/services/update.service';
 export class UpdateComponent   {
     @Input() tooltip: string;
 
-    public updateService = inject(NewVersionCheckerService);
+    constructor(public updateService:NewVersionCheckerService) {
+    }
 
      applyUpdate(): void {
         this.updateService.applyUpdate();
