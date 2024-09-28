@@ -27,6 +27,8 @@ import { Chat } from 'app/layout/common/quick-chat/quick-chat.types';
 import { ChatService } from '../chat.service';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AngorConfigService } from '@angor/services/config';
+import { GifDialogComponent } from 'app/shared/gif/gif-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector: 'chat-conversation',
@@ -70,7 +72,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
         private _chatService: ChatService,
         private _angorMediaWatcherService: AngorMediaWatcherService,
         private _ngZone: NgZone,
-        private _angorConfigService: AngorConfigService
+        private _angorConfigService: AngorConfigService,
+        public dialog: MatDialog
     ) {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -78,12 +81,47 @@ export class ConversationComponent implements OnInit, OnDestroy {
           console.error('Speech recognition is not supported in this browser.');
           return;
         }
-                this.recognition = new SpeechRecognition();
+        this.recognition = new SpeechRecognition();
         this.recognition.lang = 'en-US';
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.setupRecognitionEvents();
     }
+
+
+
+    openGifDialog(): void {
+      const dialogRef = this.dialog.open(GifDialogComponent, {
+        width: '600px',
+        maxHeight: '80vh',
+        data: { apiKey: 'LIVDSRZULELA' }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+
+          const messageContent = result
+
+          if (messageContent) {
+
+            this.messageInput.nativeElement.value = '';
+            this._chatService.sendPrivateMessage(messageContent)
+                .then(() => {
+                    this.messageInput.nativeElement.value = '';
+                    this.finalTranscript = '';
+                })
+                .catch((error) => {
+                    console.error('Failed to send message:', error);
+                });
+            this.finalTranscript = '';
+            this.userEdited = false;
+        }
+
+
+        }
+      });
+    }
+
 
     ngOnInit(): void {
         this._angorConfigService.config$.subscribe((config) => {
@@ -118,6 +156,28 @@ export class ConversationComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.markForCheck();
             });
     }
+
+
+    parseContent(content: string): string {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return content.replace(urlRegex, (url) => {
+          if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+            return `<img src="${url}" alt="Image" width="100%" style="max-width: 100%; border-radius: 5px;">`;
+          } else if (url.match(/\.(mp4|webm)$/) != null) {
+            return `<video controls width="100%" style="max-width: 100%; border-radius: 5px;"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+          } else if (url.match(/(youtu\.be\/|youtube\.com\/watch\?v=)/)) {
+            let videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
+            const ampersandPosition = videoId.indexOf('&');
+            if (ampersandPosition !== -1) {
+              videoId = videoId.substring(0, ampersandPosition);
+            }
+            return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+          } else {
+            return `<a href="${url}" target="_blank" style="color: #007bff;">${url}</a>`;
+          }
+        }).replace(/\n/g, '<br>');
+      }
+
 
     @HostListener('input')
     @HostListener('ngModelChange')
@@ -246,8 +306,7 @@ export class ConversationComponent implements OnInit, OnDestroy {
     sendMessage(): void {
         const messageContent = this.messageInput.nativeElement.value.trim();
 
-        const message = this.messageInput.nativeElement.value;
-        if (message.trim()) {
+         if (messageContent) {
 
             this.messageInput.nativeElement.value = '';
             this._chatService.sendPrivateMessage(messageContent)

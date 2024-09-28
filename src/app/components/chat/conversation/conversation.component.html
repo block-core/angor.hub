@@ -209,7 +209,7 @@
                                         <!-- Message -->
                                         <div
                                             class="min-w-4 leading-5"
-                                            [innerHTML]="message.value"
+                                            [innerHTML]="parseContent(message.value)"
                                         ></div>
                                     </div>
                                     <!-- Time -->
@@ -245,6 +245,11 @@
                     class="flex items-end border-t bg-gray-50 p-4 dark:bg-transparent"
                 >
                     <div class="my-px flex h-11 items-center">
+                         <button mat-icon-button (click)="openGifDialog()">
+                            <mat-icon
+                                [svgIcon]="'heroicons_outline:gif'"
+                            ></mat-icon>
+                        </button>
                         <button mat-icon-button (click)="toggleEmojiPicker()">
                             <mat-icon
                                 [svgIcon]="'heroicons_outline:face-smile'"
