@@ -23,7 +23,7 @@
             "label": "Angor hub"
         },
         {
-            "src": "icons/hub-screenshot-1.png",
+            "src": "app-icons/hub-screenshot-1.png",
             "sizes": "360x720",
             "type": "image/png",
             "form_factor": "narrow",
