@@ -6,6 +6,23 @@
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
+  "categories": ["tools"],
+  "edge_side_panel": {},
+  "protocol_handlers": [
+    {
+      "protocol": "web+angorhub",
+      "url": "/index.html?data=%s"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "app-icons/hub-screenshot.png",
+      "sizes": "1024x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Community Discovery screen"
+    }
+  ],
   "icons": [
     {
       "src": "app-icons/icon-72x72.png",
