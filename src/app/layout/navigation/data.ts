@@ -13,14 +13,14 @@ export const defaultNavigation: AngorNavigationItem[] = [
         id   : 'explore',
         title: 'Explore',
         type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
+        icon : 'heroicons_outline:magnifying-glass',
         link : '/explore'
     },
     {
         id   : 'settings',
         title: 'Settings',
         type : 'basic',
-        icon : 'heroicons_outline:cog',
+        icon : 'heroicons_outline:cog-6-tooth',
         link : '/settings'
     },
     {
@@ -51,14 +51,14 @@ export const compactNavigation: AngorNavigationItem[] = [
         id   : 'explore',
         title: 'Explore',
         type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
+        icon : 'heroicons_outline:magnifying-glass',
         link : '/explore'
     },
     {
         id   : 'settings',
         title: 'Settings',
         type : 'basic',
-        icon : 'heroicons_outline:cog',
+        icon : 'heroicons_outline:cog-6-tooth',
         link : '/settings'
     },
     {
@@ -89,14 +89,14 @@ export const futuristicNavigation: AngorNavigationItem[] = [
         id   : 'explore',
         title: 'Explore',
         type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
+        icon : 'heroicons_outline:magnifying-glass',
         link : '/explore'
     },
     {
         id   : 'settings',
         title: 'Settings',
         type : 'basic',
-        icon : 'heroicons_outline:cog',
+        icon : 'heroicons_outline:cog-6-tooth',
         link : '/settings'
     },
     {
@@ -127,14 +127,14 @@ export const horizontalNavigation: AngorNavigationItem[] = [
         id   : 'explore',
         title: 'Explore',
         type : 'basic',
-        icon : 'heroicons_outline:chart-pie',
+        icon : 'heroicons_outline:magnifying-glass',
         link : '/explore'
     },
     {
         id   : 'settings',
         title: 'Settings',
         type : 'basic',
-        icon : 'heroicons_outline:cog',
+        icon : 'heroicons_outline:cog-6-tooth',
         link : '/settings'
     },
     {

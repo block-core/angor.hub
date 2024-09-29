@@ -26,12 +26,22 @@
         <div class="mx-auto flex w-full max-w-xs flex-auto flex-col sm:max-w-5xl">
             <!-- Filters -->
             <div class="flex w-full max-w-xs flex-col items-center justify-between sm:max-w-none sm:flex-row">
-                <mat-form-field class="mt-4 w-full sm:mt-0 sm:w-72" [subscriptSizing]="'dynamic'">
-                    <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
-                    <input (keyup.enter)="filterByQuery(query.value)" placeholder="Search ..." matInput #query />
-                </mat-form-field>
-                <mat-slide-toggle class="mt-8 sm:ml-auto sm:mt-0" [color]="'primary'"
-                    (change)="toggleCompleted($event)">
+                <!-- Search bar with clear button -->
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <mat-form-field class="mt-4 w-full sm:w-80" [subscriptSizing]="'dynamic'">
+                        <mat-icon matPrefix class="icon-size-5" [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                        <input (keyup.enter)="filterByQuery(query.value)" placeholder="Search ..." matInput #query />
+                    </mat-form-field>
+                    <!-- Clear search button -->
+                    <button mat-icon-button color="warn" *ngIf="showCloseSearchButton" (click)="resetSearch(query)" class="mt-4">
+                        <mat-icon [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+                    </button>
+                    <button mat-icon-button color="success" *ngIf="!showCloseSearchButton" (click)="filterByQuery(query.value)" class="mt-4">
+                        <mat-icon [svgIcon]="'heroicons_solid:magnifying-glass'"></mat-icon>
+                    </button>
+                </div>
+                <!-- Toggle completed -->
+                <mat-slide-toggle class="mt-8 sm:ml-auto sm:mt-0" [color]="'primary'" (change)="toggleCompleted($event)">
                     Hide completed
                 </mat-slide-toggle>
             </div>
@@ -111,24 +121,31 @@
                                     let investor of [].constructor(project.totalInvestmentsCount || 0);
                                     let i = index
                                 ">
-                                    <ng-container *ngIf="i < 10">
-                                        <img class="text-card ring-bg-card m-0.5 h-6 w-6 rounded-full ring-2"
-                                             [ngClass]="{
+                                        <ng-container *ngIf="i < 10">
+                                            <img class="text-card ring-bg-card m-0.5 h-6 w-6 rounded-full ring-2"
+                                                [ngClass]="{
                                                  '-ml-3': project.totalInvestmentsCount > 1 && i > 0
-                                             }"
-                                             [src]="'images/avatars/avatar-placeholder.png'"
-                                             alt="Investor avatar {{ i + 1 }}" />
+                                             }" [src]="'images/avatars/avatar-placeholder.png'"
+                                                alt="Investor avatar {{ i + 1 }}" />
+                                        </ng-container>
                                     </ng-container>
-                                </ng-container>
                                 </div>
                             </div>
                         </div>
                     </angor-card>
                 </ng-container>
             </div>
-
+            <ng-container *ngIf="filteredProjects.length ==0">
+                <div class="flex flex-auto flex-col items-center justify-center bg-gray-100 dark:bg-transparent">
+                    <mat-icon class="icon-size-24"
+                        [svgIcon]="'heroicons_outline:archive-box-x-mark'"></mat-icon>
+                    <div class="text-secondary mt-4 text-2xl font-semibold tracking-tight">
+                        No project
+                    </div>
+                </div>
+            </ng-container>
             <!-- Load More Button -->
-            <div class="mt-10 flex justify-center">
+            <div *ngIf="filteredProjects.length >0" class="mt-10 flex justify-center">
                 <button mat-raised-button color="primary" (click)="loadProjects()" [disabled]="loading">
                     {{ loading ? 'Loading...' : 'Load More Projects' }}
                 </button>

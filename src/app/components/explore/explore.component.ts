@@ -43,6 +43,8 @@ export class ExploreComponent implements OnInit, OnDestroy {
     private metadataLoadLimit = 5;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     filteredProjects: Project[] = [];
+    showCloseSearchButton: boolean = false;
+
 
     constructor(
         private projectService: ProjectsService,
@@ -268,8 +270,8 @@ export class ExploreComponent implements OnInit, OnDestroy {
 
     filterByQuery(query: string): void {
         if (!query || query.trim() === '') {
-            // If query is empty or only contains spaces, reset to the full list of projects
             this.filteredProjects = [...this.projects];
+            this.showCloseSearchButton = false;
             this.changeDetectorRef.detectChanges();
             return;
         }
@@ -286,9 +288,16 @@ export class ExploreComponent implements OnInit, OnDestroy {
             );
         });
 
+        this.showCloseSearchButton = this.projects.length > 0  ;
+
         this.changeDetectorRef.detectChanges();
     }
 
+    resetSearch(queryInput: HTMLInputElement): void {
+        queryInput.value = '';
+        this.filterByQuery('');
+        this.showCloseSearchButton = false;
+    }
 
     toggleCompleted(event: any): void {
 
