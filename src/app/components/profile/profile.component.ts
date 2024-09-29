@@ -52,13 +52,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     errorMessage: string | null = null;
     metadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
-    private projectPubKey;
     private userPubKey;
     followers: any[] = [];
     following: any[] = [];
     allPublicKeys: string[] = [];
     suggestions: { pubkey: string, metadata: any }[] = [];
-
+    isCurrentUserProfile: Boolean;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -68,7 +67,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _sanitizer: DomSanitizer,
         private _route: ActivatedRoute,
         private _socialService: SocialService,
-        private _ngZone: NgZone
 
     ) { }
 
@@ -76,15 +74,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
         this._route.paramMap.subscribe((params) => {
-            this.projectPubKey = params.get('pubkey') || '';
-            if (this.projectPubKey != '') {
-                this.loadProfile(this.projectPubKey);
-            }
-            else {
-                this.userPubKey = this._signerService.getPublicKey();
-                this.loadProfile(this.userPubKey);
+            const routePubKey = params.get('pubkey');
+            this.userPubKey =  this._signerService.getPublicKey();
+            this.isCurrentUserProfile = !routePubKey || routePubKey === this.userPubKey;
+            this.userPubKey = routePubKey || this._signerService.getPublicKey();
 
-            }
+            console.log( this.isCurrentUserProfile);
+
+            this.loadProfile(this.userPubKey);
         });
 
 
@@ -105,7 +102,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
                 this.followers.push(event.pubkey);
-                 this._changeDetectorRef.detectChanges();
+                this._changeDetectorRef.detectChanges();
             });
 
         // Subscribe to real-time following
@@ -119,7 +116,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.detectChanges();
             });
 
-           this.updateSuggestionList();
+        this.updateSuggestionList();
     }
 
     ngOnDestroy(): void {
@@ -128,6 +125,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     private async loadProfile(publicKey: string): Promise<void> {
+
+        this.userPubKey = this._signerService.getPublicKey();
+
         this.isLoading = true;
         this.errorMessage = null;
 
@@ -140,7 +140,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
         this.followers = [];
         this.following = [];
-        
+
         this.profile = { pubkey: publicKey };
 
         try {

@@ -66,7 +66,7 @@
             <angor-card *ngIf="metadata?.about && metadata.about.trim() !== ''"
                 class="flex w-full max-w-80 flex-col p-8">
                 <div class="text-2xl font-semibold leading-tight">About</div>
-                <div class="mt-4">
+                               <div class="mt-4">
                     {{metadata?.about || ''}}
                 </div>
                 <a class="mt-8 px-6" mat-flat-button [color]="'primary'" [routerLink]="['./']">
@@ -384,7 +384,7 @@
         <!-- Column -->
         <div class="flex flex-col items-start">
             <!-- Create Post -->
-            <angor-card class="flex w-full max-w-140 flex-col p-6 pb-6 sm:p-8">
+            <angor-card *ngIf="isCurrentUserProfile" class="flex w-full max-w-140 flex-col p-6 pb-6 sm:p-8">
                 <div class="text-xl font-semibold">Create Post</div>
                 <div class="mt-8 flex flex-col items-start sm:flex-row">
                     <div class="mb-6 flex items-center sm:mb-0">
@@ -451,7 +451,7 @@
             </angor-card>
 
             <!-- Post 1 -->
-            <angor-card class="mt-8 flex w-full max-w-140 flex-col" #expandableCard02="angorCard">
+            <angor-card [ngClass]="{'mt-8': isCurrentUserProfile}"  class="flex w-full max-w-140 flex-col" #expandableCard02="angorCard">
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img class="mr-4 h-10 w-10 rounded-full" src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image" />
@@ -570,8 +570,12 @@
                     <hr class="m-0 border-b" />
                     <div class="mx-4 mb-3 mt-6 flex flex-col sm:mx-8">
                         <div class="flex items-start">
-                            <img class="mr-5 h-12 w-12 rounded-full" src="images/avatars/avatar-placeholder.png"
-                                alt="Card cover image" />
+
+                                <img class="mr-5 h-12 w-12 rounded-full object-cover"
+                                [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                                onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+                                alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+
                             <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
                                 <textarea matInput [placeholder]="'Write a comment...'" [rows]="3"
                                     cdkTextareaAutosize></textarea>
