@@ -28,29 +28,53 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 })
 export class SettingsNotificationsComponent implements OnInit {
     notificationsForm: UntypedFormGroup;
+    notificationKinds: { [key: string]: number } = {
+        mention: 1,
+        privateMessage: 4,
+        zap: 9735,
+        follower: 3,
+    };
 
-    /**
-     * Constructor
-     */
     constructor(private _formBuilder: UntypedFormBuilder) {}
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Lifecycle hooks
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * On init
-     */
     ngOnInit(): void {
-        // Create the form
+        const savedSettings = this.loadNotificationSettings();
+
         this.notificationsForm = this._formBuilder.group({
-            communication: [true],
-            security: [true],
-            meetups: [false],
-            comments: [false],
-            mention: [true],
-            follow: [true],
-            inquiry: [true],
+            mention: [savedSettings.includes(this.notificationKinds.mention)],
+            privateMessage: [savedSettings.includes(this.notificationKinds.privateMessage)],
+            zap: [savedSettings.includes(this.notificationKinds.zap)],
+            follower: [savedSettings.includes(this.notificationKinds.follower)],
         });
+    }
+
+    saveSettings(): void {
+        const formValues = this.notificationsForm.value;
+        const enabledKinds: number[] = [];
+
+        if (formValues.mention) {
+            enabledKinds.push(this.notificationKinds.mention);
+        }
+        if (formValues.privateMessage) {
+            enabledKinds.push(this.notificationKinds.privateMessage);
+        }
+        if (formValues.zap) {
+            enabledKinds.push(this.notificationKinds.zap);
+        }
+        if (formValues.follower) {
+            enabledKinds.push(this.notificationKinds.follower);
+        }
+
+        this.saveNotificationSettings(enabledKinds);
+        console.log('Notification settings saved:', enabledKinds);
+    }
+
+    private saveNotificationSettings(settings: number[]): void {
+        localStorage.setItem('notificationSettings', JSON.stringify(settings));
+    }
+
+    private loadNotificationSettings(): number[] {
+        const storedSettings = localStorage.getItem('notificationSettings');
+        return storedSettings ? JSON.parse(storedSettings) : [1, 3, 4, 9735]; // Default to all kinds if not set
     }
 }

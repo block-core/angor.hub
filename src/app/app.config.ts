@@ -13,16 +13,16 @@ import { provideAngor } from '@angor';
 import { TranslocoService, provideTransloco } from '@ngneat/transloco';
 import { appRoutes } from 'app/app.routes';
 import { provideIcons } from 'app/core/icons/icons.provider';
-import { mockApiServices } from 'app/mock-api';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { provideServiceWorker } from '@angular/service-worker';
 import { HashService } from './services/hash.service';
+import { navigationServices } from './layout/navigation/navigation.services';
 
 export function initializeApp(hashService: HashService) {
     console.log('initializeApp. Getting hashService.load.');
     return (): Promise<void> => hashService.load();
-  }
+}
 export const appConfig: ApplicationConfig = {
     providers: [
         provideAnimations(),
@@ -36,7 +36,7 @@ export const appConfig: ApplicationConfig = {
             useFactory: initializeApp,
             deps: [HashService],
             multi: true,
-          },
+        },
         provideRouter(
             appRoutes,
             withPreloading(PreloadAllModules),
@@ -97,7 +97,7 @@ export const appConfig: ApplicationConfig = {
         provideAngor({
             mockApi: {
                 delay: 0,
-                services: mockApiServices,
+                services: navigationServices,
             },
             angor: JSON.parse(localStorage.getItem('angorConfig')) ?? {
                 layout: 'classic',

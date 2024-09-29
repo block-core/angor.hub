@@ -57,7 +57,12 @@ export class NotificationService {
         return this.notificationCount.asObservable();
     }
 
-    public async subscribeToNotifications(pubkey: string): Promise<void> {
+    private loadFilterPreferences(): number[] {
+        const storedPreferences = localStorage.getItem('notificationSettings');
+        return storedPreferences ? JSON.parse(storedPreferences) : [1, 3, 4, 9735]; // Default to all kinds if not set
+    }
+
+     public async subscribeToNotifications(pubkey: string): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const pool = this.relayService.getPool();
         const connectedRelays = this.relayService.getConnectedRelays();
@@ -66,9 +71,14 @@ export class NotificationService {
             throw new Error('No connected relays');
         }
         const lastNotificationTimestamp = this.loadTimestampFromLocalStorage();
+        const filterPreferences = this.loadFilterPreferences();
+
+        if (filterPreferences.length === 0) {
+            filterPreferences.push(1, 3, 4, 9735);
+        }
 
         const filter: Filter = {
-            kinds: [1, 3, 4, 9735],
+            kinds: filterPreferences,
             '#p': [pubkey],
             limit: 50,
             since: lastNotificationTimestamp || undefined

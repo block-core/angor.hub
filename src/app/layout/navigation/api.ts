@@ -6,11 +6,11 @@ import {
     defaultNavigation,
     futuristicNavigation,
     horizontalNavigation,
-} from 'app/mock-api/common/navigation/data';
+} from 'app/layout/navigation/data';
 import { cloneDeep } from 'lodash-es';
 
 @Injectable({ providedIn: 'root' })
-export class NavigationMockApi {
+export class NavigationApi {
     private readonly _compactNavigation: AngorNavigationItem[] =
         compactNavigation;
     private readonly _defaultNavigation: AngorNavigationItem[] =
@@ -20,26 +20,13 @@ export class NavigationMockApi {
     private readonly _horizontalNavigation: AngorNavigationItem[] =
         horizontalNavigation;
 
-    /**
-     * Constructor
-     */
     constructor(private _angorMockApiService: AngorMockApiService) {
         // Register Mock API handlers
         this.registerHandlers();
     }
 
-    // -----------------------------------------------------------------------------------------------------
-    // @ Public methods
-    // -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Register Mock API handlers
-     */
     registerHandlers(): void {
-        // -----------------------------------------------------------------------------------------------------
-        // @ Navigation - GET
-        // -----------------------------------------------------------------------------------------------------
-        this._angorMockApiService.onGet('api/common/navigation').reply(() => {
+        this._angorMockApiService.onGet('api/navigation').reply(() => {
             // Fill compact navigation children using the default navigation
             this._compactNavigation.forEach((compactNavItem) => {
                 this._defaultNavigation.forEach((defaultNavItem) => {
