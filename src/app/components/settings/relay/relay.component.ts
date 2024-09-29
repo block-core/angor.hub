@@ -108,6 +108,10 @@ export class SettingsRelayComponent implements OnInit {
         return relay.connected ? 'Connected' : 'Disconnected';
     }
 
+    getRelayStatusClass(relay: any): string {
+        return relay.connected ? 'text-green-700' : 'text-red-700';
+    }
+
     relayFavIcon(url: string): string {
         let safeUrl = url.replace('wss://', 'https://').replace('ws://', 'https://');
 

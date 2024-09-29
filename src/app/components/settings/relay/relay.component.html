@@ -27,7 +27,7 @@
                     </div>
                 <div class="ml-4">
                     <div class="font-medium">{{ relay.url }}</div>
-                     <div class="text-sm text-gray-500">Status: {{ getRelayStatus(relay) }}</div>
+                    <div class="text-sm" [ngClass]="getRelayStatusClass(relay)">Status: {{ getRelayStatus(relay) }}</div>
                 </div>
             </div>
             <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
