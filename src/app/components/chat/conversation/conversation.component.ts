@@ -27,7 +27,7 @@ import { Chat } from 'app/layout/common/quick-chat/quick-chat.types';
 import { ChatService } from '../chat.service';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AngorConfigService } from '@angor/services/config';
-import { GifDialogComponent } from 'app/shared/gif/gif-dialog.component';
+import { GifDialogComponent } from 'app/shared/gif-dialog/gif-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({

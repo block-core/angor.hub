@@ -267,16 +267,28 @@ export class ExploreComponent implements OnInit, OnDestroy {
     }
 
     filterByQuery(query: string): void {
-        if (!query) {
+        if (!query || query.trim() === '') {
+            // If query is empty or only contains spaces, reset to the full list of projects
             this.filteredProjects = [...this.projects];
+            this.changeDetectorRef.detectChanges();
             return;
         }
 
-        this.filteredProjects = this.projects.filter(project =>
-            project.displayName?.toLowerCase().includes(query.toLowerCase()) ||
-            project.about?.toLowerCase().includes(query.toLowerCase())
-        );
+        const lowerCaseQuery = query.toLowerCase();
+
+        this.filteredProjects = this.projects.filter(project => {
+            return (
+                (project.displayName && project.displayName.toLowerCase().includes(lowerCaseQuery)) ||
+                (project.about && project.about.toLowerCase().includes(lowerCaseQuery)) ||
+                (project.displayName && project.displayName.toLowerCase().includes(lowerCaseQuery)) ||
+                (project.nostrPubKey && project.nostrPubKey.toLowerCase().includes(lowerCaseQuery)) ||
+                (project.projectIdentifier && project.projectIdentifier.toLowerCase().includes(lowerCaseQuery))
+            );
+        });
+
+        this.changeDetectorRef.detectChanges();
     }
+
 
     toggleCompleted(event: any): void {
 
