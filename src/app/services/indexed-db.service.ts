@@ -186,6 +186,31 @@ export class IndexedDBService {
     }
   }
 
+  async getSuggestionUsers(): Promise<{ pubkey: string, metadata: any }[]> {
+    try {
+      const users: { pubkey: string, metadata: any }[] = [];
+      await this.userStore.iterate<any, void>((metadata, pubkey) => {
+        users.push({ pubkey, metadata });
+      });
+
+      const count = Math.min(users.length, 16);
+
+      const randomUsers = this.getRandomItems(users, count);
+      return randomUsers;
+    } catch (error) {
+      console.error('Error getting suggestion users from IndexedDB:', error);
+      return [];
+    }
+  }
+
+   private getRandomItems<T>(array: T[], count: number): T[] {
+    const shuffled = array.sort(() => 0.5 - Math.random());
+
+    return shuffled.slice(0, count);
+
+}
+
+
   async clearAllMetadata(): Promise<void> {
     try {
       await this.userStore.clear();

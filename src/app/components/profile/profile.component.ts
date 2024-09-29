@@ -7,6 +7,7 @@ import {
     ViewEncapsulation,
     OnInit,
     OnDestroy,
+    NgZone,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -55,6 +56,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private userPubKey;
     followers: any[] = [];
     following: any[] = [];
+    allPublicKeys: string[] = [];
+    suggestions: { pubkey: string, metadata: any }[] = [];
 
 
     constructor(
@@ -64,7 +67,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _indexedDBService: IndexedDBService,
         private _sanitizer: DomSanitizer,
         private _route: ActivatedRoute,
-        private _socialService: SocialService
+        private _socialService: SocialService,
+        private _ngZone: NgZone
+
     ) { }
 
     ngOnInit(): void {
@@ -99,8 +104,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._socialService.getFollowersObservable()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
-                this.followers.push({ nostrPubKey: event.pubkey });
-                this._changeDetectorRef.detectChanges();
+                this.followers.push(event.pubkey);
+                 this._changeDetectorRef.detectChanges();
             });
 
         // Subscribe to real-time following
@@ -114,7 +119,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.detectChanges();
             });
 
-
+           this.updateSuggestionList();
     }
 
     ngOnDestroy(): void {
@@ -133,7 +138,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
             return;
         }
 
-
+        this.followers = [];
+        this.following = [];
+        
         this.profile = { pubkey: publicKey };
 
         try {
@@ -166,6 +173,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this._changeDetectorRef.detectChanges();
         }
     }
+
+
+    private updateSuggestionList(): void {
+        this._indexedDBService.getSuggestionUsers().then((suggestions) => {
+            this.suggestions = suggestions;
+
+            this._changeDetectorRef.detectChanges();
+        }).catch((error) => {
+            console.error('Error updating suggestion list:', error);
+        });
+    }
+
+
 
     getSafeUrl(url: string): SafeUrl {
         return this._sanitizer.bypassSecurityTrustUrl(url);

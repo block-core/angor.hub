@@ -38,7 +38,7 @@ export class SocialService {
         return new Promise((resolve) => {
             const sub = pool.subscribeMany(connectedRelays, filters, {
                 onevent: (event: NostrEvent) => {
-                    followers.push({ nostrPubKey: event.pubkey });
+                    followers.push(event);
                     this.followersSubject.next(event);
                 },
                 oneose() {
@@ -66,7 +66,7 @@ export class SocialService {
                 onevent: (event: NostrEvent) => {
                     const tags = event.tags.filter((tag) => tag[0] === 'p');
                     tags.forEach((tag) => {
-                        following.push({ nostrPubKey: tag[1] });
+                        following.push( tag[1]  );
                         this.followingSubject.next(event);
                     });
                 },
