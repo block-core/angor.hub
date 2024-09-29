@@ -132,7 +132,7 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
                             about: result.user.about ? result.user.about.replace(/<\/?[^>]+(>|$)/g, '') : '',
                             avatar: result.user.picture || null,
                             banner: result.user.banner || null,
-                            link: `/project/${result.pubkey}`
+                            link: `/profile/${result.pubkey}`
                         }
                     ]
                 }));
