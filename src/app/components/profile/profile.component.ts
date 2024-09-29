@@ -57,7 +57,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     following: any[] = [];
     allPublicKeys: string[] = [];
     suggestions: { pubkey: string, metadata: any }[] = [];
-    isCurrentUserProfile: Boolean;
+    isCurrentUserProfile: Boolean=false;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -72,19 +72,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
 
-
         this._route.paramMap.subscribe((params) => {
-            this.routePubKey = params.get('pubkey');
-            this.userPubKey = this._signerService.getPublicKey();
+            const routePubKey = params.get('pubkey');
+            const userPubKey = this._signerService.getPublicKey();
 
-            if (this.routePubKey) {
-                this.loadProfile(this.routePubKey);
-            } else {
-                this.loadProfile(this.userPubKey);
+            this.isCurrentUserProfile = routePubKey === userPubKey;
+
+            const pubKeyToLoad = routePubKey || userPubKey;
+            this.loadProfile(pubKeyToLoad);
+
+            if (!routePubKey) {
+                this.isCurrentUserProfile = true;
             }
 
             this.loadCurrentUserProfile();
         });
+
 
         this._indexedDBService.getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
