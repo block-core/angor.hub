@@ -71,9 +71,13 @@ jobs:
           name: ${{ env.PROJECT_NAME }}-preview-${{ env.VERSION }}
           path: ${{ env.RELEASE_NAME }}
 
-      # Step 10: Create/Update GitHub Release using GitHub CLI
-      - name: Create GitHub Release
+      # Step 10: Create or Update GitHub Release
+      - name: Create or Update GitHub Release
         run: |
-          gh release create ${{ env.VERSION }} ${{ env.RELEASE_NAME }} --title "${{ env.PROJECT_NAME }} v${{ env.VERSION }}" --draft --notes "Auto-generated release for version ${{ env.VERSION }}"
+          if gh release view ${{ env.VERSION }}; then
+            gh release upload ${{ env.VERSION }} ${{ env.RELEASE_NAME }} --clobber
+          else
+            gh release create ${{ env.VERSION }} ${{ env.RELEASE_NAME }} --title "${{ env.PROJECT_NAME }} v${{ env.VERSION }}" --draft --notes "Auto-generated release for version ${{ env.VERSION }}"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
