@@ -75,7 +75,7 @@
             </angor-card>
 
             <!-- Suggestion -->
-            <angor-card *ngIf="suggestions.length > 0" class="mt-8 flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
+            <angor-card *ngIf="suggestions.length > 0" [ngClass]="{'mt-8': metadata?.about}" class="flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
                 <div class="flex items-center justify-between">
                     <div class="text-2xl font-semibold leading-tight">
                         Suggestion
@@ -389,10 +389,10 @@
                 <div class="mt-8 flex flex-col items-start sm:flex-row">
                     <div class="mb-6 flex items-center sm:mb-0">
                         <img class="mr-4 h-12 w-12 min-w-12 rounded-full object-cover"
-                            [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                            [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
                             onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                            alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
-                        <div class="sm:hidden">{{metadata?.name || 'Unknown User'}}</div>
+                            alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
+                        <div class="sm:hidden">{{currentUserMetadata?.name || 'Unknown User'}}</div>
                     </div>
                     <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
                         <textarea matInput [placeholder]="'What\'s on your mind?'" [rows]="3"
@@ -572,9 +572,9 @@
                         <div class="flex items-start">
 
                                 <img class="mr-5 h-12 w-12 rounded-full object-cover"
-                                [src]="metadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                                [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
                                 onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                                alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                                alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
 
                             <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
                                 <textarea matInput [placeholder]="'Write a comment...'" [rows]="3"

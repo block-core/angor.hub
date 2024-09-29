@@ -7,7 +7,6 @@ import {
     ViewEncapsulation,
     OnInit,
     OnDestroy,
-    NgZone,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -47,12 +46,13 @@ import { SocialService } from 'app/services/social.service';
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-    profile: any;
     isLoading: boolean = true;
     errorMessage: string | null = null;
     metadata: any;
+    currentUserMetadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     private userPubKey;
+    private routePubKey;
     followers: any[] = [];
     following: any[] = [];
     allPublicKeys: string[] = [];
@@ -74,30 +74,38 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
         this._route.paramMap.subscribe((params) => {
-            const routePubKey = params.get('pubkey');
-            this.userPubKey =  this._signerService.getPublicKey();
-            this.isCurrentUserProfile = !routePubKey || routePubKey === this.userPubKey;
-            this.userPubKey = routePubKey || this._signerService.getPublicKey();
+            this.routePubKey = params.get('pubkey');
+            this.userPubKey = this._signerService.getPublicKey();
 
-            console.log( this.isCurrentUserProfile);
+            if (this.routePubKey) {
+                this.loadProfile(this.routePubKey);
+            } else {
+                this.loadProfile(this.userPubKey);
+            }
 
-            this.loadProfile(this.userPubKey);
+            this.loadCurrentUserProfile();
         });
-
-
 
         this._indexedDBService.getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((updatedMetadata) => {
-                if (updatedMetadata && updatedMetadata.pubkey === this.profile?.pubkey) {
-                    this.metadata = updatedMetadata.metadata;
+                if (updatedMetadata && updatedMetadata.pubkey === this.userPubKey) {
+                    this.currentUserMetadata = updatedMetadata.metadata;
                     this._changeDetectorRef.detectChanges();
                 }
             });
+        if (this.routePubKey) {
+            this._indexedDBService.getMetadataStream()
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe((updatedMetadata) => {
+                    if (updatedMetadata && updatedMetadata.pubkey === this.routePubKey) {
+                        this.metadata = updatedMetadata.metadata;
+                        this._changeDetectorRef.detectChanges();
+                    }
+                });
+        }
 
 
-
-        // Subscribe to real-time followers
         this._socialService.getFollowersObservable()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
@@ -105,7 +113,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.detectChanges();
             });
 
-        // Subscribe to real-time following
         this._socialService.getFollowingObservable()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
@@ -125,11 +132,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     private async loadProfile(publicKey: string): Promise<void> {
-
-        this.userPubKey = this._signerService.getPublicKey();
-
         this.isLoading = true;
         this.errorMessage = null;
+
+        this.metadata = null;
+        this.followers = [];
+        this.following = [];
+        this._changeDetectorRef.detectChanges();
 
         if (!publicKey) {
             this.errorMessage = 'No public key found. Please log in again.';
@@ -138,23 +147,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
             return;
         }
 
-        this.followers = [];
-        this.following = [];
-
-        this.profile = { pubkey: publicKey };
-
         try {
-
             const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
             if (metadata) {
                 this.metadata = metadata;
-
                 this._changeDetectorRef.detectChanges();
             }
             await this._socialService.getFollowers(publicKey);
             await this._socialService.getFollowing(publicKey);
-            this._changeDetectorRef.detectChanges();
-
 
             this._metadataService.getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
@@ -164,6 +164,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
                         this._changeDetectorRef.detectChanges();
                     }
                 });
+
         } catch (error) {
             console.error('Failed to load profile data:', error);
             this.errorMessage = 'Failed to load profile data. Please try again later.';
@@ -175,6 +176,35 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
 
+
+    private async loadCurrentUserProfile(): Promise<void> {
+        try {
+            this.currentUserMetadata = null;
+
+            this.userPubKey = this._signerService.getPublicKey();
+            const currentUserMetadata = await this._metadataService.fetchMetadataWithCache(this.userPubKey);
+            if (currentUserMetadata) {
+                this.currentUserMetadata = currentUserMetadata;
+
+                this._changeDetectorRef.detectChanges();
+            }
+            this._metadataService.getMetadataStream()
+                .pipe(takeUntil(this._unsubscribeAll))
+                .subscribe((updatedMetadata) => {
+                    if (updatedMetadata && updatedMetadata.pubkey === this.userPubKey) {
+                        this.currentUserMetadata = updatedMetadata;
+                        this._changeDetectorRef.detectChanges();
+                    }
+                });
+        } catch (error) {
+            console.error('Failed to load profile data:', error);
+            this.errorMessage = 'Failed to load profile data. Please try again later.';
+            this._changeDetectorRef.detectChanges();
+        } finally {
+            this._changeDetectorRef.detectChanges();
+        }
+    }
+
     private updateSuggestionList(): void {
         this._indexedDBService.getSuggestionUsers().then((suggestions) => {
             this.suggestions = suggestions;
@@ -184,8 +214,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
             console.error('Error updating suggestion list:', error);
         });
     }
-
-
 
     getSafeUrl(url: string): SafeUrl {
         return this._sanitizer.bypassSecurityTrustUrl(url);
