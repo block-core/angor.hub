@@ -543,12 +543,15 @@ export class ChatService implements OnDestroy {
         //      return of(existingChat);
         // }
         const newChat: Chat = {
-            id: id,
-            contact: contact || { pubKey: id, name: contact.name, picture: contact.picture },
+            id: id || '',
+            contact: contact
+                ? { pubKey: contact.pubKey || id, name: contact.name || 'Unknown', picture: contact.picture || '/images/avatars/avatar-placeholder.png' }
+                : { pubKey: id, name: 'Unknown', picture: '/images/avatars/avatar-placeholder.png' },
             lastMessage: 'new chat...',
-            lastMessageAt: Math.floor(Date.now() / 1000).toString(),
+            lastMessageAt: Math.floor(Date.now() / 1000).toString() || '0',
             messages: []
         };
+
         // const updatedChats = this._chats.value ? [...this._chats.value, newChat] : [newChat];
         // this._chats.next(updatedChats);
         // this._chat.next(newChat);

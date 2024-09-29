@@ -1,24 +1,63 @@
 import { Injectable } from '@angular/core';
 import { Filter, NostrEvent } from 'nostr-tools';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import { RelayService } from './relay.service';
+
+export interface NostrNotification {
+    id: string;
+    icon?: string;
+    image?: string;
+    title?: string;
+    description?: string;
+    time?: Date;
+    kind?: number;
+    link?: string;
+    useRouter?: boolean;
+    read?: boolean;
+}
 
 @Injectable({
     providedIn: 'root'
 })
 export class NotificationService {
 
-    private notificationSubject = new Subject<NostrEvent>();
+    private notificationSubject = new BehaviorSubject<NostrNotification[]>([]);
+    private notificationCount = new BehaviorSubject<number>(0);
+    private lastNotificationTimestamp: number | null = null;
 
-    constructor(
-        private relayService: RelayService
-    ) { }
+    constructor(private relayService: RelayService) {
+        this.initializeNotificationData();
+    }
 
-    getNotificationObservable(): Observable<NostrEvent> {
+    private initializeNotificationData(): void {
+        this.notificationCount.next(this.loadCountFromLocalStorage());
+        this.lastNotificationTimestamp = this.loadTimestampFromLocalStorage();
+    }
+
+    private loadCountFromLocalStorage(): number {
+        const storedCount = localStorage.getItem('notificationCount');
+        return storedCount ? parseInt(storedCount, 10) : 0;
+    }
+
+    private loadTimestampFromLocalStorage(): number | null {
+        const storedTimestamp = localStorage.getItem('lastNotificationTimestamp');
+        return storedTimestamp ? parseInt(storedTimestamp, 10) : null;
+    }
+
+    private saveNotificationData(count: number, timestamp: number): void {
+        localStorage.setItem('notificationCount', count.toString());
+        localStorage.setItem('lastNotificationTimestamp', timestamp.toString());
+    }
+
+    getNotificationObservable(): Observable<NostrNotification[]> {
         return this.notificationSubject.asObservable();
     }
 
-    async subscribeToNotifications(pubkey: string): Promise<void> {
+    public getNotificationCount(): Observable<number> {
+        return this.notificationCount.asObservable();
+    }
+
+    public async subscribeToNotifications(pubkey: string): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const pool = this.relayService.getPool();
         const connectedRelays = this.relayService.getConnectedRelays();
@@ -26,47 +65,102 @@ export class NotificationService {
         if (connectedRelays.length === 0) {
             throw new Error('No connected relays');
         }
+        const lastNotificationTimestamp = this.loadTimestampFromLocalStorage();
 
         const filter: Filter = {
-            kinds: [1, 3, 4, 9735], // 1: Text Note, 3: Follow, 4: Encrypted DM, 9735: Zap
-            '#p': [pubkey], // Filtering events related to the user's public key
-            limit: 50
+            kinds: [1, 3, 4, 9735],
+            '#p': [pubkey],
+            limit: 50,
+            since: lastNotificationTimestamp || undefined
         };
 
         return new Promise((resolve) => {
             const sub = pool.subscribeMany(connectedRelays, [filter], {
-                onevent: (event: NostrEvent) => {
-                    if (this.isNotificationEvent(event, pubkey)) {
-                        const eventTimestamp = event.created_at * 1000;
-                        const eventDate = new Date(eventTimestamp);
-                        const formattedDate = eventDate.toLocaleString();
-
-                        // Log the event kind and details to the console
-                        console.log(`Received event kind: ${event.kind}, at ${formattedDate}`);
-
-                        if (event.kind === 4) {
-                            event.content = `Sent a private message at ${formattedDate}.`;
-                            console.log('Private Message Event:', event);
-                        } else if (event.kind === 1) {
-                            event.content = `Mentioned you in an event at ${formattedDate}.`;
-                            console.log('Mention Event:', event);
-                        } else if (event.kind === 9735) {
-                            console.log('Zap Event:', event);
-                        } else if (event.kind === 3) {
-                            console.log('New Follower Event:', event);
-                        }
-
-                        this.notificationSubject.next(event);
-                    }
-                },
+                onevent: (event: NostrEvent) => this.handleNotificationEvent(event, pubkey),
                 oneose() {
-                    sub.close();
-                    resolve();
+                     resolve();
                 }
             });
         });
     }
 
+    private handleNotificationEvent(event: NostrEvent, pubkey: string): void {
+        console.log('Received event:', event);
+
+
+        if (this.isNotificationEvent(event, pubkey)) {
+            const eventTimestamp = event.created_at * 1000;
+            const formattedDate = new Date(eventTimestamp);
+
+            let notificationTitle = '';
+            let notificationDescription = '';
+            let notificationIcon = '';
+
+            switch (event.kind) {
+                case 1:
+                    notificationTitle = 'Mention';
+                    notificationDescription = `Mentioned you in an event.`;
+                    notificationIcon = 'heroicons_outline:at-symbol';
+                    break;
+                case 4:
+                    notificationTitle = 'Private Message';
+                    notificationDescription = `Sent a private message.`;
+                    notificationIcon = 'heroicons_outline:envelope-open';
+                    break;
+                case 9735:
+                    notificationTitle = 'Zap';
+                    notificationDescription = 'Received a zap event.';
+                    notificationIcon = 'feather:zap';
+                    break;
+                case 3:
+                    notificationTitle = 'New Follower';
+                    notificationDescription = 'You have a new follower.';
+                    notificationIcon = 'heroicons_outline:user-plus';
+                    break;
+                default:
+                    notificationTitle = 'Notification';
+                    notificationIcon = 'heroicons_outline:bell';
+                    break;
+            }
+
+            const notification: NostrNotification = {
+                id: event.id,
+                icon: notificationIcon,
+                title: notificationTitle,
+                description: notificationDescription,
+                time: formattedDate,
+                kind: event.kind,
+                read: false
+            };
+
+            console.log('Generated notification:', notification);
+
+
+            const currentNotifications = this.notificationSubject.value;
+            const updatedNotifications = [notification, ...currentNotifications].slice(0, 50);
+
+            this.notificationSubject.next(updatedNotifications);
+            this.incrementNotificationCount(event.created_at);
+        }
+    }
+
+
+    private incrementNotificationCount(timestamp: number): void {
+        const newCount = this.notificationCount.value + 1;
+        this.notificationCount.next(newCount);
+        this.saveNotificationData(newCount, timestamp);
+    }
+
+    public markAllAsRead(): void {
+        const updatedNotifications = this.notificationSubject.value.map(notification => ({
+            ...notification,
+            read: true
+        }));
+        this.notificationSubject.next(updatedNotifications);
+        this.notificationCount.next(0);
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        this.saveNotificationData(0, currentTimestamp);
+    }
 
     private isNotificationEvent(event: NostrEvent, pubkey: string): boolean {
         return event.tags.some(tag => tag[0] === 'p' && tag[1] === pubkey);
