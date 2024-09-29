@@ -22,6 +22,7 @@ import { MetadataService } from 'app/services/metadata.service';
 import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { SocialService } from 'app/services/social.service';
 
 @Component({
     selector: 'profile',
@@ -52,6 +53,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private _unsubscribeAll: Subject<any> = new Subject<any>();
     private projectPubKey;
     private userPubKey;
+    followers: any[] = [];
+    following: any[] = [];
+
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -59,20 +63,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService,
         private _sanitizer: DomSanitizer,
-        private route: ActivatedRoute,
+        private _route: ActivatedRoute,
+        private _socialService: SocialService
     ) { }
 
     ngOnInit(): void {
 
 
-        this.route.paramMap.subscribe((params) => {
+        this._route.paramMap.subscribe((params) => {
             this.projectPubKey = params.get('pubkey') || '';
             if (this.projectPubKey != '') {
                 this.loadProfile(this.projectPubKey);
             }
-            else
-            {
-                 this.userPubKey  = this._signerService.getPublicKey();
+            else {
+                this.userPubKey = this._signerService.getPublicKey();
                 this.loadProfile(this.userPubKey);
 
             }
@@ -88,6 +92,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
                     this._changeDetectorRef.detectChanges();
                 }
             });
+
+
+
+        // Subscribe to real-time followers
+        this._socialService.getFollowersObservable()
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((event) => {
+                this.followers.push({ nostrPubKey: event.pubkey });
+                this._changeDetectorRef.detectChanges();
+            });
+
+        // Subscribe to real-time following
+        this._socialService.getFollowingObservable()
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((event) => {
+                const tags = event.tags.filter((tag) => tag[0] === 'p');
+                tags.forEach((tag) => {
+                    this.following.push({ nostrPubKey: tag[1] });
+                });
+                this._changeDetectorRef.detectChanges();
+            });
+
+
     }
 
     ngOnDestroy(): void {
@@ -95,7 +122,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
-    private async loadProfile(publicKey :string): Promise<void> {
+    private async loadProfile(publicKey: string): Promise<void> {
         this.isLoading = true;
         this.errorMessage = null;
 
@@ -114,8 +141,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
             const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
             if (metadata) {
                 this.metadata = metadata;
+
                 this._changeDetectorRef.detectChanges();
             }
+            await this._socialService.getFollowers(publicKey);
+            await this._socialService.getFollowing(publicKey);
+            this._changeDetectorRef.detectChanges();
 
 
             this._metadataService.getMetadataStream()
