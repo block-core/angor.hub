@@ -33,6 +33,7 @@ import { MatDialog } from '@angular/material/dialog';
 @Component({
     selector: 'chat-conversation',
     templateUrl: './conversation.component.html',
+    styleUrls: ['./conversation.component.css'],
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
@@ -161,10 +162,10 @@ export class ConversationComponent implements OnInit, OnDestroy {
     parseContent(content: string): string {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         return content.replace(urlRegex, (url) => {
-          if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-            return `<img src="${url}" alt="Image" width="100%" style="max-width: 100%; border-radius: 5px;">`;
+          if (url.match(/\.(jpeg|jpg|gif|png|bmp|svg|webp|tiff)$/) != null) {
+            return `<img src="${url}" alt="Image" width="100%" class="c-img">`;
           } else if (url.match(/\.(mp4|webm)$/) != null) {
-            return `<video controls width="100%" style="max-width: 100%; border-radius: 5px;"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+            return `<video controls width="100%" class="c-video"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
           } else if (url.match(/(youtu\.be\/|youtube\.com\/watch\?v=)/)) {
             let videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
             const ampersandPosition = videoId.indexOf('&');
