@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'checkmessage', standalone: true 
+  name: 'checkmessage', standalone: true
 })
 export class CheckmessagePipe implements PipeTransform {
 
@@ -18,31 +18,31 @@ export class CheckmessagePipe implements PipeTransform {
     const urlRegex = /(https?:\/\/[^\s]+)/;
 
     if (imageRegex.test(value)) {
-      return 'image';
+      return '🌄 image';
     }
     if (videoRegex.test(value)) {
-      return 'video';
+      return '🎬 video';
     }
     if (audioRegex.test(value)) {
-      return 'audio';
+      return '🎵 audio';
     }
     if (pdfRegex.test(value)) {
-      return 'pdf';
+      return '📁 pdf';
     }
     if (youtubeRegex.test(value)) {
-      return 'youtube';
+      return '📽️ youtube';
     }
     if (vimeoRegex.test(value)) {
-      return 'vimeo';
+      return '📽️ vimeo';
     }
     if (instagramRegex.test(value)) {
-      return 'instagram';
+      return '🔮 instagram';
     }
     if (twitterRegex.test(value)) {
-      return 'twitter';
+      return '🐦 twitter';
     }
     if (urlRegex.test(value)) {
-      return 'url';
+      return '🌐 url';
     }
 
      return value;
