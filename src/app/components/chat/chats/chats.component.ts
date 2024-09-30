@@ -20,6 +20,7 @@ import { Chat, Profile } from '../chat.types';
 import { NewChatComponent } from '../new-chat/new-chat.component';
 import { ProfileComponent } from '../profile/profile.component';
 import { AgoPipe } from 'app/shared/pipes/ago.pipe';
+import { CheckmessagePipe } from 'app/shared/pipes/checkmessage.pipe';
 
 @Component({
     selector: 'chat-chats',
@@ -41,6 +42,7 @@ import { AgoPipe } from 'app/shared/pipes/ago.pipe';
         RouterOutlet,
         AgoPipe,
         CommonModule,
+        CheckmessagePipe
     ],
 })
 export class ChatsComponent implements OnInit, OnDestroy {
