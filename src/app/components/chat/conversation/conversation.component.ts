@@ -29,6 +29,7 @@ import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AngorConfigService } from '@angor/services/config';
 import { GifDialogComponent } from 'app/shared/gif-dialog/gif-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
     selector: 'chat-conversation',
@@ -74,7 +75,8 @@ export class ConversationComponent implements OnInit, OnDestroy {
         private _angorMediaWatcherService: AngorMediaWatcherService,
         private _ngZone: NgZone,
         private _angorConfigService: AngorConfigService,
-        public dialog: MatDialog
+        public dialog: MatDialog,
+        private sanitizer: DomSanitizer
     ) {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -158,27 +160,30 @@ export class ConversationComponent implements OnInit, OnDestroy {
             });
     }
 
-
-    parseContent(content: string): string {
+    parseContent(content: string): SafeHtml {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return content.replace(urlRegex, (url) => {
+        const cleanedContent = content.replace(/["]+/g, '');
+        const parsedContent = cleanedContent.replace(urlRegex, (url) => {
           if (url.match(/\.(jpeg|jpg|gif|png|bmp|svg|webp|tiff)$/) != null) {
             return `<img src="${url}" alt="Image" width="100%" class="c-img">`;
           } else if (url.match(/\.(mp4|webm)$/) != null) {
             return `<video controls width="100%" class="c-video"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
           } else if (url.match(/(youtu\.be\/|youtube\.com\/watch\?v=)/)) {
-            let videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
-            const ampersandPosition = videoId.indexOf('&');
-            if (ampersandPosition !== -1) {
-              videoId = videoId.substring(0, ampersandPosition);
+            let videoId;
+            if (url.includes('youtu.be/')) {
+              videoId = url.split('youtu.be/')[1];
+            } else if (url.includes('watch?v=')) {
+              const urlParams = new URLSearchParams(url.split('?')[1]);
+              videoId = urlParams.get('v');
             }
-            return `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+            return `<iframe width="100%" class="c-video" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
           } else {
-            return `<a href="${url}" target="_blank" style="color: #007bff;">${url}</a>`;
+            return `<a href="${url}" target="_blank">${url}</a>`;
           }
         }).replace(/\n/g, '<br>');
-      }
 
+        return this.sanitizer.bypassSecurityTrustHtml(parsedContent);
+      }
 
     @HostListener('input')
     @HostListener('ngModelChange')
