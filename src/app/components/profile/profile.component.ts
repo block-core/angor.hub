@@ -58,6 +58,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     allPublicKeys: string[] = [];
     suggestions: { pubkey: string, metadata: any }[] = [];
     isCurrentUserProfile: Boolean=false;
+    isFollowing = false;
+
+
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -221,4 +224,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     getSafeUrl(url: string): SafeUrl {
         return this._sanitizer.bypassSecurityTrustUrl(url);
     }
+
+    toggleFollow() {
+        this.isFollowing = !this.isFollowing;
+     }
 }

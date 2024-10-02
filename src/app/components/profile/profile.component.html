@@ -51,9 +51,13 @@
 
 
             <!-- Menu -->
-            <div class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto">
-                <a class="font-medium" [routerLink]="['./']"> Events </a>
-                <a class="text-secondary" [routerLink]="['./']"> About </a>
+            <div *ngIf="!isCurrentUserProfile" class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto">
+                <div class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto">
+                    <button mat-raised-button color="primary" (click)="toggleFollow()"  >
+                        <mat-icon>{{ isFollowing ? 'person_remove' : 'person_add' }}</mat-icon>
+                        <span class="ml-2">{{ isFollowing ? 'UNFOLLOW' : 'FOLLOW' }}</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
