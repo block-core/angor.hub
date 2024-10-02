@@ -60,8 +60,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     isCurrentUserProfile: Boolean=false;
     isFollowing = false;
 
-
-
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _metadataService: MetadataService,
@@ -77,18 +75,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
         this._route.paramMap.subscribe((params) => {
             const routePubKey = params.get('pubkey');
+            this.routePubKey= routePubKey;
             const userPubKey = this._signerService.getPublicKey();
-
             this.isCurrentUserProfile = routePubKey === userPubKey;
-
             const pubKeyToLoad = routePubKey || userPubKey;
             this.loadProfile(pubKeyToLoad);
-
             if (!routePubKey) {
                 this.isCurrentUserProfile = true;
             }
-
-            this.loadCurrentUserProfile();
+           this.loadCurrentUserProfile();
         });
 
 
@@ -110,7 +105,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
                     }
                 });
         }
-
 
         this._socialService.getFollowersObservable()
             .pipe(takeUntil(this._unsubscribeAll))
@@ -137,7 +131,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
-    private async loadProfile(publicKey: string): Promise<void> {
+    async loadProfile(publicKey: string): Promise<void> {
         this.isLoading = true;
         this.errorMessage = null;
 
@@ -159,8 +153,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.metadata = metadata;
                 this._changeDetectorRef.detectChanges();
             }
-            await this._socialService.getFollowers(publicKey);
-            await this._socialService.getFollowing(publicKey);
+
+             await this._socialService.getFollowers(publicKey);
+            const currentUserPubKey = this._signerService.getPublicKey();
+            this.isFollowing = this.followers.includes(currentUserPubKey);
+
+             await this._socialService.getFollowing(publicKey);
 
             this._metadataService.getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
@@ -180,8 +178,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this._changeDetectorRef.detectChanges();
         }
     }
-
-
 
     private async loadCurrentUserProfile(): Promise<void> {
         try {
@@ -225,7 +221,32 @@ export class ProfileComponent implements OnInit, OnDestroy {
         return this._sanitizer.bypassSecurityTrustUrl(url);
     }
 
-    toggleFollow() {
-        this.isFollowing = !this.isFollowing;
-     }
+    async toggleFollow(): Promise<void> {
+        try {
+            const userPubKey = this._signerService.getPublicKey();
+            const routePubKey = this.routePubKey || this.userPubKey;
+
+            if (!routePubKey || !userPubKey) {
+                console.error('Public key missing. Unable to toggle follow.');
+                return;
+            }
+
+            if (this.isFollowing) {
+                await this._socialService.unfollow(routePubKey);
+                console.log(`Unfollowed ${routePubKey}`);
+            } else {
+                await this._socialService.follow(routePubKey);
+                console.log(`Followed ${routePubKey}`);
+            }
+
+            this.isFollowing = !this.isFollowing;
+
+            this._changeDetectorRef.detectChanges();
+
+        } catch (error) {
+            console.error('Failed to toggle follow:', error);
+        }
+    }
+
+
 }
