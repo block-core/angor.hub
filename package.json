@@ -1,6 +1,6 @@
 {
     "name": "angor-hub",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "Angor Hub is a Nostr client that is customized around the Angor protocol, a decentralized crowdfunding platform.",
     "author": "angor",
     "private": true,
