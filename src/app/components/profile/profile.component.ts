@@ -23,6 +23,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { SocialService } from 'app/services/social.service';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector: 'profile',
@@ -232,16 +233,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
             }
 
             if (this.isFollowing) {
-                await this._socialService.unfollow(routePubKey);
+                 await this._socialService.unfollow(routePubKey);
                 console.log(`Unfollowed ${routePubKey}`);
+
+                 this.followers = this.followers.filter(pubkey => pubkey !== userPubKey);
             } else {
-                await this._socialService.follow(routePubKey);
+                 await this._socialService.follow(routePubKey);
                 console.log(`Followed ${routePubKey}`);
+
+                 this.followers.push(userPubKey);
             }
 
-            this.isFollowing = !this.isFollowing;
+             this.isFollowing = !this.isFollowing;
 
-            this._changeDetectorRef.detectChanges();
+             this._changeDetectorRef.detectChanges();
 
         } catch (error) {
             console.error('Failed to toggle follow:', error);

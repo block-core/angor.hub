@@ -91,6 +91,10 @@ export const appRoutes: Route[] = [
                 loadChildren: () => import('app/components/settings/settings.routes')
             },
             {
+                path: 'settings/:id',
+                loadChildren: () => import('app/components/settings/settings.routes')
+            },
+            {
                 path: 'chat',
                 loadChildren: () => import('app/components/chat/chat.routes')
             },

@@ -11,7 +11,7 @@
         <!-- User info -->
         <div class="bg-card mx-auto flex w-full max-w-5xl flex-0 flex-col items-center px-8 lg:h-18 lg:flex-row">
             <!-- picture -->
-            <div class="-mt-26 rounded-full lg:-mt-22">
+            <div class="-mt-26 rounded-full lg:-mt-22 flex-shrink-0">
                 <ng-container *ngIf="metadata?.picture; else defaultAvatar">
                     <img class="ring-bg-card min-h-32 min-w-32 h-32 w-32 rounded-full ring-4 object-cover max-w-fit"
                         [src]="getSafeUrl(metadata?.picture)"
@@ -27,18 +27,23 @@
             </div>
 
             <!-- Details -->
-            <div class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start">
-                <div class="text-lg font-bold leading-tight truncate max-w-44">{{metadata?.display_name ||
-                    metadata?.name || 'Unknown User'}}</div>
-                <div class="text-secondary leading-tight truncate max-w-44">{{metadata?.username || metadata?.name}}
+            <div class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start flex-grow">
+                <div class="text-lg font-bold leading-tight max-w-full lg:max-w-[25rem] truncate"
+                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{metadata?.display_name || metadata?.name || 'Unknown User'}}
+                </div>
+                <div class="text-secondary leading-tight max-w-full lg:max-w-[25rem] truncate"
+                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{metadata?.username || metadata?.name}}
                 </div>
             </div>
 
+
             <!-- Separator -->
-            <div class="mx-8 hidden h-8 border-l-2 lg:flex"></div>
+            <div class="mx-8 hidden h-8 border-l-2 lg:flex flex-shrink-0"></div>
 
             <!-- Stats -->
-            <div class="mt-6 flex items-center space-x-6 lg:mt-0">
+            <div class="mt-6 flex items-center space-x-6 lg:mt-0 flex-shrink-0">
                 <div class="flex flex-col items-center">
                     <span class="font-bold">{{ followers.length }}</span>
                     <span class="text-secondary text-sm font-medium">FOLLOWERS</span>
@@ -49,17 +54,67 @@
                 </div>
             </div>
 
+            <!-- Separator -->
+            <div   class="mx-8 hidden h-8 border-l-2 lg:flex flex-shrink-0"></div>
 
-            <!-- Menu -->
-            <div *ngIf="!isCurrentUserProfile" class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto">
-                <div class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto">
-                    <button mat-raised-button color="primary" (click)="toggleFollow()"  >
-                        <mat-icon>{{ isFollowing ? 'person_remove' : 'person_add' }}</mat-icon>
-                        <span class="ml-2">{{ isFollowing ? 'UNFOLLOW' : 'FOLLOW' }}</span>
-                    </button>
-                </div>
+            <!-- Tools -->
+           <div class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto flex-shrink-0">
+            <div *ngIf="!isCurrentUserProfile">
+                <button mat-icon-button (click)="toggleFollow()" [matTooltip]="isFollowing ? 'Unfollow' : 'Follow'">
+                    <mat-icon [svgIcon]="isFollowing ? 'heroicons_outline:user-minus' : 'heroicons_outline:user-plus'">
+                    </mat-icon>
+                </button>
             </div>
+            <div>
+                <button mat-icon-button [matMenuTriggerFor]="profileMenu">
+                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-vertical'"></mat-icon>
+                </button>
+                <mat-menu #profileMenu="matMenu">
+                    <button *ngIf="!isCurrentUserProfile" mat-menu-item>
+                        <span class="flex items-center">
+                            <mat-icon class="mr-3 icon-size-5"
+                                [svgIcon]="'feather:zap'"></mat-icon>
+                            <span>Send Zap</span>
+                        </span>
+                    </button>
+
+                    <button *ngIf="isCurrentUserProfile" mat-menu-item>
+                        <span class="flex items-center">
+                            <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_outline:qr-code'"></mat-icon>
+                            <span>Receive Zap</span>
+                        </span>
+                    </button>
+
+                    <mat-divider class="my-2"></mat-divider>
+                    <button *ngIf="isCurrentUserProfile" mat-menu-item [routerLink]="'/settings/profile'">
+                        <span class="flex items-center">
+                            <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                            <span>Edit your profile</span>
+                        </span>
+                    </button>
+
+                    <button *ngIf="!isCurrentUserProfile" mat-menu-item>
+                        <span class="flex items-center">
+                            <mat-icon class="mr-3 icon-size-5" [svgIcon]="
+                                    'heroicons_solid:exclamation-triangle'
+                                "></mat-icon>
+                            <span>Report</span>
+                        </span>
+                    </button>
+                    <button *ngIf="!isCurrentUserProfile" mat-menu-item>
+                        <span class="flex items-center">
+                            <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:bell'"></mat-icon>
+                            <span>Turn on notifications</span>
+                        </span>
+                    </button>
+                </mat-menu>
+            </div>
+           </div>
+
+
+
         </div>
+
     </div>
 
     <!-- Main -->
@@ -70,7 +125,7 @@
             <angor-card *ngIf="metadata?.about && metadata.about.trim() !== ''"
                 class="flex w-full max-w-80 flex-col p-8">
                 <div class="text-2xl font-semibold leading-tight">About</div>
-                               <div class="mt-4">
+                <div class="mt-4">
                     {{metadata?.about || ''}}
                 </div>
                 <a class="mt-8 px-6" mat-flat-button [color]="'primary'" [routerLink]="['./']">
@@ -79,7 +134,8 @@
             </angor-card>
 
             <!-- Suggestion -->
-            <angor-card *ngIf="suggestions.length > 0" [ngClass]="{'mt-8': metadata?.about}" class="flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
+            <angor-card *ngIf="suggestions.length > 0" [ngClass]="{'mt-8': metadata?.about}"
+                class="flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
                 <div class="flex items-center justify-between">
                     <div class="text-2xl font-semibold leading-tight">
                         Suggestion
@@ -455,7 +511,8 @@
             </angor-card>
 
             <!-- Post 1 -->
-            <angor-card [ngClass]="{'mt-8': isCurrentUserProfile}"  class="flex w-full max-w-140 flex-col" #expandableCard02="angorCard">
+            <angor-card [ngClass]="{'mt-8': isCurrentUserProfile}" class="flex w-full max-w-140 flex-col"
+                #expandableCard02="angorCard">
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
                     <img class="mr-4 h-10 w-10 rounded-full" src="images/avatars/avatar-placeholder.png"
                         alt="Card cover image" />
@@ -575,7 +632,7 @@
                     <div class="mx-4 mb-3 mt-6 flex flex-col sm:mx-8">
                         <div class="flex items-start">
 
-                                <img class="mr-5 h-12 w-12 rounded-full object-cover"
+                            <img class="mr-5 h-12 w-12 rounded-full object-cover"
                                 [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
                                 onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
                                 alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
