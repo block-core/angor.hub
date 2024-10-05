@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { LightningResponse, LightningInvoice } from '../types/post';
 import { Event } from 'nostr-tools';
+import { LightningInvoice, LightningResponse } from 'app/types/post';
 
 @Injectable({
   providedIn: 'root',
@@ -12,29 +12,32 @@ export class LightningService {
   constructor(private http: HttpClient) {}
 
   getLightning(url: string): Observable<LightningResponse> {
-    return this.http
-      .get<LightningResponse>(url)
-      .pipe(
-        catchError((error) => {
-          console.error('Failed to fetch Lightning data:', error);
-          return of({ status: 'Failed' } as LightningResponse);
-        })
-      );
+    return this.http.get<LightningResponse>(url).pipe(
+      catchError((error) => {
+        console.error('Failed to fetch Lightning response:', error);
+        return of({ status: 'Failed' } as LightningResponse);
+      })
+    );
   }
 
   getLightningInvoice(url: string, amount: string): Observable<LightningInvoice> {
-    const fullUrl = `${url}?amount=${amount}`;
-    return this.http.get<LightningInvoice>(fullUrl).pipe(
+    const requestUrl = `${url}?amount=${amount}`;
+    return this.http.get<LightningInvoice>(requestUrl).pipe(
       catchError((error) => {
         console.error('Failed to fetch Lightning invoice:', error);
-        return of(null as unknown as LightningInvoice);
+        return of({ pr: '', status: 'Failed' } as LightningInvoice);
       })
     );
   }
 
   getLightningAddress(url: string): string {
-    const [username, domain] = url.split('@');
-    return `https://${domain}/.well-known/lnurlp/${username}`;
+    try {
+      const [username, domain] = url.split('@');
+      return `https://${domain}/.well-known/lnurlp/${username}`;
+    } catch (error) {
+      console.error('Invalid Lightning address format:', url);
+      return '';
+    }
   }
 
   sendZapRequest(
@@ -43,50 +46,57 @@ export class LightningService {
     amount: string,
     lnurl: string
   ): Observable<LightningInvoice> {
-    const encodedEvent = encodeURIComponent(JSON.stringify(zapRequest));
-    const url = `${callback}?amount=${amount}&nostr=${encodedEvent}&lnurl=${lnurl}`;
-    return this.http.get<LightningInvoice>(url).pipe(
+    const event = encodeURIComponent(JSON.stringify(zapRequest));
+    const requestUrl = `${callback}?amount=${amount}&nostr=${event}&lnurl=${lnurl}`;
+    return this.http.get<LightningInvoice>(requestUrl).pipe(
       catchError((error) => {
         console.error('Failed to send zap request:', error);
-        return of(null as unknown as LightningInvoice);
+        return of({ pr: '', status: 'Failed' } as LightningInvoice);
       })
     );
   }
 
   async login(): Promise<boolean> {
-    if (window.webln && !window.webln.isEnabled()) {
-      try {
+    try {
+      if (window.webln && !window.webln.isEnabled()) {
         await window.webln.enable();
-        return true;
-      } catch (error) {
-        console.error('Failed to enable WebLN:', error);
-        return false;
       }
+      return true;
+    } catch (error) {
+      console.error('WebLN login failed:', error);
+      return false;
     }
-    return !!window.webln;
   }
 
   hasWebln(): boolean {
-    return !!window.webln;
+    return Boolean(window.webln);
   }
 
-  async sendPayment(paymentRequest: string): Promise<any> {
+  async sendPayment(pr: string): Promise<any> {
     try {
-      return await window.webln?.sendPayment(paymentRequest);
-    } catch (error) {
-      console.error('Failed to send payment:', error);
+      if (this.hasWebln()) {
+        return await window.webln.sendPayment(pr);
+      }
+      console.error('WebLN is not available');
       return null;
+    } catch (error) {
+      console.error('Payment failed:', error);
+      throw error;
     }
   }
 
-  async payInvoice(paymentRequest: string): Promise<boolean> {
-    const isLoggedIn = await this.login();
-    if (!isLoggedIn) {
-      console.error('WebLN is not available');
-      return false;
+  async payInvoice(pr: string): Promise<boolean> {
+    const loggedIn = await this.login();
+    if (loggedIn && this.hasWebln()) {
+      try {
+        const response = await this.sendPayment(pr);
+        return Boolean(response);
+      } catch (error) {
+        console.error('Failed to pay invoice:', error);
+        return false;
+      }
     }
-
-    const response = await this.sendPayment(paymentRequest);
-    return response !== null;
+    console.error('WebLN not available or login failed');
+    return false;
   }
 }

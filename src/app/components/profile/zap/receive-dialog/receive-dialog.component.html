@@ -1,0 +1,39 @@
+<h2>⚡ Receive Zap</h2>
+<mat-dialog-content *ngIf="!displayQRCode">
+    <div class="preset-buttons">
+        <button mat-mini-fab color="primary" *ngFor="let button of zapButtons" (click)="invoiceAmount = button.value">
+            <mat-icon>{{ button.icon }}</mat-icon>
+            <span>{{ button.label }}</span>
+        </button>
+    </div>
+    <mat-divider></mat-divider>
+    <mat-form-field appearance="outline" class="sats-input">
+        <mat-label>Zap Amount</mat-label>
+        <input matInput [(ngModel)]="invoiceAmount" placeholder="e.g., 100" type="number" />
+    </mat-form-field>
+    <mat-dialog-actions align="end">
+        <button mat-icon-button color="warn" (click)="closeDialog()" [matTooltip]="'Close'">
+            <mat-icon [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+        </button>
+        <button mat-raised-button color="primary" (click)="generateInvoice()">
+            Generate Invoice
+        </button>
+    </mat-dialog-actions>
+</mat-dialog-content>
+
+<mat-dialog-content *ngIf="displayQRCode">
+    <div *ngIf="displayQRCode" class="qrcode">
+        <span>Scan with phone to pay ({{ invoiceAmount }} sats)</span>
+        <mat-divider></mat-divider>
+        <qrcode [qrdata]="lightningInvoice" [matTooltip]="'Lightning Invoice'" class="qrcode-image" [errorCorrectionLevel]="'M'"></qrcode>
+
+        <mat-dialog-actions align="center">
+            <button mat-icon-button color="warn" (click)="closeDialog()" [matTooltip]="'Close'">
+                <mat-icon [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
+            </button>
+            <button mat-icon-button (click)="copyInvoice()" [matTooltip]="'Copy Invoice'">
+                <mat-icon [svgIcon]="'heroicons_outline:clipboard-document'"></mat-icon>
+            </button>
+        </mat-dialog-actions>
+    </div>
+</mat-dialog-content>

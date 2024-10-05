@@ -6,7 +6,8 @@ import {
     Component,
     ViewEncapsulation,
     OnInit,
-    OnDestroy,
+    OnDestroy
+
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -24,6 +25,15 @@ import { IndexedDBService } from 'app/services/indexed-db.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { SocialService } from 'app/services/social.service';
 import { MatDialog } from '@angular/material/dialog';
+import { LightningInvoice, LightningResponse } from 'app/types/post';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { LightningService } from 'app/services/lightning.service';
+import { bech32 } from '@scure/base';
+import { FormsModule } from '@angular/forms';
+import { QRCodeModule } from 'angularx-qrcode';
+import { Clipboard } from '@angular/cdk/clipboard';
+import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
+import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 
 @Component({
     selector: 'profile',
@@ -43,7 +53,9 @@ import { MatDialog } from '@angular/material/dialog';
         MatDividerModule,
         MatTooltipModule,
         NgClass,
-        CommonModule
+        CommonModule,
+        FormsModule,
+        QRCodeModule,
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -58,8 +70,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
     following: any[] = [];
     allPublicKeys: string[] = [];
     suggestions: { pubkey: string, metadata: any }[] = [];
-    isCurrentUserProfile: Boolean=false;
+    isCurrentUserProfile: Boolean = false;
     isFollowing = false;
+
+    lightningResponse: LightningResponse | null = null;
+    lightningInvoice: LightningInvoice | null = null;
+    sats: string;
+    paymentInvoice: string = '';
+    invoiceAmount: string = '?';
+
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -69,6 +88,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _sanitizer: DomSanitizer,
         private _route: ActivatedRoute,
         private _socialService: SocialService,
+        private snackBar: MatSnackBar,
+        private lightning: LightningService,
+        private _dialog: MatDialog // Add MatDialog here
 
     ) { }
 
@@ -76,7 +98,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
         this._route.paramMap.subscribe((params) => {
             const routePubKey = params.get('pubkey');
-            this.routePubKey= routePubKey;
+            this.routePubKey = routePubKey;
             const userPubKey = this._signerService.getPublicKey();
             this.isCurrentUserProfile = routePubKey === userPubKey;
             const pubKeyToLoad = routePubKey || userPubKey;
@@ -84,9 +106,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
             if (!routePubKey) {
                 this.isCurrentUserProfile = true;
             }
-           this.loadCurrentUserProfile();
+            this.loadCurrentUserProfile();
         });
-
 
         this._indexedDBService.getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
@@ -149,17 +170,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
 
         try {
-            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
-            if (metadata) {
-                this.metadata = metadata;
+            const userMetadata = await this._metadataService.fetchMetadataWithCache(publicKey);
+            if (userMetadata) {
+                this.metadata = userMetadata;
                 this._changeDetectorRef.detectChanges();
             }
 
-             await this._socialService.getFollowers(publicKey);
+            await this._socialService.getFollowers(publicKey);
             const currentUserPubKey = this._signerService.getPublicKey();
             this.isFollowing = this.followers.includes(currentUserPubKey);
 
-             await this._socialService.getFollowing(publicKey);
+            await this._socialService.getFollowing(publicKey);
 
             this._metadataService.getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
@@ -233,25 +254,84 @@ export class ProfileComponent implements OnInit, OnDestroy {
             }
 
             if (this.isFollowing) {
-                 await this._socialService.unfollow(routePubKey);
+                await this._socialService.unfollow(routePubKey);
                 console.log(`Unfollowed ${routePubKey}`);
 
-                 this.followers = this.followers.filter(pubkey => pubkey !== userPubKey);
+                this.followers = this.followers.filter(pubkey => pubkey !== userPubKey);
             } else {
-                 await this._socialService.follow(routePubKey);
+                await this._socialService.follow(routePubKey);
                 console.log(`Followed ${routePubKey}`);
 
-                 this.followers.push(userPubKey);
+                this.followers.push(userPubKey);
             }
 
-             this.isFollowing = !this.isFollowing;
+            this.isFollowing = !this.isFollowing;
 
-             this._changeDetectorRef.detectChanges();
+            this._changeDetectorRef.detectChanges();
 
         } catch (error) {
             console.error('Failed to toggle follow:', error);
         }
     }
 
+
+    openSnackBar(message: string, action: string) {
+        this.snackBar.open(message, action, { duration: 1300 });
+    }
+
+
+
+    getLightningInfo() {
+        let lightningAddress = '';
+        if (this.metadata?.lud06) {
+            const { words } = bech32.decode(this.metadata.lud06, 5000);
+            const data = new Uint8Array(bech32.fromWords(words));
+            lightningAddress = new TextDecoder().decode(Uint8Array.from(data));
+        } else if (this.metadata?.lud16?.toLowerCase().startsWith('lnurl')) {
+            const { words } = bech32.decode(this.metadata.lud16, 5000);
+            const data = new Uint8Array(bech32.fromWords(words));
+            lightningAddress = new TextDecoder().decode(Uint8Array.from(data));
+        } else if (this.metadata?.lud16) {
+            lightningAddress = this.lightning.getLightningAddress(this.metadata.lud16);
+        }
+        if (lightningAddress !== '') {
+            this.lightning.getLightning(lightningAddress).subscribe((response) => {
+                this.lightningResponse = response;
+                if (this.lightningResponse.status === 'Failed') {
+                    this.openSnackBar('Failed to lookup lightning address', 'dismiss');
+                } else if (this.lightningResponse.callback) {
+                    this.openZapDialog(); // Open dialog when callback is available
+                } else {
+                    this.openSnackBar("couldn't find user's lightning address", 'dismiss');
+                }
+            });
+        } else {
+            this.openSnackBar('No lightning address found', 'dismiss');
+        }
+    }
+
+    async zap() {
+        if (this.metadata && (this.metadata.lud06 || this.metadata.lud16)) {
+            this.getLightningInfo();
+        } else {
+            this.openSnackBar("user can't receive zaps", 'dismiss');
+        }
+    }
+
+    openZapDialog(): void {
+        this._dialog.open(SendDialogComponent, {
+            width: '405px',
+            maxHeight: '90vh',
+            data: this.metadata
+        });
+    }
+
+    openReceiveZapDialog(): void {
+        this._dialog.open(ReceiveDialogComponent, {
+            width: '405px',
+            maxHeight: '90vh',
+            data: this.metadata
+        });
+    }
 
 }
