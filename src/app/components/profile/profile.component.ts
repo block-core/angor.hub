@@ -6,7 +6,9 @@ import {
     Component,
     ViewEncapsulation,
     OnInit,
-    OnDestroy
+    OnDestroy,
+    ViewChild,
+    ElementRef
 
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,12 +36,16 @@ import { QRCodeModule } from 'angularx-qrcode';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { AngorConfigService } from '@angor/services/config';
 
 @Component({
+
     selector: 'profile',
     templateUrl: './profile.component.html',
-    encapsulation: ViewEncapsulation.None,
+    styleUrls: ['./profile.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    encapsulation: ViewEncapsulation.None,
     standalone: true,
     imports: [
         RouterLink,
@@ -56,9 +62,15 @@ import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.comp
         CommonModule,
         FormsModule,
         QRCodeModule,
+        PickerComponent
     ],
+
 })
 export class ProfileComponent implements OnInit, OnDestroy {
+    @ViewChild('eventInput') eventInput: ElementRef;
+    @ViewChild('commentInput') commentInput: ElementRef;
+
+    darkMode: boolean = false;
     isLoading: boolean = true;
     errorMessage: string | null = null;
     metadata: any;
@@ -73,6 +85,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     isCurrentUserProfile: Boolean = false;
     isFollowing = false;
 
+    showEmojiPicker = false;
+    showCommentEmojiPicker = false;
     lightningResponse: LightningResponse | null = null;
     lightningInvoice: LightningInvoice | null = null;
     sats: string;
@@ -90,12 +104,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _socialService: SocialService,
         private snackBar: MatSnackBar,
         private lightning: LightningService,
-        private _dialog: MatDialog // Add MatDialog here
+        private _dialog: MatDialog,
+        private _angorConfigService: AngorConfigService,
+
 
     ) { }
 
-    ngOnInit(): void {
 
+    ngOnInit(): void {
+        this._angorConfigService.config$.subscribe((config) => {
+            if (config.scheme === 'auto') {
+                this.detectSystemTheme();
+            } else {
+                this.darkMode = config.scheme === 'dark';
+            }
+        });
         this._route.paramMap.subscribe((params) => {
             const routePubKey = params.get('pubkey');
             this.routePubKey = routePubKey;
@@ -331,6 +354,41 @@ export class ProfileComponent implements OnInit, OnDestroy {
             width: '405px',
             maxHeight: '90vh',
             data: this.metadata
+        });
+    }
+
+
+
+
+    //======events
+
+
+    addEmoji(event: any) {
+        this.eventInput.nativeElement.value += event.emoji.native;
+        this.showEmojiPicker = false;
+    }
+
+    toggleEmojiPicker() {
+        this.showCommentEmojiPicker=false;
+        this.showEmojiPicker = !this.showEmojiPicker;
+    }
+
+    addEmojiTocomment(event: any) {
+        this.commentInput.nativeElement.value += event.emoji.native;
+        this.showCommentEmojiPicker = false;
+    }
+
+    toggleCommentEmojiPicker() {
+        this.showEmojiPicker=false;
+        this.showCommentEmojiPicker = !this.showCommentEmojiPicker;
+    }
+
+    detectSystemTheme() {
+        const darkSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        this.darkMode = darkSchemeMedia.matches;
+
+        darkSchemeMedia.addEventListener('change', (event) => {
+            this.darkMode = event.matches;
         });
     }
 
