@@ -20,6 +20,7 @@ import { SettingsRelayComponent } from './relay/relay.component';
 import { SettingsNetworkComponent } from "./network/network.component";
 import { SettingsIndexerComponent } from "./indexer/indexer.component";
 import { SignerService } from 'app/services/signer.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
     selector: 'settings',
@@ -28,17 +29,17 @@ import { SignerService } from 'app/services/signer.service';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
     imports: [
-    MatSidenavModule,
-    MatButtonModule,
-    MatIconModule,
-    NgClass,
-    SettingsProfileComponent,
-    SettingsSecurityComponent,
-    SettingsNotificationsComponent,
-    SettingsRelayComponent,
-    SettingsNetworkComponent,
-    SettingsIndexerComponent
-],
+        MatSidenavModule,
+        MatButtonModule,
+        MatIconModule,
+        NgClass,
+        SettingsProfileComponent,
+        SettingsSecurityComponent,
+        SettingsNotificationsComponent,
+        SettingsRelayComponent,
+        SettingsNetworkComponent,
+        SettingsIndexerComponent
+    ],
 })
 export class SettingsComponent implements OnInit, OnDestroy {
     @ViewChild('drawer') drawer: MatDrawer;
@@ -85,15 +86,33 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
 
     selectedPanel = 'relay';
+     selectPanel(panelId: string): void {
+        this.selectedPanel = panelId;
+         this.router.navigate(['settings', panelId], { replaceUrl: true });
+    }
+
+
     private _unsubscribeAll = new Subject<void>();
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _angorMediaWatcherService: AngorMediaWatcherService,
-        private _signerService: SignerService
-    ) {}
+        private _signerService: SignerService,
+        private _route: ActivatedRoute,
+        private router: Router
+
+    ) { }
 
     ngOnInit(): void {
+        this._route.paramMap.subscribe((params) => {
+            const id = params.get('id');
+            if (id && this.panels.some(panel => panel.id === id)) {
+                this.selectedPanel = id;
+            } else {
+                this.selectedPanel = 'relay';
+            }
+        });
+
         const securityPanel = {
             id: 'security',
             icon: 'heroicons_outline:shield-check',
@@ -132,6 +151,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     goToPanel(panel: string): void {
         this.selectedPanel = panel;
+        this.router.navigate(['settings', panel], { replaceUrl: true });
         if (this.drawerMode === 'over') {
             this.drawer.close();
         }

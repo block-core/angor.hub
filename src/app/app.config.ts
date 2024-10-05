@@ -18,6 +18,8 @@ import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
 import { provideServiceWorker } from '@angular/service-worker';
 import { HashService } from './services/hash.service';
 import { navigationServices } from './layout/navigation/navigation.services';
+import { WebLNProvider } from '@webbtc/webln-types';
+import { NostrWindow } from './types/nostr';
 
 export function initializeApp(hashService: HashService) {
     console.log('initializeApp. Getting hashService.load.');
@@ -119,5 +121,13 @@ export const appConfig: ApplicationConfig = {
                 ],
             },
         }),
+
     ],
 };
+declare global {
+    interface Window {
+      webln?: WebLNProvider;
+      nostr?: NostrWindow;
+    }
+  }
+
