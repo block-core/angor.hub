@@ -38,6 +38,8 @@ import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AngorConfigService } from '@angor/services/config';
+import { AngorConfirmationService } from '@angor/services/confirmation';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 
 @Component({
 
@@ -62,11 +64,13 @@ import { AngorConfigService } from '@angor/services/config';
         CommonModule,
         FormsModule,
         QRCodeModule,
-        PickerComponent
+        PickerComponent,
+        MatSlideToggle
     ],
 
 })
 export class ProfileComponent implements OnInit, OnDestroy {
+
     @ViewChild('eventInput') eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
 
@@ -92,7 +96,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     sats: string;
     paymentInvoice: string = '';
     invoiceAmount: string = '?';
-
+    isLiked = false;
+    isPreview = false;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -106,6 +111,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private lightning: LightningService,
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
+        private _angorConfirmationService: AngorConfirmationService
 
 
     ) { }
@@ -362,6 +368,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     //======events
 
+    toggleLike() {
+        this.isLiked = !this.isLiked;
+
+        if (this.isLiked) {
+            setTimeout(() => {
+                this.isLiked = false;
+                this.isLiked = true;
+            }, 300);
+        }
+    }
 
     addEmoji(event: any) {
         this.eventInput.nativeElement.value += event.emoji.native;
@@ -369,7 +385,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     toggleEmojiPicker() {
-        this.showCommentEmojiPicker=false;
+        this.showCommentEmojiPicker = false;
         this.showEmojiPicker = !this.showEmojiPicker;
     }
 
@@ -379,7 +395,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     toggleCommentEmojiPicker() {
-        this.showEmojiPicker=false;
+        this.showEmojiPicker = false;
         this.showCommentEmojiPicker = !this.showCommentEmojiPicker;
     }
 
@@ -390,6 +406,45 @@ export class ProfileComponent implements OnInit, OnDestroy {
         darkSchemeMedia.addEventListener('change', (event) => {
             this.darkMode = event.matches;
         });
+    }
+
+
+
+    openConfirmationDialog(): void {
+        // Open the dialog and save the reference of it
+        const dialogRef = this._angorConfirmationService.open(
+            {
+                "title": "Share Event",
+                "message": "Are you sure you want to share this event on your profile? <span class=\"font-medium\">This action is permanent and cannot be undone.</span>",
+                "icon": {
+                    "show": true,
+                    "name": "heroicons_solid:share",
+                    "color": "primary"
+                },
+                "actions": {
+                    "confirm": {
+                        "show": true,
+                        "label": "Yes, Share",
+                        "color": "primary"
+                    },
+                    "cancel": {
+                        "show": true,
+                        "label": "Cancel"
+                    }
+                },
+                "dismissible": true
+            }
+
+        );
+
+        // Subscribe to afterClosed from the dialog reference
+        dialogRef.afterClosed().subscribe((result) => {
+            console.log(result);
+        });
+    }
+
+    togglePreview() {
+        this.isPreview = !this.isPreview;
     }
 
 }

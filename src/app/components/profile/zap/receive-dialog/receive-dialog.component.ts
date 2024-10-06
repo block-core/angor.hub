@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { MatDialogActions, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { webln } from '@getalby/sdk';
 import { NgClass, CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -50,7 +50,8 @@ import { SettingsSecurityComponent } from 'app/components/settings/security/secu
     MatDialogActions,
     QRCodeModule,
     MatDivider,
-    MatTooltip
+    MatTooltip,
+    MatDialogClose
   ],
   templateUrl: './receive-dialog.component.html',
   styleUrls: ['./receive-dialog.component.scss']

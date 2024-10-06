@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LightningService } from 'app/services/lightning.service';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -54,7 +54,8 @@ import { MatTooltip } from '@angular/material/tooltip';
         QRCodeModule,
         MatDivider,
         MatTooltip,
-        MatDialogTitle
+        MatDialogTitle,
+        MatDialogClose
     ],
     templateUrl: './send-dialog.component.html',
     styleUrls: ['./send-dialog.component.scss']

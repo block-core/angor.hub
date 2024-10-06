@@ -1,3 +1,11 @@
+<div class="absolute right-0 top-0 pr-4 pt-4">
+    <button mat-icon-button [matDialogClose]="undefined">
+        <mat-icon
+            class="text-secondary"
+            [svgIcon]="'heroicons_outline:x-mark'"
+        ></mat-icon>
+    </button>
+</div>
 <h1>⚡ Send Zap</h1>
 <mat-dialog-content *ngIf="!showInvoiceSection || !lightningInvoice">
     <div class="preset-buttons">
@@ -13,9 +21,6 @@
     </mat-form-field>
 
     <mat-dialog-actions align="end">
-        <button mat-icon-button color="warn" (click)="closeDialog()" [matTooltip]="'Close'">
-            <mat-icon [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
-        </button>
         <button mat-raised-button color="primary" (click)="sendZap()">
             Create invoice
         </button>
@@ -31,10 +36,6 @@
     </div>
 
     <mat-dialog-actions align="center">
-        <button mat-icon-button color="warn" (click)="closeDialog()" [matTooltip]="'Close'">
-            <mat-icon [svgIcon]="'heroicons_solid:x-mark'"></mat-icon>
-        </button>
-
         <button mat-icon-button (click)="copyInvoice()" [matTooltip]="'Copy Invoice'">
             <mat-icon [svgIcon]="'heroicons_outline:clipboard-document'"></mat-icon>
         </button>
