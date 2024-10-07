@@ -33,13 +33,13 @@ import { LightningService } from 'app/services/lightning.service';
 import { bech32 } from '@scure/base';
 import { FormsModule } from '@angular/forms';
 import { QRCodeModule } from 'angularx-qrcode';
-import { Clipboard } from '@angular/cdk/clipboard';
 import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { AngorConfigService } from '@angor/services/config';
 import { AngorConfirmationService } from '@angor/services/confirmation';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { EventBoxComponent } from "../event-box/event-box.component";
 
 @Component({
 
@@ -49,6 +49,7 @@ import { MatSlideToggle } from '@angular/material/slide-toggle';
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     standalone: true,
+
     imports: [
         RouterLink,
         AngorCardComponent,
@@ -65,13 +66,15 @@ import { MatSlideToggle } from '@angular/material/slide-toggle';
         FormsModule,
         QRCodeModule,
         PickerComponent,
-        MatSlideToggle
-    ],
+        MatSlideToggle,
+        EventBoxComponent,
+    ]
+
 
 })
 export class ProfileComponent implements OnInit, OnDestroy {
 
-    @ViewChild('eventInput') eventInput: ElementRef;
+    @ViewChild('eventInput', { static: false }) eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
 
     darkMode: boolean = false;
@@ -129,7 +132,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
             const routePubKey = params.get('pubkey');
             this.routePubKey = routePubKey;
             const userPubKey = this._signerService.getPublicKey();
-            this.isCurrentUserProfile = routePubKey === userPubKey;
+
+            if (routePubKey || userPubKey) {
+                this.isCurrentUserProfile = routePubKey === userPubKey;
+            }
+
             const pubKeyToLoad = routePubKey || userPubKey;
             this.loadProfile(pubKeyToLoad);
             if (!routePubKey) {
@@ -307,8 +314,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     openSnackBar(message: string, action: string) {
         this.snackBar.open(message, action, { duration: 1300 });
     }
-
-
 
     getLightningInfo() {
         let lightningAddress = '';

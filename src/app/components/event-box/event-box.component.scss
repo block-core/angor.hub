@@ -1,0 +1,27 @@
+.emoji-picker-container-global {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: 350px;
+    max-width: 100%;
+ }
+ .heart-beat {
+    animation: heartBeatAnimation 0.3s ease-in-out;
+  }
+
+  @keyframes heartBeatAnimation {
+    0% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(2);
+    }
+    60% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
