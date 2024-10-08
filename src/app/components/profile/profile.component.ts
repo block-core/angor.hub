@@ -27,7 +27,7 @@ import { IndexedDBService } from 'app/services/indexed-db.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { SocialService } from 'app/services/social.service';
 import { MatDialog } from '@angular/material/dialog';
-import { LightningInvoice, LightningResponse } from 'app/types/post';
+import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LightningService } from 'app/services/lightning.service';
 import { bech32 } from '@scure/base';
@@ -40,6 +40,8 @@ import { AngorConfigService } from '@angor/services/config';
 import { AngorConfirmationService } from '@angor/services/confirmation';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { EventBoxComponent } from "../event-box/event-box.component";
+import { Filter, NostrEvent } from 'nostr-tools';
+import { EventService } from 'app/services/event.service';
 
 @Component({
 
@@ -83,7 +85,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     metadata: any;
     currentUserMetadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
-    private userPubKey;
+    private currentUserPubKey;
     private routePubKey;
     followers: any[] = [];
     following: any[] = [];
@@ -101,6 +103,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     invoiceAmount: string = '?';
     isLiked = false;
     isPreview = false;
+    posts: Post[] = []; // Store user's posts
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -114,13 +117,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private lightning: LightningService,
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
-        private _angorConfirmationService: AngorConfirmationService
-
+        private _angorConfirmationService: AngorConfirmationService,
+        private _eventService: EventService
 
     ) { }
 
 
     ngOnInit(): void {
+
+
+
+
         this._angorConfigService.config$.subscribe((config) => {
             if (config.scheme === 'auto') {
                 this.detectSystemTheme();
@@ -131,14 +138,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._route.paramMap.subscribe((params) => {
             const routePubKey = params.get('pubkey');
             this.routePubKey = routePubKey;
-            const userPubKey = this._signerService.getPublicKey();
+            const currentUserPubKey = this._signerService.getPublicKey();
 
-            if (routePubKey || userPubKey) {
-                this.isCurrentUserProfile = routePubKey === userPubKey;
+            if (routePubKey || currentUserPubKey) {
+                this.isCurrentUserProfile = routePubKey === currentUserPubKey;
             }
 
-            const pubKeyToLoad = routePubKey || userPubKey;
-            this.loadProfile(pubKeyToLoad);
+            this.routePubKey = routePubKey || currentUserPubKey;
+            this.loadProfile(this.routePubKey);
             if (!routePubKey) {
                 this.isCurrentUserProfile = true;
             }
@@ -148,7 +155,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._indexedDBService.getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((updatedMetadata) => {
-                if (updatedMetadata && updatedMetadata.pubkey === this.userPubKey) {
+                if (updatedMetadata && updatedMetadata.pubkey === this.currentUserPubKey) {
                     this.currentUserMetadata = updatedMetadata.metadata;
                     this._changeDetectorRef.detectChanges();
                 }
@@ -181,6 +188,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this._changeDetectorRef.detectChanges();
             });
 
+                 this.loadUserPosts(this.routePubKey);
+
         this.updateSuggestionList();
     }
 
@@ -188,6 +197,48 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
+
+
+
+
+
+    loadUserPosts(userPubKey :string): void {
+
+        if (!userPubKey) {
+            console.error('No public key found for the current user.');
+            return;
+        }
+        this.posts = []
+        // Create a filter for the user's posts (kind 1 = text notes)
+        const filter: Filter = {
+            kinds: [1], // Kind 1 for text notes (posts)
+            authors: [userPubKey], // Filter by the current user's public key
+        };
+
+        // Use the EventService to subscribe to the user's posts in real-time
+        this._eventService.subscribeToEvents(filter);
+
+        // Subscribe to the eventSubject to listen for new posts
+        this._eventService.eventSubject
+            .pipe(takeUntil(this._unsubscribeAll)) // Clean up when the component is destroyed
+            .subscribe((event: NostrEvent | null) => {
+                if (event) {
+                    // Pass MetadataService to getPostFromResponse
+                    const post = this._eventService.getPostFromResponse(event, "", this._metadataService);
+
+                   this.posts.push(post); // Add the post to the array
+                    this._changeDetectorRef.detectChanges(); // Trigger change detection
+                 }
+            });
+            this._changeDetectorRef.detectChanges(); // Trigger change detection
+
+    }
+
+
+
+
+
+
 
     async loadProfile(publicKey: string): Promise<void> {
         this.isLoading = true;
@@ -241,8 +292,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         try {
             this.currentUserMetadata = null;
 
-            this.userPubKey = this._signerService.getPublicKey();
-            const currentUserMetadata = await this._metadataService.fetchMetadataWithCache(this.userPubKey);
+            this.currentUserPubKey = this._signerService.getPublicKey();
+            const currentUserMetadata = await this._metadataService.fetchMetadataWithCache(this.currentUserPubKey);
             if (currentUserMetadata) {
                 this.currentUserMetadata = currentUserMetadata;
 
@@ -251,7 +302,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this._metadataService.getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
-                    if (updatedMetadata && updatedMetadata.pubkey === this.userPubKey) {
+                    if (updatedMetadata && updatedMetadata.pubkey === this.currentUserPubKey) {
                         this.currentUserMetadata = updatedMetadata;
                         this._changeDetectorRef.detectChanges();
                     }
@@ -282,7 +333,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     async toggleFollow(): Promise<void> {
         try {
             const userPubKey = this._signerService.getPublicKey();
-            const routePubKey = this.routePubKey || this.userPubKey;
+            const routePubKey = this.routePubKey || this.currentUserPubKey;
 
             if (!routePubKey || !userPubKey) {
                 console.error('Public key missing. Unable to toggle follow.');
@@ -451,5 +502,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     togglePreview() {
         this.isPreview = !this.isPreview;
     }
+
+
+
+
+
 
 }
