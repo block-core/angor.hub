@@ -59,10 +59,10 @@ export class NotificationService {
 
     private loadFilterPreferences(): number[] {
         const storedPreferences = localStorage.getItem('notificationSettings');
-        return storedPreferences ? JSON.parse(storedPreferences) : [1, 3, 4, 9735]; // Default to all kinds if not set
+        return storedPreferences ? JSON.parse(storedPreferences) : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
     }
 
-     public async subscribeToNotifications(pubkey: string): Promise<void> {
+    public async subscribeToNotifications(pubkey: string): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const pool = this.relayService.getPool();
         const connectedRelays = this.relayService.getConnectedRelays();
@@ -74,7 +74,7 @@ export class NotificationService {
         const filterPreferences = this.loadFilterPreferences();
 
         if (filterPreferences.length === 0) {
-            filterPreferences.push(1, 3, 4, 9735);
+            filterPreferences.push(1, 3, 4, 7, 9735);
         }
 
         const filter: Filter = {
@@ -88,7 +88,7 @@ export class NotificationService {
             const sub = pool.subscribeMany(connectedRelays, [filter], {
                 onevent: (event: NostrEvent) => this.handleNotificationEvent(event, pubkey),
                 oneose() {
-                     resolve();
+                    resolve();
                 }
             });
         });
@@ -126,6 +126,11 @@ export class NotificationService {
                     notificationTitle = 'New Follower';
                     notificationDescription = 'You have a new follower.';
                     notificationIcon = 'heroicons_outline:user-plus';
+                    break;
+                case 7:
+                    notificationTitle = 'New Like';
+                    notificationDescription = 'You have a new Like.';
+                    notificationIcon = 'heroicons_outline:hand-thumb-up';
                     break;
                 default:
                     notificationTitle = 'Notification';
