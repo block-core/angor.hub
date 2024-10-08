@@ -3,147 +3,237 @@
     <div class="bg-card flex flex-col shadow">
         <!-- Cover image -->
         <div>
-            <img class="h-40 object-cover lg:h-80" [src]="metadata?.banner || '/images/pages/profile/cover.jpg'"
+            <img
+                class="h-40 object-cover lg:h-80"
+                [src]="metadata?.banner || '/images/pages/profile/cover.jpg'"
                 onerror="this.onerror=null; this.src='/images/pages/profile/cover.jpg';"
-                alt="{{metadata?.display_name || metadata?.name || 'Banner'}}" />
+                alt="{{ metadata?.display_name || metadata?.name || 'Banner' }}"
+            />
         </div>
 
         <!-- User info -->
-        <div class="bg-card mx-auto flex w-full max-w-5xl flex-0 flex-col items-center px-8 lg:h-18 lg:flex-row">
+        <div
+            class="bg-card mx-auto flex w-full max-w-5xl flex-0 flex-col items-center px-8 lg:h-18 lg:flex-row"
+        >
             <!-- picture -->
-            <div class="-mt-26 rounded-full lg:-mt-22 flex-shrink-0">
+            <div class="-mt-26 flex-shrink-0 rounded-full lg:-mt-22">
                 <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-                    <img class="ring-bg-card min-h-32 min-w-32 h-32 w-32 rounded-full ring-4 object-cover max-w-fit"
+                    <img
+                        class="ring-bg-card h-32 min-h-32 w-32 min-w-32 max-w-fit rounded-full object-cover ring-4"
                         [src]="getSafeUrl(metadata?.picture)"
                         onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                        alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                        alt="{{
+                            metadata?.display_name || metadata?.name || ''
+                        }}"
+                    />
                 </ng-container>
                 <ng-template #defaultAvatar>
-                    <img class="ring-bg-card min-h-32 min-w-32 h-32 w-32 rounded-full ring-4 object-cover"
+                    <img
+                        class="ring-bg-card h-32 min-h-32 w-32 min-w-32 rounded-full object-cover ring-4"
                         src="/images/avatars/avatar-placeholder.png"
                         onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                        alt="{{metadata?.display_name || metadata?.name || 'Avatar'}}" />
+                        alt="{{
+                            metadata?.display_name || metadata?.name || ''
+                        }}"
+                    />
                 </ng-template>
             </div>
 
             <!-- Details -->
-            <div class="mt-4 flex flex-col items-center lg:ml-8 lg:mt-0 lg:items-start flex-grow">
-                <div class="text-lg font-bold leading-tight max-w-full lg:max-w-[25rem] truncate"
-                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    {{metadata?.display_name || metadata?.name || 'Unknown User'}}
+            <div
+                class="mt-4 flex flex-grow flex-col items-center lg:ml-8 lg:mt-0 lg:items-start"
+            >
+                <div
+                    class="max-w-full truncate text-lg font-bold leading-tight lg:max-w-[25rem]"
+                    style="
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    "
+                >
+                    {{
+                        metadata?.display_name ||
+                            metadata?.name ||
+                            'Unknown User'
+                    }}
                 </div>
-                <div class="text-secondary leading-tight max-w-full lg:max-w-[25rem] truncate"
-                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    {{metadata?.username || metadata?.name}}
+                <div
+                    class="text-secondary max-w-full truncate leading-tight lg:max-w-[25rem]"
+                    style="
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    "
+                >
+                    {{ metadata?.username || metadata?.name }}
                 </div>
             </div>
 
-
             <!-- Separator -->
-            <div class="mx-8 hidden h-8 border-l-2 lg:flex flex-shrink-0"></div>
+            <div class="mx-8 hidden h-8 flex-shrink-0 border-l-2 lg:flex"></div>
 
             <!-- Stats -->
-            <div class="mt-6 flex items-center space-x-6 lg:mt-0 flex-shrink-0">
+            <div class="mt-6 flex flex-shrink-0 items-center space-x-6 lg:mt-0">
                 <div class="flex flex-col items-center">
                     <span class="font-bold">{{ followers.length }}</span>
-                    <span class="text-secondary text-sm font-medium">FOLLOWERS</span>
+                    <span class="text-secondary text-sm font-medium"
+                        >FOLLOWERS</span
+                    >
                 </div>
                 <div class="flex flex-col items-center">
                     <span class="font-bold">{{ following.length }}</span>
-                    <span class="text-secondary text-sm font-medium">FOLLOWING</span>
+                    <span class="text-secondary text-sm font-medium"
+                        >FOLLOWING</span
+                    >
                 </div>
             </div>
 
             <!-- Separator -->
-            <div class="mx-8 hidden h-8 border-l-2 lg:flex flex-shrink-0"></div>
+            <div class="mx-8 hidden h-8 flex-shrink-0 border-l-2 lg:flex"></div>
 
             <!-- Tools -->
-            <div class="mb-4 mt-8 flex items-center space-x-6 lg:m-0 lg:ml-auto flex-shrink-0">
+            <div
+                class="mb-4 mt-8 flex flex-shrink-0 items-center space-x-6 lg:m-0 lg:ml-auto"
+            >
                 <div *ngIf="!isCurrentUserProfile">
-                    <button mat-icon-button (click)="toggleFollow()" [matTooltip]="isFollowing ? 'Unfollow' : 'Follow'">
+                    <button
+                        mat-icon-button
+                        (click)="toggleFollow()"
+                        [matTooltip]="isFollowing ? 'Unfollow' : 'Follow'"
+                    >
                         <mat-icon
-                            [svgIcon]="isFollowing ? 'heroicons_outline:user-minus' : 'heroicons_outline:user-plus'">
+                            [svgIcon]="
+                                isFollowing
+                                    ? 'heroicons_outline:user-minus'
+                                    : 'heroicons_outline:user-plus'
+                            "
+                        >
                         </mat-icon>
                     </button>
                 </div>
                 <div>
                     <button mat-icon-button [matMenuTriggerFor]="profileMenu">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-vertical'"></mat-icon>
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:ellipsis-vertical'"
+                        ></mat-icon>
                     </button>
                     <mat-menu #profileMenu="matMenu">
-                        <button *ngIf="!isCurrentUserProfile" mat-menu-item (click)="zap()">
+                        <button
+                            *ngIf="!isCurrentUserProfile"
+                            mat-menu-item
+                            (click)="zap()"
+                        >
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'feather:zap'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'feather:zap'"
+                                ></mat-icon>
                                 <span>Send Zap</span>
                             </span>
                         </button>
 
-                        <button *ngIf="isCurrentUserProfile" mat-menu-item (click)="openReceiveZapDialog()">
+                        <button
+                            *ngIf="isCurrentUserProfile"
+                            mat-menu-item
+                            (click)="openReceiveZapDialog()"
+                        >
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_outline:qr-code'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_outline:qr-code'"
+                                ></mat-icon>
                                 <span>Receive Zap</span>
                             </span>
                         </button>
 
                         <mat-divider class="my-2"></mat-divider>
-                        <button *ngIf="isCurrentUserProfile" mat-menu-item [routerLink]="'/settings/profile'">
+                        <button
+                            *ngIf="isCurrentUserProfile"
+                            mat-menu-item
+                            [routerLink]="'/settings/profile'"
+                        >
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5"
-                                    [svgIcon]="'heroicons_outline:pencil-square'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="
+                                        'heroicons_outline:pencil-square'
+                                    "
+                                ></mat-icon>
                                 <span>Edit your profile</span>
                             </span>
                         </button>
 
                         <button *ngIf="!isCurrentUserProfile" mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="
-                                    'heroicons_solid:exclamation-triangle'
-                                "></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="
+                                        'heroicons_solid:exclamation-triangle'
+                                    "
+                                ></mat-icon>
                                 <span>Report</span>
                             </span>
                         </button>
                         <button *ngIf="!isCurrentUserProfile" mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:bell'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:bell'"
+                                ></mat-icon>
                                 <span>Turn on notifications</span>
                             </span>
                         </button>
                     </mat-menu>
                 </div>
             </div>
-
-
-
         </div>
-
     </div>
 
     <!-- Main -->
-    <div class="mx-auto flex w-full max-w-5xl flex-auto justify-center p-6 sm:p-8">
+    <div
+        class="mx-auto flex w-full max-w-5xl flex-auto justify-center p-6 sm:p-8"
+    >
         <!-- Column -->
         <div class="mr-8 hidden flex-col items-start lg:flex">
             <!-- About me -->
-            <angor-card *ngIf="metadata?.about && metadata.about.trim() !== ''"
-                class="flex w-full max-w-80 flex-col p-8">
+            <angor-card
+                *ngIf="metadata?.about && metadata.about.trim() !== ''"
+                class="flex w-full max-w-80 flex-col p-8"
+            >
                 <div class="text-2xl font-semibold leading-tight">About</div>
                 <div class="mt-4">
-                    {{metadata?.about || ''}}
+                    {{ metadata?.about || '' }}
                 </div>
-                <a class="mt-8 px-6" mat-flat-button [color]="'primary'" [routerLink]="['./']">
+                <a
+                    class="mt-8 px-6"
+                    mat-flat-button
+                    [color]="'primary'"
+                    [routerLink]="['./']"
+                >
                     See complete about
                 </a>
             </angor-card>
 
             <!-- Suggestion -->
-            <angor-card *ngIf="suggestions.length > 0" [ngClass]="{'mt-8': metadata?.about}"
-                class="flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
+            <angor-card
+                *ngIf="suggestions.length > 0"
+                [ngClass]="{ 'mt-8': metadata?.about }"
+                class="flex w-full max-w-80 flex-col px-8 pb-4 pt-6"
+            >
                 <div class="flex items-center justify-between">
                     <div class="text-2xl font-semibold leading-tight">
                         Suggestion
                     </div>
                     <div class="-mr-3">
-                        <button mat-icon-button [matMenuTriggerFor]="listCard08Menu">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-vertical'"></mat-icon>
+                        <button
+                            mat-icon-button
+                            [matMenuTriggerFor]="listCard08Menu"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:ellipsis-vertical'"
+                            ></mat-icon>
                         </button>
                         <mat-menu #listCard08Menu="matMenu">
                             <button mat-menu-item [routerLink]="['/explore']">
@@ -153,32 +243,63 @@
                     </div>
                 </div>
 
-
-                <div class="flex flex-col" *ngIf="suggestions && suggestions.length > 0">
-                    <div class="mt-6 flex justify-between" *ngFor="let i of [0, 1, 2, 3]">
+                <div
+                    class="flex flex-col"
+                    *ngIf="suggestions && suggestions.length > 0"
+                >
+                    <div
+                        class="mt-6 flex justify-between"
+                        *ngFor="let i of [0, 1, 2, 3]"
+                    >
                         <ng-container *ngIf="suggestions.length > i * 4">
-                            <img *ngFor="let j of [0, 1, 2, 3]" class="h-14 w-14 rounded-full object-cover"
-                                [src]="suggestions[i * 4 + j]?.metadata?.picture ? suggestions[i * 4 + j].metadata.picture : 'images/avatars/avatar-placeholder.png'"
-                                [alt]="suggestions[i * 4 + j]?.metadata?.name ? suggestions[i * 4 + j].metadata.name : 'image'"
+                            <img
+                                *ngFor="let j of [0, 1, 2, 3]"
+                                class="h-14 w-14 rounded-full object-cover"
+                                [src]="
+                                    suggestions[i * 4 + j]?.metadata?.picture
+                                        ? suggestions[i * 4 + j].metadata
+                                              .picture
+                                        : 'images/avatars/avatar-placeholder.png'
+                                "
+                                [alt]="
+                                    suggestions[i * 4 + j]?.metadata?.name
+                                        ? suggestions[i * 4 + j].metadata.name
+                                        : 'image'
+                                "
                                 onerror="this.onerror=null; this.src='/images/pages/profile/cover.jpg';"
-                                [matTooltip]="suggestions[i * 4 + j]?.metadata?.name ? suggestions[i * 4 + j].metadata.name : ''"
-                                [routerLink]="['/profile',suggestions[i * 4 + j].pubkey]" role="button" />
+                                [matTooltip]="
+                                    suggestions[i * 4 + j]?.metadata?.name
+                                        ? suggestions[i * 4 + j].metadata.name
+                                        : ''
+                                "
+                                [routerLink]="[
+                                    '/profile',
+                                    suggestions[i * 4 + j].pubkey,
+                                ]"
+                                role="button"
+                            />
                         </ng-container>
                     </div>
                 </div>
-
-
             </angor-card>
 
-            <!-- Groups -->
-            <angor-card class="mt-8 flex w-full max-w-80 flex-col px-8 pb-4 pt-6">
+            <!-- Last projects -->
+            <angor-card
+                class="mt-8 flex w-full max-w-80 flex-col px-8 pb-4 pt-6"
+            >
                 <div class="flex items-center justify-between">
                     <div class="text-2xl font-semibold leading-tight">
                         Last projects
                     </div>
                     <div class="-mr-3">
-                        <button mat-icon-button [matMenuTriggerFor]="listEventMenu">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-vertical'"></mat-icon>
+                        <button
+                            mat-icon-button
+                            [matMenuTriggerFor]="listEventMenu"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:ellipsis-vertical'"
+                            ></mat-icon>
                         </button>
                         <mat-menu #listEventMenu="matMenu">
                             <button mat-menu-item>Search for groups</button>
@@ -187,8 +308,11 @@
                 </div>
                 <div class="mt-5 flex flex-col">
                     <div class="flex items-center">
-                        <img class="mr-4 h-14 w-14 rounded object-cover" src="images/cards/coffee-shop-01-320x200.jpg"
-                            alt="Card cover image" />
+                        <img
+                            class="mr-4 h-14 w-14 rounded object-cover"
+                            src="images/cards/coffee-shop-01-320x200.jpg"
+                            alt="Card cover image"
+                        />
                         <div class="flex min-w-0 flex-col">
                             <div class="font-medium leading-none">
                                 The Port Cafe
@@ -196,172 +320,291 @@
                             <div class="mt-1 truncate text-md leading-none">
                                 Best cafe of the downtown New York
                             </div>
-                            <div class="text-secondary mt-2 text-md leading-none">
+                            <div
+                                class="text-secondary mt-2 text-md leading-none"
+                            >
                                 1.2k followers
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="-mx-3 mt-6 flex items-center">
-                    <a class="px-3" mat-button [color]="'primary'" [routerLink]="['/explore']">
+                    <a
+                        class="px-3"
+                        mat-button
+                        [color]="'primary'"
+                        [routerLink]="['/explore']"
+                    >
                         See all Project
                     </a>
                 </div>
             </angor-card>
-
         </div>
 
         <!-- Column -->
         <div class="flex w-full flex-col items-start">
-
             <!-- Create Post -->
-            <angor-card *ngIf="isCurrentUserProfile" class="flex w-full max-w-140 flex-col p-6 pb-6 sm:p-8">
+            <angor-card
+                *ngIf="isCurrentUserProfile"
+                class="mb-8 flex w-full max-w-140 flex-col p-6 pb-6 sm:p-8"
+            >
                 <div class="flex justify-between">
                     <div class="text-xl font-semibold">Create Post</div>
                     <!-- Toggle preview -->
-                    <mat-slide-toggle class="-mr-4 ml-auto" [color]="'primary'" (change)="togglePreview()">
+                    <mat-slide-toggle
+                        class="-mr-4 ml-auto"
+                        [color]="'primary'"
+                        (change)="togglePreview()"
+                    >
                         Preview
                     </mat-slide-toggle>
                 </div>
                 <div class="mt-8 flex flex-col items-start sm:flex-row">
                     <div class="mb-6 flex items-center sm:mb-0">
-                        <img class="mr-4 h-12 w-12 min-w-12 rounded-full object-cover"
-                            [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                        <img
+                            class="mr-4 h-12 w-12 min-w-12 rounded-full object-cover"
+                            [src]="
+                                currentUserMetadata?.picture ||
+                                'images/avatars/avatar-placeholder.png'
+                            "
                             onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                            alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
-                        <div class="sm:hidden">{{currentUserMetadata?.name || 'Unknown User'}}</div>
+                            alt="{{
+                                currentUserMetadata?.display_name ||
+                                    currentUserMetadata?.name ||
+                                    'Avatar'
+                            }}"
+                        />
+                        <div class="sm:hidden">
+                            {{ currentUserMetadata?.name || 'Unknown User' }}
+                        </div>
                     </div>
-                    <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                        <textarea matInput [placeholder]="'What\'s on your mind?'" [rows]="3" #eventInput
-                            cdkTextareaAutosize></textarea>
+                    <mat-form-field
+                        class="w-full"
+                        [subscriptSizing]="'dynamic'"
+                    >
+                        <textarea
+                            matInput
+                            [placeholder]="'What\'s on your mind?'"
+                            [rows]="3"
+                            #eventInput
+                            cdkTextareaAutosize
+                        ></textarea>
                     </mat-form-field>
                 </div>
-                <div class="-mx-3 mt-6 flex items-center justify-between sm:mt-8">
-
+                <div
+                    class="-mx-3 mt-6 flex items-center justify-between sm:mt-8"
+                >
                     <div class="flex items-center">
-                        <button class="mr-1 px-3" mat-button (click)="toggleEmojiPicker()">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:face-smile'"></mat-icon>
+                        <button
+                            class="mr-1 px-3"
+                            mat-button
+                            (click)="toggleEmojiPicker()"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:face-smile'"
+                            ></mat-icon>
                             <span class="ml-2">Feeling</span>
                         </button>
-                        <div *ngIf="showEmojiPicker" class="emoji-picker-container-global">
-                            <emoji-mart (emojiClick)="addEmoji($event)" [darkMode]="darkMode"></emoji-mart>
+                        <div
+                            *ngIf="showEmojiPicker"
+                            class="emoji-picker-container-global"
+                        >
+                            <emoji-mart
+                                (emojiClick)="addEmoji($event)"
+                                [darkMode]="darkMode"
+                            ></emoji-mart>
                         </div>
-                        <button class="mr-1 hidden px-3 sm:inline-flex" mat-button>
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:photo'"></mat-icon>
+                        <button
+                            class="mr-1 hidden px-3 sm:inline-flex"
+                            mat-button
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:photo'"
+                            ></mat-icon>
                             <span class="ml-2">Media</span>
                         </button>
 
-                        <button class="mr-1 hidden px-3 sm:inline-flex" mat-button>
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                        <button
+                            class="mr-1 hidden px-3 sm:inline-flex"
+                            mat-button
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:user-circle'"
+                            ></mat-icon>
                             <span class="ml-2">Tag</span>
                         </button>
 
-                        <button class="px-3" mat-button [matMenuTriggerFor]="postCardMenu01">
-                            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-horizontal'"></mat-icon>
+                        <button
+                            class="px-3"
+                            mat-button
+                            [matMenuTriggerFor]="postCardMenu01"
+                        >
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="
+                                    'heroicons_solid:ellipsis-horizontal'
+                                "
+                            ></mat-icon>
                         </button>
 
                         <mat-menu #postCardMenu01="matMenu">
                             <button class="sm:hidden" mat-menu-item>
                                 <span class="flex items-center">
-                                    <mat-icon class="mr-3 icon-size-5"
-                                        [svgIcon]="'heroicons_solid:user-circle'"></mat-icon>
+                                    <mat-icon
+                                        class="mr-3 icon-size-5"
+                                        [svgIcon]="
+                                            'heroicons_solid:user-circle'
+                                        "
+                                    ></mat-icon>
                                     <span>Tag</span>
                                 </span>
                             </button>
                             <button class="sm:hidden" mat-menu-item>
                                 <span class="flex items-center">
-                                    <mat-icon class="mr-3 icon-size-5"
-                                        [svgIcon]="'heroicons_solid:face-smile'"></mat-icon>
+                                    <mat-icon
+                                        class="mr-3 icon-size-5"
+                                        [svgIcon]="'heroicons_solid:face-smile'"
+                                    ></mat-icon>
                                     <span>Feeling</span>
                                 </span>
                             </button>
                             <button mat-menu-item>
                                 <span class="flex items-center">
-                                    <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:play'"></mat-icon>
+                                    <mat-icon
+                                        class="mr-3 icon-size-5"
+                                        [svgIcon]="'heroicons_solid:play'"
+                                    ></mat-icon>
                                     <span>Live</span>
                                 </span>
                             </button>
                             <button mat-menu-item>
                                 <span class="flex items-center">
-                                    <mat-icon class="mr-3 icon-size-5"
-                                        [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+                                    <mat-icon
+                                        class="mr-3 icon-size-5"
+                                        [svgIcon]="'heroicons_solid:sparkles'"
+                                    ></mat-icon>
                                     <span>Gif</span>
                                 </span>
                             </button>
                             <button mat-menu-item>
                                 <span class="flex items-center">
-                                    <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:map-pin'"></mat-icon>
+                                    <mat-icon
+                                        class="mr-3 icon-size-5"
+                                        [svgIcon]="'heroicons_solid:map-pin'"
+                                    ></mat-icon>
                                     <span>Check in</span>
                                 </span>
                             </button>
                         </mat-menu>
                     </div>
 
-                    <button class="mr-1 px-3 flex" mat-button>
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:paper-airplane'"></mat-icon>
+                    <button class="mr-1 flex px-3" mat-button>
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:paper-airplane'"
+                        ></mat-icon>
                         <span class="ml-2">Send</span>
                     </button>
                 </div>
-
             </angor-card>
 
-
             <!-- preview -->
-            <angor-card *ngIf="isPreview" [ngClass]="{'mt-8': isCurrentUserProfile}"
-                class="flex w-full max-w-140 flex-col bg-primary-50 dark:bg-primary-800"
-                #expandableComments="angorCard">
+            <angor-card
+                *ngIf="isPreview"
+                class="mb-8 flex w-full max-w-140 flex-col bg-primary-50 dark:bg-primary-800"
+                #expandableComments="angorCard"
+            >
                 <div class="mx-6 mb-4 mt-6 flex items-center sm:mx-8">
-                    <img class="mr-4 h-10 w-10 rounded-full"
-                        [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                    <img
+                        class="mr-4 h-10 w-10 rounded-full"
+                        [src]="
+                            currentUserMetadata?.picture ||
+                            'images/avatars/avatar-placeholder.png'
+                        "
                         onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                        alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
+                        alt="{{
+                            currentUserMetadata?.display_name ||
+                                currentUserMetadata?.name ||
+                                'Avatar'
+                        }}"
+                    />
                     <div class="flex flex-col">
-                        <span class="font-semibold leading-none">{{currentUserMetadata?.display_name ||
-                            currentUserMetadata?.name}}</span>
-                        <span class="text-secondary mt-1 text-sm leading-none">1 minutes ago</span>
+                        <span class="font-semibold leading-none">{{
+                            currentUserMetadata?.display_name ||
+                                currentUserMetadata?.name
+                        }}</span>
+                        <span class="text-secondary mt-1 text-sm leading-none"
+                            >1 minutes ago</span
+                        >
                     </div>
-                    <button class="-mr-4 ml-auto" mat-icon-button [matMenuTriggerFor]="postCardMenu02">
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:ellipsis-vertical'"></mat-icon>
+                    <button
+                        class="-mr-4 ml-auto"
+                        mat-icon-button
+                        [matMenuTriggerFor]="postCardMenu02"
+                    >
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:ellipsis-vertical'"
+                        ></mat-icon>
                     </button>
                     <mat-menu #postCardMenu02="matMenu">
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5"
-                                    [svgIcon]="'heroicons_solid:arrow-up-tray'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:arrow-up-tray'"
+                                ></mat-icon>
                                 <span>Save post</span>
                             </span>
                         </button>
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:eye-slash'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:eye-slash'"
+                                ></mat-icon>
                                 <span>Hide post</span>
                             </span>
                         </button>
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:clock'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:clock'"
+                                ></mat-icon>
                                 <span>Snooze for 30 days</span>
                             </span>
                         </button>
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5"
-                                    [svgIcon]="'heroicons_solid:minus-circle'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:minus-circle'"
+                                ></mat-icon>
                                 <span>Hide all</span>
                             </span>
                         </button>
                         <mat-divider class="my-2"></mat-divider>
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="
-                        'heroicons_solid:exclamation-triangle'
-                    "></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="
+                                        'heroicons_solid:exclamation-triangle'
+                                    "
+                                ></mat-icon>
                                 <span>Report post</span>
                             </span>
                         </button>
                         <button mat-menu-item>
                             <span class="flex items-center">
-                                <mat-icon class="mr-3 icon-size-5" [svgIcon]="'heroicons_solid:bell'"></mat-icon>
+                                <mat-icon
+                                    class="mr-3 icon-size-5"
+                                    [svgIcon]="'heroicons_solid:bell'"
+                                ></mat-icon>
                                 <span>Turn on notifications for this post</span>
                             </span>
                         </button>
@@ -369,40 +612,76 @@
                 </div>
                 <div class="mx-6 mb-6 mt-2 sm:mx-8">
                     <!-- text -->
-                    {{eventInput.nativeElement.value}}
+                    {{ eventInput.nativeElement.value }}
                 </div>
                 <div class="relative mb-4">
                     <!-- image or video -->
                 </div>
                 <div class="mx-3 flex items-center sm:mx-5">
                     <button class="mr-1 px-3" mat-button (click)="toggleLike()">
-                        <mat-icon class="text-red-500 icon-size-5" [ngClass]="{ 'heart-beat': isLiked }"
-                            [svgIcon]="isLiked ? 'heroicons_solid:heart' : 'heroicons_outline:heart'">
+                        <mat-icon
+                            class="text-red-500 icon-size-5"
+                            [ngClass]="{ 'heart-beat': isLiked }"
+                            [svgIcon]="
+                                isLiked
+                                    ? 'heroicons_solid:heart'
+                                    : 'heroicons_outline:heart'
+                            "
+                        >
                         </mat-icon>
-                        <span class="ml-2">{{ isLiked ? 'Unlike' : 'Like' }}</span>
+                        <span class="ml-2">{{
+                            isLiked ? 'Unlike' : 'Like'
+                        }}</span>
                     </button>
-                    <button class="mr-1 px-3" mat-button
-                        (click)="expandableComments.expanded =!expandableComments.expanded">
-                        <mat-icon class="icon-size-5"
-                            [svgIcon]="'heroicons_solid:chat-bubble-left-ellipsis'"></mat-icon>
+                    <button
+                        class="mr-1 px-3"
+                        mat-button
+                        (click)="
+                            expandableComments.expanded =
+                                !expandableComments.expanded
+                        "
+                    >
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="
+                                'heroicons_solid:chat-bubble-left-ellipsis'
+                            "
+                        ></mat-icon>
                         <span class="ml-2">Comment</span>
                     </button>
                     <button class="mr-1 px-3" mat-button>
-                        <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:share'"></mat-icon>
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:share'"
+                        ></mat-icon>
                         <span class="ml-2">Share</span>
                     </button>
                 </div>
                 <hr class="mx-6 mb-6 mt-4 border-b sm:mx-8" />
-                <div class="mx-6 mb-4 flex flex-col sm:mx-8 sm:mb-6 sm:flex-row sm:items-center">
+                <div
+                    class="mx-6 mb-4 flex flex-col sm:mx-8 sm:mb-6 sm:flex-row sm:items-center"
+                >
                     <div class="flex items-center">
-                        <img class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/avatar-placeholder.png" alt="Card cover image" />
-                        <img class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/avatar-placeholder.png" alt="Card cover image" />
-                        <img class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/avatar-placeholder.png" alt="Card cover image" />
-                        <img class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
-                            src="images/avatars/avatar-placeholder.png" alt="Card cover image" />
+                        <img
+                            class="text-card m-0.5 h-6 w-6 rounded-full ring-2 ring-white"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
+                        <img
+                            class="text-card m-0.5 -ml-3 h-6 w-6 rounded-full ring-2 ring-white"
+                            src="images/avatars/avatar-placeholder.png"
+                            alt="Card cover image"
+                        />
                         <div class="ml-3 text-md tracking-tight">
                             You and 4 more liked this
                         </div>
@@ -412,12 +691,22 @@
                         <button class="-ml-2 mr-1 px-3 sm:ml-0" mat-button>
                             0 shares
                         </button>
-                        <button class="px-3 sm:-mr-4" mat-button
-                            (click)="expandableComments.expanded =!expandableComments.expanded">
+                        <button
+                            class="px-3 sm:-mr-4"
+                            mat-button
+                            (click)="
+                                expandableComments.expanded =
+                                    !expandableComments.expanded
+                            "
+                        >
                             <span class="mr-1">0 Comments</span>
-                            <mat-icon class="rotate-0 transition-transform duration-150 ease-in-out icon-size-5"
-                                [ngClass]="{'rotate-180': expandableComments.expanded,}"
-                                [svgIcon]="'heroicons_mini:chevron-down'"></mat-icon>
+                            <mat-icon
+                                class="rotate-0 transition-transform duration-150 ease-in-out icon-size-5"
+                                [ngClass]="{
+                                    'rotate-180': expandableComments.expanded,
+                                }"
+                                [svgIcon]="'heroicons_mini:chevron-down'"
+                            ></mat-icon>
                         </button>
                     </div>
                 </div>
@@ -426,47 +715,119 @@
                     <hr class="m-0 border-b" />
                     <div class="mx-4 mb-3 mt-6 flex flex-col sm:mx-8">
                         <div class="flex items-start">
-
-                            <img class="mr-5 h-12 w-12 rounded-full object-cover"
-                                [src]="currentUserMetadata?.picture || 'images/avatars/avatar-placeholder.png'"
+                            <img
+                                class="mr-5 h-12 w-12 rounded-full object-cover"
+                                [src]="
+                                    currentUserMetadata?.picture ||
+                                    'images/avatars/avatar-placeholder.png'
+                                "
                                 onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
-                                alt="{{currentUserMetadata?.display_name || currentUserMetadata?.name || 'Avatar'}}" />
+                                alt="{{
+                                    currentUserMetadata?.display_name ||
+                                        currentUserMetadata?.name ||
+                                        'Avatar'
+                                }}"
+                            />
 
-                            <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-                                <textarea matInput [placeholder]="'Write a comment...'" [rows]="3" #commentInput
-                                    cdkTextareaAutosize></textarea>
+                            <mat-form-field
+                                class="w-full"
+                                [subscriptSizing]="'dynamic'"
+                            >
+                                <textarea
+                                    matInput
+                                    [placeholder]="'Write a comment...'"
+                                    [rows]="3"
+                                    #commentInput
+                                    cdkTextareaAutosize
+                                ></textarea>
                             </mat-form-field>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
                             <div class="flex items-center">
-                                <button mat-icon-button (click)="toggleCommentEmojiPicker()">
-                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:face-smile'"></mat-icon>
+                                <button
+                                    mat-icon-button
+                                    (click)="toggleCommentEmojiPicker()"
+                                >
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        [svgIcon]="'heroicons_solid:face-smile'"
+                                    ></mat-icon>
                                 </button>
-                                <div *ngIf="showCommentEmojiPicker" class="emoji-picker-container-global">
-                                    <emoji-mart (emojiClick)="addEmojiTocomment($event)"
-                                        [darkMode]="darkMode"></emoji-mart>
+                                <div
+                                    *ngIf="showCommentEmojiPicker"
+                                    class="emoji-picker-container-global"
+                                >
+                                    <emoji-mart
+                                        (emojiClick)="addEmojiTocomment($event)"
+                                        [darkMode]="darkMode"
+                                    ></emoji-mart>
                                 </div>
                                 <button mat-icon-button>
-                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:photo'"></mat-icon>
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        [svgIcon]="'heroicons_solid:photo'"
+                                    ></mat-icon>
                                 </button>
                                 <button mat-icon-button>
-                                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:sparkles'"></mat-icon>
+                                    <mat-icon
+                                        class="icon-size-5"
+                                        [svgIcon]="'heroicons_solid:sparkles'"
+                                    ></mat-icon>
                                 </button>
                             </div>
-                            <button class="mr-1 px-3 flex" mat-button>
-                                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:paper-airplane'"></mat-icon>
+                            <button class="mr-1 flex px-3" mat-button>
+                                <mat-icon
+                                    class="icon-size-5"
+                                    [svgIcon]="'heroicons_solid:paper-airplane'"
+                                ></mat-icon>
                                 <span class="ml-2">Send</span>
                             </button>
                         </div>
                     </div>
-
                 </ng-container>
             </angor-card>
 
 
-            @for (item of posts; track $index) {
-            <app-event-box class="w-full" [post]="item" [isLiked]="false" [user]="currentUserMetadata"></app-event-box>
-            }
+
+            <ng-container *ngIf="!isLoading && posts.length === 0">
+                <angor-card class="mb-8 flex w-full max-w-140 flex-col bg-primary-50 dark:bg-primary-800 p-8">
+                    {{ noEventsMessage }}
+                </angor-card>
+            </ng-container>
+
+            <div
+            class="feed-posts"
+            infiniteScroll
+            [infiniteScrollDistance]="2"
+            [infiniteScrollThrottle]="500"
+            (scrolled)="onScroll()"
+            [scrollWindow]="true"
+          >
+
+            <ng-container *ngIf="posts.length > 0">
+                <ng-container *ngFor="let item of posts; trackBy: trackByIndex">
+                    <app-event-box
+                        class="w-full"
+                        [post]="item"
+                        [isLiked]="false"
+                        [username]="item.username"
+                        [user]="currentUserMetadata"
+                    ></app-event-box>
+                </ng-container>
+            </ng-container>
+
+</div>
+            <ng-container *ngIf="isLoading">
+                <angor-card class="mb-8 flex w-full max-w-140 flex-col bg-primary-50 dark:bg-primary-800 p-8 justify-center items-center text-center">
+                    <mat-spinner diameter="48" color="primary"></mat-spinner>
+                </angor-card>
+            </ng-container>
+
+
+<button (click)="getPosts()">Get posts </button>
+
+
+
         </div>
     </div>
 </div>

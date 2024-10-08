@@ -1,65 +1,68 @@
 import { AngorCardComponent } from '@angor/components/card';
 import { AngorConfigService } from '@angor/services/config';
 import { AngorConfirmationService } from '@angor/services/confirmation';
- import { NgClass, CommonModule } from '@angular/common';
+import { NgClass, CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
- import { MatButtonModule } from '@angular/material/button';
- import { MatDividerModule } from '@angular/material/divider';
- import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { EventService } from 'app/services/event.service';
 import { Post, Zap } from 'app/types/post';
 
 
 @Component({
-  selector: 'app-event-box',
-  encapsulation: ViewEncapsulation.None,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  exportAs: 'app-event-box',
-  standalone: true,
-  imports: [
-    AngorCardComponent,
-    MatIconModule,
-    MatButtonModule,
-    MatMenuModule,
-    MatInputModule,
-    MatDividerModule,
-    MatTooltipModule,
-    NgClass,
-    CommonModule,
-    PickerComponent
-  ],
-  templateUrl: './event-box.component.html',
-  styleUrls: ['./event-box.component.scss'],
+    selector: 'app-event-box',
+    encapsulation: ViewEncapsulation.None,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    exportAs: 'app-event-box',
+    standalone: true,
+    imports: [
+        AngorCardComponent,
+        MatIconModule,
+        MatButtonModule,
+        MatMenuModule,
+        MatInputModule,
+        MatDividerModule,
+        MatTooltipModule,
+        NgClass,
+        CommonModule,
+        PickerComponent
+    ],
+    templateUrl: './event-box.component.html',
 
- })
+})
 export class EventBoxComponent {
-   @ViewChild('commentInput') commentInput: ElementRef;
+    @ViewChild('commentInput') commentInput: ElementRef;
     @Input() user?: any;
     @Input() isLiked: boolean = false;
-    @Input() root?: Post;
+    @Input() username?: any;
     @Input() post?: Post;
     @Input() zaps?: Zap[];
     @Input() zapsCount?: number;
     @Input() inPostDetail?: boolean;
     @Input() likes?: number;
-    isCurrentUserProfile:boolean = true;
+    isCurrentUserProfile: boolean = true;
     showCommentEmojiPicker = false;
     darkMode: boolean = false;
     isLoading: boolean = true;
     errorMessage: string | null = null;
     metadata: any;
+    safeHtmlContent: SafeHtml | null = null;
 
     constructor(
-         private _angorConfigService: AngorConfigService,
+        private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
         private snackBar: MatSnackBar,
-        private _eventService : EventService
+        private _eventService: EventService,
+        private sanitizer: DomSanitizer,
+        private _changeDetectorRef: ChangeDetectorRef,
 
     ) { }
 
@@ -71,10 +74,26 @@ export class EventBoxComponent {
                 this.darkMode = config.scheme === 'dark';
             }
         });
+        if (this.post && this.post.content) {
+            this.safeHtmlContent = this.sanitizeHtml(this.post.content);
+        }
+        this._changeDetectorRef.detectChanges();
     }
 
+    ngAfterViewInit(): void {
+        this._changeDetectorRef.markForCheck();
+    }
+    ngOnChanges() {
+        this._changeDetectorRef.detectChanges();
+    }
+
+    sanitizeHtml(content: string): SafeHtml {
+        return this.sanitizer.bypassSecurityTrustHtml(content);
+    }
     toggleLike() {
+
         this.isLiked = !this.isLiked;
+        this.isLiked ? this.likePost() : this.unlikePost();
 
         if (this.isLiked) {
             setTimeout(() => {
@@ -83,17 +102,29 @@ export class EventBoxComponent {
             }, 300);
         }
     }
-    likePost(event :Post) {
-        this._eventService.sendLikeEvent(event);
-        this.post.setPostLikedByMe(true);
-        if (this.likes === undefined) {
-            this.likes = 0;
+
+
+    likePost(): void {
+        if (this.post) {
+            this._eventService.sendLikeEvent(this.post);
+            this.post.setPostLikedByMe(true);
+            this.likes++;
+            this.openSnackBar('Reaction Sent', 'dismiss');
         }
-        this.likes += 1;
-        this.openSnackBar("Reaction Sent", "dismiss");
     }
 
+    unlikePost(): void {
+        if (this.post) {
+            // this._eventService.sendUnlikeEvent(this.post); // Optional feature to send unlike event
+            this.post.setPostLikedByMe(false);
+            this.likes--;
+            this.openSnackBar('Reaction Removed', 'dismiss');
+        }
+    }
 
+    trackByFn(index: number, item: any): number {
+        return item.id || index;
+    }
 
     openSnackBar(message: string, action: string) {
         this.snackBar.open(message, action, { duration: 1300 });
@@ -106,7 +137,7 @@ export class EventBoxComponent {
 
     toggleCommentEmojiPicker1() {
         console.log('toggleCommentEmojiPicker1 called')
-         this.showCommentEmojiPicker = !this.showCommentEmojiPicker;
+        this.showCommentEmojiPicker = !this.showCommentEmojiPicker;
     }
 
     detectSystemTheme() {

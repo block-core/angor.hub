@@ -3,8 +3,8 @@ import { Event, nip19, nip10 } from 'nostr-tools';
 import { decode } from "@gandlaf21/bolt11-decode";
 import dayjs from 'dayjs';
 import * as relativeTime from 'dayjs/plugin/relativeTime';
-import { humantime } from 'app/utils';
-import { MetadataService } from 'app/services/metadata.service';
+ import { MetadataService } from 'app/services/metadata.service';
+import { humantime } from 'app/shared/utils';
 
 export interface TextWrap {
     text: string;

@@ -1,57 +1,66 @@
+import { AngorCardComponent } from '@angor/components/card';
+import { AngorConfigService } from '@angor/services/config';
+import { AngorConfirmationService } from '@angor/services/confirmation';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { CommonModule, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ViewEncapsulation,
-    OnInit,
+    ElementRef,
     OnDestroy,
+    OnInit,
     ViewChild,
-    ElementRef
-
+    ViewEncapsulation,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AngorCardComponent } from '@angor/components/card';
-import { SignerService } from 'app/services/signer.service';
-import { MetadataService } from 'app/services/metadata.service';
-import { Subject, takeUntil } from 'rxjs';
-import { IndexedDBService } from 'app/services/indexed-db.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { SocialService } from 'app/services/social.service';
-import { MatDialog } from '@angular/material/dialog';
-import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { LightningService } from 'app/services/lightning.service';
-import { bech32 } from '@scure/base';
-import { FormsModule } from '@angular/forms';
-import { QRCodeModule } from 'angularx-qrcode';
-import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
-import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
-import { PickerComponent } from '@ctrl/ngx-emoji-mart';
-import { AngorConfigService } from '@angor/services/config';
-import { AngorConfirmationService } from '@angor/services/confirmation';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
-import { EventBoxComponent } from "../event-box/event-box.component";
-import { Filter, NostrEvent } from 'nostr-tools';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { bech32 } from '@scure/base';
+import { QRCodeModule } from 'angularx-qrcode';
 import { EventService } from 'app/services/event.service';
+import { IndexedDBService } from 'app/services/indexed-db.service';
+import { LightningService } from 'app/services/lightning.service';
+import { MetadataService } from 'app/services/metadata.service';
+import { SignerService } from 'app/services/signer.service';
+import { SocialService } from 'app/services/social.service';
+import { SafeUrlPipe } from 'app/shared/pipes/safe-url.pipe';
+import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
+import { Filter, NostrEvent } from 'nostr-tools';
+import { Subject, takeUntil } from 'rxjs';
+import { EventBoxComponent } from '../event-box/event-box.component';
+import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
+import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { Paginator } from 'app/shared/utils';
+
+
+interface Chip {
+    color?: string;
+    selected?: string;
+    name: string;
+}
+
 
 @Component({
-
     selector: 'profile',
     templateUrl: './profile.component.html',
     styleUrls: ['./profile.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     standalone: true,
-
     imports: [
         RouterLink,
         AngorCardComponent,
@@ -70,14 +79,16 @@ import { EventService } from 'app/services/event.service';
         PickerComponent,
         MatSlideToggle,
         EventBoxComponent,
-    ]
-
-
+        SafeUrlPipe,
+        MatProgressSpinnerModule,
+        InfiniteScrollModule
+    ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
 
     @ViewChild('eventInput', { static: false }) eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
+    @ViewChild(EventBoxComponent) childComponent!: EventBoxComponent;
 
     darkMode: boolean = false;
     isLoading: boolean = true;
@@ -85,12 +96,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     metadata: any;
     currentUserMetadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
-    private currentUserPubKey;
+    private currentUserPubKey : string;
     private routePubKey;
     followers: any[] = [];
     following: any[] = [];
     allPublicKeys: string[] = [];
-    suggestions: { pubkey: string, metadata: any }[] = [];
+    suggestions: { pubkey: string; metadata: any }[] = [];
     isCurrentUserProfile: Boolean = false;
     isFollowing = false;
 
@@ -103,7 +114,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
     invoiceAmount: string = '?';
     isLiked = false;
     isPreview = false;
-    posts: Post[] = []; // Store user's posts
+    posts: Post[] = [];
+    likes: any[] = [];
+
+    paginator: Paginator;
+
+
+    myLikes: NostrEvent[] = [];
+    myLikedNoteIds: string[] = [];
+
+
+
+    isLoadingPosts: boolean = true;
+    noEventsMessage: string = '';
+    loadingTimeout: any;
 
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
@@ -119,15 +143,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
         private _eventService: EventService
+    ) {
 
-    ) { }
+        let baseTimeDiff = 120;
+        let since = 0;
 
+        this.paginator = new Paginator(0, since, baseTimeDiff=baseTimeDiff);
+
+
+    }
 
     ngOnInit(): void {
-
-
-
-
         this._angorConfigService.config$.subscribe((config) => {
             if (config.scheme === 'auto') {
                 this.detectSystemTheme();
@@ -139,7 +165,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             const routePubKey = params.get('pubkey');
             this.routePubKey = routePubKey;
             const currentUserPubKey = this._signerService.getPublicKey();
-
+            this.currentUserPubKey = currentUserPubKey;
             if (routePubKey || currentUserPubKey) {
                 this.isCurrentUserProfile = routePubKey === currentUserPubKey;
             }
@@ -150,35 +176,49 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.isCurrentUserProfile = true;
             }
             this.loadCurrentUserProfile();
+
+           // this.loadUserPosts(this.routePubKey);
+            this.getPosts();
+            this.updateSuggestionList();
         });
 
-        this._indexedDBService.getMetadataStream()
+        this._indexedDBService
+            .getMetadataStream()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((updatedMetadata) => {
-                if (updatedMetadata && updatedMetadata.pubkey === this.currentUserPubKey) {
+                if (
+                    updatedMetadata &&
+                    updatedMetadata.pubkey === this.currentUserPubKey
+                ) {
                     this.currentUserMetadata = updatedMetadata.metadata;
                     this._changeDetectorRef.detectChanges();
                 }
             });
         if (this.routePubKey) {
-            this._indexedDBService.getMetadataStream()
+            this._indexedDBService
+                .getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
-                    if (updatedMetadata && updatedMetadata.pubkey === this.routePubKey) {
+                    if (
+                        updatedMetadata &&
+                        updatedMetadata.pubkey === this.routePubKey
+                    ) {
                         this.metadata = updatedMetadata.metadata;
                         this._changeDetectorRef.detectChanges();
                     }
                 });
         }
 
-        this._socialService.getFollowersObservable()
+        this._socialService
+            .getFollowersObservable()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
                 this.followers.push(event.pubkey);
                 this._changeDetectorRef.detectChanges();
             });
 
-        this._socialService.getFollowingObservable()
+        this._socialService
+            .getFollowingObservable()
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((event) => {
                 const tags = event.tags.filter((tag) => tag[0] === 'p');
@@ -187,10 +227,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 });
                 this._changeDetectorRef.detectChanges();
             });
-
-                 this.loadUserPosts(this.routePubKey);
-
-        this.updateSuggestionList();
     }
 
     ngOnDestroy(): void {
@@ -200,44 +236,137 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
 
-
-
-    loadUserPosts(userPubKey :string): void {
-
-        if (!userPubKey) {
-            console.error('No public key found for the current user.');
-            return;
-        }
-        this.posts = []
-        // Create a filter for the user's posts (kind 1 = text notes)
-        const filter: Filter = {
-            kinds: [1], // Kind 1 for text notes (posts)
-            authors: [userPubKey], // Filter by the current user's public key
-        };
-
-        // Use the EventService to subscribe to the user's posts in real-time
-        this._eventService.subscribeToEvents(filter);
-
-        // Subscribe to the eventSubject to listen for new posts
-        this._eventService.eventSubject
-            .pipe(takeUntil(this._unsubscribeAll)) // Clean up when the component is destroyed
-            .subscribe((event: NostrEvent | null) => {
-                if (event) {
-                    // Pass MetadataService to getPostFromResponse
-                    const post = this._eventService.getPostFromResponse(event, "", this._metadataService);
-
-                   this.posts.push(post); // Add the post to the array
-                    this._changeDetectorRef.detectChanges(); // Trigger change detection
-                 }
-            });
-            this._changeDetectorRef.detectChanges(); // Trigger change detection
-
+    toggleLoading(): void {
+        this.isLoadingPosts = !this.isLoadingPosts;
     }
 
 
+    async getMyLikes() {
+        let myLikesFilter: Filter = {
+            kinds: [7], "authors": [this._signerService.getPublicKey()]
+        }
+        this.myLikes = await this._eventService.fetchFilteredEvents(myLikesFilter);
+        this.myLikes.forEach(like => {
+            try {
+                let tag = like.tags[like.tags.length - 2]
+                if (tag[0] == "e") {
+                    let id = tag[1]
+                    this.myLikedNoteIds.push(id);
+                }
+
+            } catch {
+                console.log("err")
+            }
+        });
+    }
 
 
+    async queryForMorePostInfo(posts: Post[]) {
+         this.getMyLikes();
 
+        let pubkeys: string[] = [];
+        let noteIds: string[] = [];
+        posts.forEach(p => {
+            pubkeys.push(p.pubkey);
+            noteIds.push(p.noteId)
+        });
+        await this._metadataService.fetchMetadataForMultipleKeys( pubkeys )
+        // join new posts and sort without ruining UI
+        let waitPosts = this.posts // existing posts
+        waitPosts = waitPosts.concat(posts) // incoming posts
+        waitPosts = waitPosts.filter((value, index, self) =>
+            index === self.findIndex((t) => (
+                t.noteId === value.noteId
+            ))
+        )
+        waitPosts.sort((a, b) => a.createdAt - b.createdAt).reverse();
+        this.posts = waitPosts;
+        this.paginator.incrementFilterTimes(this.posts);
+        let replyFilter: Filter = {
+            kinds: [1], "#e": noteIds,
+        }
+        let replies = await this._eventService.fetchPosts(replyFilter, this._metadataService)
+
+
+        let likesFilter: Filter = {
+            kinds: [7], "#e": noteIds
+        }
+        let likes = await this._eventService.fetchFilteredEvents(likesFilter);
+        this.patchPostsWithMoreInfo(posts, replies, likes);
+        // filter out dupes
+        this.toggleLoading();
+    }
+
+
+    patchPostsWithMoreInfo(posts: Post[], replies: Post[], likes: NostrEvent[]) {
+        let counts: {[id: string]: number} = {}
+        for (const r of replies) {
+            if (r.nip10Result?.reply?.id) {
+                counts[r.nip10Result.reply.id] = counts[r.nip10Result.reply.id] ? counts[r.nip10Result.reply.id] + 1 : 1;
+            }
+        }
+        let likeCounts: {[id: string]: number} = {}
+
+        for (const like of likes) {
+            let noteId = null;
+            like.tags.slice().reverse().forEach(x => {
+                if (x[0] == "e" && noteId === null) {
+                    noteId = x[1];
+                }
+            });
+            likeCounts[noteId] = likeCounts[noteId] ? likeCounts[noteId] + 1 : 1;
+        }
+
+        posts.forEach(p => {
+            p.setReplyCount(counts[p.noteId]);
+            p.setLikeCount(likeCounts[p.noteId]);
+            if (this.myLikedNoteIds.includes(p.noteId)) {
+                p.setPostLikedByMe(true);
+            }
+        });
+    }
+
+
+    async getPosts() {
+        let filter = this.getFilter();
+        this.toggleLoading();
+
+        try {
+            let fetchedPosts: Post[] = await this._eventService.fetchPosts(filter, this._metadataService);
+
+            if (fetchedPosts.length < 2) {
+                filter.since += 5000; // Expand time window
+                fetchedPosts.push(...await this._eventService.fetchPosts(filter, this._metadataService));
+            }
+
+            await this.queryForMorePostInfo(fetchedPosts); // Update and merge posts
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+            this.noEventsMessage = "Failed to load posts. Please try again later.";
+        } finally {
+            this.toggleLoading();
+        }
+    }
+
+
+    async onScroll() {
+        if (!this.isLoadingPosts) {
+            await this.getPosts();
+        }
+    }
+
+    getFilter(): Filter {
+        let filter: Filter = {};
+
+            filter.kinds = [1];
+            filter.authors = [this.routePubKey]
+            filter.limit = 5;
+            filter.since = this.paginator.since;
+            filter.until = this.paginator.until;
+
+        this.paginator.printTimes();
+        return filter;
+    }
 
 
     async loadProfile(publicKey: string): Promise<void> {
@@ -247,6 +376,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.metadata = null;
         this.followers = [];
         this.following = [];
+
         this._changeDetectorRef.detectChanges();
 
         if (!publicKey) {
@@ -257,7 +387,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
 
         try {
-            const userMetadata = await this._metadataService.fetchMetadataWithCache(publicKey);
+            const userMetadata =
+                await this._metadataService.fetchMetadataWithCache(publicKey);
             if (userMetadata) {
                 this.metadata = userMetadata;
                 this._changeDetectorRef.detectChanges();
@@ -269,23 +400,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
             await this._socialService.getFollowing(publicKey);
 
-            this._metadataService.getMetadataStream()
+            this._metadataService
+                .getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
-                    if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+                    if (
+                        updatedMetadata &&
+                        updatedMetadata.pubkey === publicKey
+                    ) {
                         this.metadata = updatedMetadata;
                         this._changeDetectorRef.detectChanges();
                     }
                 });
-
         } catch (error) {
             console.error('Failed to load profile data:', error);
-            this.errorMessage = 'Failed to load profile data. Please try again later.';
+            this.errorMessage =
+                'Failed to load profile data. Please try again later.';
             this._changeDetectorRef.detectChanges();
         } finally {
             this.isLoading = false;
             this._changeDetectorRef.detectChanges();
         }
+
+
     }
 
     private async loadCurrentUserProfile(): Promise<void> {
@@ -293,23 +430,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.currentUserMetadata = null;
 
             this.currentUserPubKey = this._signerService.getPublicKey();
-            const currentUserMetadata = await this._metadataService.fetchMetadataWithCache(this.currentUserPubKey);
+            const currentUserMetadata =
+                await this._metadataService.fetchMetadataWithCache(
+                    this.currentUserPubKey
+                );
             if (currentUserMetadata) {
                 this.currentUserMetadata = currentUserMetadata;
 
                 this._changeDetectorRef.detectChanges();
             }
-            this._metadataService.getMetadataStream()
+            this._metadataService
+                .getMetadataStream()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((updatedMetadata) => {
-                    if (updatedMetadata && updatedMetadata.pubkey === this.currentUserPubKey) {
+                    if (
+                        updatedMetadata &&
+                        updatedMetadata.pubkey === this.currentUserPubKey
+                    ) {
                         this.currentUserMetadata = updatedMetadata;
                         this._changeDetectorRef.detectChanges();
                     }
                 });
         } catch (error) {
             console.error('Failed to load profile data:', error);
-            this.errorMessage = 'Failed to load profile data. Please try again later.';
+            this.errorMessage =
+                'Failed to load profile data. Please try again later.';
             this._changeDetectorRef.detectChanges();
         } finally {
             this._changeDetectorRef.detectChanges();
@@ -317,13 +462,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     private updateSuggestionList(): void {
-        this._indexedDBService.getSuggestionUsers().then((suggestions) => {
-            this.suggestions = suggestions;
+        this._indexedDBService
+            .getSuggestionUsers()
+            .then((suggestions) => {
+                this.suggestions = suggestions;
 
-            this._changeDetectorRef.detectChanges();
-        }).catch((error) => {
-            console.error('Error updating suggestion list:', error);
-        });
+                this._changeDetectorRef.detectChanges();
+            })
+            .catch((error) => {
+                console.error('Error updating suggestion list:', error);
+            });
     }
 
     getSafeUrl(url: string): SafeUrl {
@@ -344,7 +492,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 await this._socialService.unfollow(routePubKey);
                 console.log(`Unfollowed ${routePubKey}`);
 
-                this.followers = this.followers.filter(pubkey => pubkey !== userPubKey);
+                this.followers = this.followers.filter(
+                    (pubkey) => pubkey !== userPubKey
+                );
             } else {
                 await this._socialService.follow(routePubKey);
                 console.log(`Followed ${routePubKey}`);
@@ -355,12 +505,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.isFollowing = !this.isFollowing;
 
             this._changeDetectorRef.detectChanges();
-
         } catch (error) {
             console.error('Failed to toggle follow:', error);
         }
     }
-
 
     openSnackBar(message: string, action: string) {
         this.snackBar.open(message, action, { duration: 1300 });
@@ -377,19 +525,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
             const data = new Uint8Array(bech32.fromWords(words));
             lightningAddress = new TextDecoder().decode(Uint8Array.from(data));
         } else if (this.metadata?.lud16) {
-            lightningAddress = this.lightning.getLightningAddress(this.metadata.lud16);
+            lightningAddress = this.lightning.getLightningAddress(
+                this.metadata.lud16
+            );
         }
         if (lightningAddress !== '') {
-            this.lightning.getLightning(lightningAddress).subscribe((response) => {
-                this.lightningResponse = response;
-                if (this.lightningResponse.status === 'Failed') {
-                    this.openSnackBar('Failed to lookup lightning address', 'dismiss');
-                } else if (this.lightningResponse.callback) {
-                    this.openZapDialog(); // Open dialog when callback is available
-                } else {
-                    this.openSnackBar("couldn't find user's lightning address", 'dismiss');
-                }
-            });
+            this.lightning
+                .getLightning(lightningAddress)
+                .subscribe((response) => {
+                    this.lightningResponse = response;
+                    if (this.lightningResponse.status === 'Failed') {
+                        this.openSnackBar(
+                            'Failed to lookup lightning address',
+                            'dismiss'
+                        );
+                    } else if (this.lightningResponse.callback) {
+                        this.openZapDialog();
+                    } else {
+                        this.openSnackBar(
+                            "couldn't find user's lightning address",
+                            'dismiss'
+                        );
+                    }
+                });
         } else {
             this.openSnackBar('No lightning address found', 'dismiss');
         }
@@ -407,7 +565,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._dialog.open(SendDialogComponent, {
             width: '405px',
             maxHeight: '90vh',
-            data: this.metadata
+            data: this.metadata,
         });
     }
 
@@ -415,14 +573,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._dialog.open(ReceiveDialogComponent, {
             width: '405px',
             maxHeight: '90vh',
-            data: this.metadata
+            data: this.metadata,
         });
     }
-
-
-
-
-    //======events
 
     toggleLike() {
         this.isLiked = !this.isLiked;
@@ -456,7 +609,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     detectSystemTheme() {
-        const darkSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        const darkSchemeMedia = window.matchMedia(
+            '(prefers-color-scheme: dark)'
+        );
         this.darkMode = darkSchemeMedia.matches;
 
         darkSchemeMedia.addEventListener('change', (event) => {
@@ -464,36 +619,30 @@ export class ProfileComponent implements OnInit, OnDestroy {
         });
     }
 
-
-
     openConfirmationDialog(): void {
-        // Open the dialog and save the reference of it
-        const dialogRef = this._angorConfirmationService.open(
-            {
-                "title": "Share Event",
-                "message": "Are you sure you want to share this event on your profile? <span class=\"font-medium\">This action is permanent and cannot be undone.</span>",
-                "icon": {
-                    "show": true,
-                    "name": "heroicons_solid:share",
-                    "color": "primary"
+        const dialogRef = this._angorConfirmationService.open({
+            title: 'Share Event',
+            message:
+                'Are you sure you want to share this event on your profile? <span class="font-medium">This action is permanent and cannot be undone.</span>',
+            icon: {
+                show: true,
+                name: 'heroicons_solid:share',
+                color: 'primary',
+            },
+            actions: {
+                confirm: {
+                    show: true,
+                    label: 'Yes, Share',
+                    color: 'primary',
                 },
-                "actions": {
-                    "confirm": {
-                        "show": true,
-                        "label": "Yes, Share",
-                        "color": "primary"
-                    },
-                    "cancel": {
-                        "show": true,
-                        "label": "Cancel"
-                    }
+                cancel: {
+                    show: true,
+                    label: 'Cancel',
                 },
-                "dismissible": true
-            }
+            },
+            dismissible: true,
+        });
 
-        );
-
-        // Subscribe to afterClosed from the dialog reference
         dialogRef.afterClosed().subscribe((result) => {
             console.log(result);
         });
@@ -502,10 +651,4 @@ export class ProfileComponent implements OnInit, OnDestroy {
     togglePreview() {
         this.isPreview = !this.isPreview;
     }
-
-
-
-
-
-
 }
