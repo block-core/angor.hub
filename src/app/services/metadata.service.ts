@@ -106,12 +106,13 @@ export class MetadataService {
   async fetchMetadataWithCache(pubkey: string): Promise<any> {
     const metadata = await this.indexedDBService.getUserMetadata(pubkey);
     if (metadata) {
-      this.metadataSubject.next(metadata);
+      return metadata;
      } else {
-      this.enqueueRequest(pubkey);
+        this.metadataSubject.next(metadata);
+      this.enqueueRequest(pubkey);    
     }
 
-    this.subscribeToMetadataUpdates(pubkey);
+
     return metadata;
   }
 
