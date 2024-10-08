@@ -28,7 +28,7 @@ export class EventService {
                 return;
             }
 
-            
+
             this.relayService.getPool().subscribeMany(connectedRelays, [filter], {
                 onevent: (event: NostrEvent) => {
                     this.eventSubject.next(event);
@@ -48,7 +48,7 @@ export class EventService {
 
         try {
             const tags = post.getAllTags();
-            const content = "+";
+            const content = "❤️";
 
 
             const unsignedEvent = this.signerService.getUnsignedEvent(7, tags, content);

@@ -145,7 +145,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _eventService: EventService
     ) {
 
-        let baseTimeDiff = 120;
+        let baseTimeDiff = 12000;
         let since = 0;
 
         this.paginator = new Paginator(0, since, baseTimeDiff=baseTimeDiff);
