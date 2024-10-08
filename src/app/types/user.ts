@@ -101,7 +101,7 @@ export class User {
         }
         this.about = kind0.about || "";
         this.aboutHTML = new Content(1, kind0.about || "", fake, true).getParsedContent();
-        this.picture = kind0.picture || "https://axiumradonmitigations.com/wp-content/uploads/2015/01/icon-user-default.png";
+        this.picture = kind0.picture || "/images/avatars/avatar-placeholder.png";
         this.banner = kind0.banner || "";
         this.lud06 = kind0.lud06 || "";
         this.lud16 = kind0.lud16 || "";
