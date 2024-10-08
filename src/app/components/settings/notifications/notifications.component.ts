@@ -75,6 +75,6 @@ export class SettingsNotificationsComponent implements OnInit {
 
     private loadNotificationSettings(): number[] {
         const storedSettings = localStorage.getItem('notificationSettings');
-        return storedSettings ? JSON.parse(storedSettings) : [1, 3, 4, 9735]; // Default to all kinds if not set
+        return storedSettings ? JSON.parse(storedSettings) : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
     }
 }
