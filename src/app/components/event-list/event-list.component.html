@@ -1,6 +1,14 @@
 <div *ngIf="isLoading" class="loading-spinner">
     <div class="spinner"></div> Loading events...
   </div>
+  <div
+  class="feed-posts"
+  infiniteScroll
+  [infiniteScrollDistance]="2"
+  [infiniteScrollThrottle]="500"
+  (scrolled)="loadMoreEvents()"
+  [scrollWindow]="true"
+>
 
   <ul class="event-list" *ngIf="!(isLoading && noMoreEvents)">
     <li *ngFor="let event of (events$ | async)" class="event-item">
@@ -12,9 +20,10 @@
         </div>
       </div>
 
-      <div class="event-content">
-        {{ event.content }}
-      </div>
+  
+        <div class="event-content" [innerHTML]="getSanitizedContent(event.content)"></div>
+
+
 
       <div class="event-actions">
         <button (click)="sendLike(event)" [disabled]="event.likedByMe">
@@ -38,6 +47,9 @@
       </div>
     </li>
   </ul>
+
+</div>
+
 
   <div *ngIf="noMoreEvents" class="no-more-events">
     No more events to load.

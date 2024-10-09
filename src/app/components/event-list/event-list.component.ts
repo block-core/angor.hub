@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, V
 import { PaginatedEventService } from 'app/services/event.service';
 import { NewEvent } from 'app/types/NewEvent';
 import { Observable } from 'rxjs';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'; // Import DomSanitizer for HTML sanitization
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 @Component({
   selector: 'app-event-list',
@@ -11,7 +13,7 @@ import { Observable } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,InfiniteScrollModule],
 })
 export class EventListComponent implements OnInit {
   @Input() pubkeys: string[] = []; // Define input for pubkeys
@@ -22,7 +24,8 @@ export class EventListComponent implements OnInit {
 
   constructor(
     private paginatedEventService: PaginatedEventService,
-    private changeDetectorRef: ChangeDetectorRef // Inject ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef, // Inject ChangeDetectorRef
+    private sanitizer: DomSanitizer // Inject DomSanitizer for HTML sanitization
   ) {
     this.events$ = this.paginatedEventService.getEventStream(); // Subscribe to event stream
   }
@@ -72,6 +75,11 @@ export class EventListComponent implements OnInit {
     }
   }
 
+  // Sanitize the event content to safely display it in the UI
+  getSanitizedContent(content: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(content);
+  }
+
   // Send a like event
   sendLike(event: NewEvent): void {
     if (!event.likedByMe) {
@@ -88,5 +96,10 @@ export class EventListComponent implements OnInit {
   // Utility to display time in a human-readable format (e.g., "5 minutes ago")
   getTimeFromNow(event: NewEvent): string {
     return event.fromNow;
+  }
+
+   // Define the trackById function for ngFor
+   trackById(index: number, item: NewEvent): string {
+    return item.id; // Assuming each event has a unique 'id' field
   }
 }
