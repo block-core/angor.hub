@@ -1,8 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { PaginatedEventService } from 'app/services/event.service';
- import { NewEvent } from 'app/types/NewEvent';
-import { NostrEvent } from 'nostr-tools';
+import { NewEvent } from 'app/types/NewEvent';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,27 +14,50 @@ import { Observable } from 'rxjs';
   imports: [CommonModule],
 })
 export class EventListComponent implements OnInit {
-  events$: Observable<NewEvent[]>; // Observable of the events to subscribe to
+  @Input() pubkeys: string[] = []; // Define input for pubkeys
+
+  events$: Observable<NewEvent[]>; // Observable for the event stream
   isLoading: boolean = false;
   noMoreEvents: boolean = false;
 
-  constructor(private paginatedEventService: PaginatedEventService) {
-    this.events$ = this.paginatedEventService.getEventStream(); // Subscribe to the event stream
+  constructor(
+    private paginatedEventService: PaginatedEventService,
+    private changeDetectorRef: ChangeDetectorRef // Inject ChangeDetectorRef
+  ) {
+    this.events$ = this.paginatedEventService.getEventStream(); // Subscribe to event stream
   }
 
   ngOnInit(): void {
+    // Subscribe to the event stream and update UI when events are received
+    this.events$.subscribe(events => {
+      // Sort events by creation date, newest first
+      const sortedEvents = events.sort((a, b) => b.createdAt - a.createdAt);
+
+      console.log('Received and sorted events:', sortedEvents); // Log the sorted list of events
+      this.changeDetectorRef.markForCheck(); // Ensure the UI updates with new events
+    });
+
+    // Load initial events on component initialization
     this.loadInitialEvents();
+
+    // Check if there are more events to load
     this.paginatedEventService.hasMoreEvents().subscribe(noMore => {
       this.noMoreEvents = noMore;
+      this.changeDetectorRef.markForCheck(); // Update UI when more events are loaded
     });
   }
 
   // Load initial events when the component initializes
   loadInitialEvents(): void {
+    if (this.pubkeys.length === 0) {
+      console.warn('No pubkeys provided to EventListComponent');
+      return;
+    }
+
     this.isLoading = true;
-    const publicKeys = ['5f432a9f39b58ff132fc0a4c8af10d42efd917d8076f68bb7f2f91ed7d4f6a41']; // Replace with the public keys you want to load events for
-    this.paginatedEventService.loadMoreEvents(publicKeys).finally(() => {
+    this.paginatedEventService.loadMoreEvents(this.pubkeys).finally(() => {
       this.isLoading = false;
+      this.changeDetectorRef.markForCheck(); // Ensure the UI updates after loading
     });
   }
 
@@ -43,9 +65,9 @@ export class EventListComponent implements OnInit {
   loadMoreEvents(): void {
     if (!this.isLoading && !this.noMoreEvents) {
       this.isLoading = true;
-      const publicKeys = ['5f432a9f39b58ff132fc0a4c8af10d42efd917d8076f68bb7f2f91ed7d4f6a41']; // Replace with the public keys
-      this.paginatedEventService.loadMoreEvents(publicKeys).finally(() => {
+      this.paginatedEventService.loadMoreEvents(this.pubkeys).finally(() => {
         this.isLoading = false;
+        this.changeDetectorRef.markForCheck(); // Update UI after more events are loaded
       });
     }
   }
@@ -56,6 +78,7 @@ export class EventListComponent implements OnInit {
       this.paginatedEventService.sendLikeEvent(event).then(() => {
         event.likedByMe = true;
         event.likeCount++;
+        this.changeDetectorRef.markForCheck(); // Update UI after liking an event
       }).catch(error => {
         console.error('Failed to send like:', error);
       });

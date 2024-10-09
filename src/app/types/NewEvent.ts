@@ -32,6 +32,7 @@ export class NewEvent {
     nip10Result: NIP10Result;
     tags: string[][] = [];       // Array of tags for the event
     id: any;
+    isAReply: boolean = false;
 
     constructor(id :any ,kind: number, pubkey: string, content: string, noteId: string, createdAt: number ,tags: string[][] = []) {
         this.kind = kind;

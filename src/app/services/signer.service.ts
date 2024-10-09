@@ -376,10 +376,6 @@ export class SignerService {
         }
     }
 
-
-
-
-
     getUnsignedEvent(kind: number, tags: string[][], content: string) {
         const eventUnsigned: UnsignedEvent = {
             kind: kind,

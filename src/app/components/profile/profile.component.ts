@@ -98,8 +98,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     metadata: any;
     currentUserMetadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
-    private currentUserPubKey : string;
-    private routePubKey;
+    public currentUserPubKey : string;
+    public routePubKey;
     followers: any[] = [];
     following: any[] = [];
     allPublicKeys: string[] = [];
@@ -237,7 +237,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
 
- 
+
 
     async onScroll() {
 
