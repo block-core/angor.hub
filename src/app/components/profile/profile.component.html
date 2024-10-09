@@ -787,45 +787,8 @@
                 </ng-container>
             </angor-card>
 
-            <ng-container *ngIf="!isLoading && posts.length === 0">
-                <angor-card
-                    class="mb-8 flex w-full flex-col bg-primary-50 p-8 dark:bg-primary-800"
-                >
-                    {{ noEventsMessage }}
-                </angor-card>
-            </ng-container>
+               <app-event-list></app-event-list>
 
-            <div
-                class="feed-posts w-full"
-                infiniteScroll
-                [infiniteScrollDistance]="2"
-                [infiniteScrollThrottle]="500"
-                (scrolled)="onScroll()"
-                [scrollWindow]="true"
-            >
-                <ng-container *ngIf="posts.length > 0">
-                    <ng-container
-                        *ngFor="let item of posts; trackBy: trackByIndex"
-                    >
-                        <app-event-box
-                            class="w-full"
-                            [post]="item"
-                            [isLiked]="false"
-                            [username]="item.username"
-                            [user]="currentUserMetadata"
-                        ></app-event-box>
-                    </ng-container>
-                </ng-container>
-            </div>
-            <ng-container *ngIf="isLoading">
-                <angor-card
-                    class="mb-8 flex w-full flex-col items-center justify-center bg-primary-50 p-8 text-center dark:bg-primary-800"
-                >
-                    <mat-spinner diameter="48" color="primary"></mat-spinner>
-                </angor-card>
-            </ng-container>
-
-            <button (click)="getPosts()">Get posts</button>
         </div>
     </div>
 </div>

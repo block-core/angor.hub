@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
-import { EventService } from 'app/services/event.service';
+import { Event1Service } from 'app/services/event1.service';
 import { Post, Zap } from 'app/types/post';
 
 
@@ -60,7 +60,7 @@ export class EventBoxComponent {
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
         private snackBar: MatSnackBar,
-        private _eventService: EventService,
+        private _eventService: Event1Service,
         private sanitizer: DomSanitizer,
         private _changeDetectorRef: ChangeDetectorRef,
 

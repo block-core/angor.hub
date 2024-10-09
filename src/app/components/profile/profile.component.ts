@@ -29,7 +29,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { bech32 } from '@scure/base';
 import { QRCodeModule } from 'angularx-qrcode';
-import { EventService } from 'app/services/event.service';
+import { Event1Service } from 'app/services/event1.service';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { LightningService } from 'app/services/lightning.service';
 import { MetadataService } from 'app/services/metadata.service';
@@ -45,6 +45,7 @@ import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { Paginator } from 'app/shared/utils';
+import { EventListComponent } from '../event-list/event-list.component';
 
 
 interface Chip {
@@ -81,7 +82,8 @@ interface Chip {
         EventBoxComponent,
         SafeUrlPipe,
         MatProgressSpinnerModule,
-        InfiniteScrollModule
+        InfiniteScrollModule,
+        EventListComponent
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -142,7 +144,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
-        private _eventService: EventService
+        private _eventService: Event1Service
     ) {
 
         let baseTimeDiff = 12000;
@@ -177,8 +179,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
             }
             this.loadCurrentUserProfile();
 
-           // this.loadUserPosts(this.routePubKey);
-            this.getPosts();
+
             this.updateSuggestionList();
         });
 
@@ -236,136 +237,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 
 
-    toggleLoading(): void {
-        this.isLoadingPosts = !this.isLoadingPosts;
-    }
-
-
-    async getMyLikes() {
-        let myLikesFilter: Filter = {
-            kinds: [7], "authors": [this._signerService.getPublicKey()]
-        }
-        this.myLikes = await this._eventService.fetchFilteredEvents(myLikesFilter);
-        this.myLikes.forEach(like => {
-            try {
-                let tag = like.tags[like.tags.length - 2]
-                if (tag[0] == "e") {
-                    let id = tag[1]
-                    this.myLikedNoteIds.push(id);
-                }
-
-            } catch {
-                console.log("err")
-            }
-        });
-    }
-
-
-    async queryForMorePostInfo(posts: Post[]) {
-         this.getMyLikes();
-
-        let pubkeys: string[] = [];
-        let noteIds: string[] = [];
-        posts.forEach(p => {
-            pubkeys.push(p.pubkey);
-            noteIds.push(p.noteId)
-        });
-        await this._metadataService.fetchMetadataForMultipleKeys( pubkeys )
-        // join new posts and sort without ruining UI
-        let waitPosts = this.posts // existing posts
-        waitPosts = waitPosts.concat(posts) // incoming posts
-        waitPosts = waitPosts.filter((value, index, self) =>
-            index === self.findIndex((t) => (
-                t.noteId === value.noteId
-            ))
-        )
-        waitPosts.sort((a, b) => a.createdAt - b.createdAt).reverse();
-        this.posts = waitPosts;
-        this.paginator.incrementFilterTimes(this.posts);
-        let replyFilter: Filter = {
-            kinds: [1], "#e": noteIds,
-        }
-        let replies = await this._eventService.fetchPosts(replyFilter, this._metadataService)
-
-
-        let likesFilter: Filter = {
-            kinds: [7], "#e": noteIds
-        }
-        let likes = await this._eventService.fetchFilteredEvents(likesFilter);
-        this.patchPostsWithMoreInfo(posts, replies, likes);
-        // filter out dupes
-        this.toggleLoading();
-    }
-
-
-    patchPostsWithMoreInfo(posts: Post[], replies: Post[], likes: NostrEvent[]) {
-        let counts: {[id: string]: number} = {}
-        for (const r of replies) {
-            if (r.nip10Result?.reply?.id) {
-                counts[r.nip10Result.reply.id] = counts[r.nip10Result.reply.id] ? counts[r.nip10Result.reply.id] + 1 : 1;
-            }
-        }
-        let likeCounts: {[id: string]: number} = {}
-
-        for (const like of likes) {
-            let noteId = null;
-            like.tags.slice().reverse().forEach(x => {
-                if (x[0] == "e" && noteId === null) {
-                    noteId = x[1];
-                }
-            });
-            likeCounts[noteId] = likeCounts[noteId] ? likeCounts[noteId] + 1 : 1;
-        }
-
-        posts.forEach(p => {
-            p.setReplyCount(counts[p.noteId]);
-            p.setLikeCount(likeCounts[p.noteId]);
-            if (this.myLikedNoteIds.includes(p.noteId)) {
-                p.setPostLikedByMe(true);
-            }
-        });
-    }
-
-
-    async getPosts() {
-        let filter = this.getFilter();
-        this.toggleLoading();
-
-        try {
-            let fetchedPosts: Post[] = await this._eventService.fetchPosts(filter, this._metadataService);
-
-            if (fetchedPosts.length < 2) {
-                filter.since += 5000; // Expand time window
-                fetchedPosts.push(...await this._eventService.fetchPosts(filter, this._metadataService));
-            }
-
-            await this.queryForMorePostInfo(fetchedPosts); // Update and merge posts
-        } catch (error) {
-            console.error("Error fetching posts:", error);
-            this.noEventsMessage = "Failed to load posts. Please try again later.";
-        } finally {
-            this.toggleLoading();
-        }
-    }
-
+ 
 
     async onScroll() {
-        if (!this.isLoadingPosts) {
-            await this.getPosts();
-        }
-    }
 
-    getFilter(): Filter {
-        let filter: Filter = {};
-
-            filter.kinds = [1];
-            filter.authors = [this.routePubKey]
-            filter.limit = 5;
-            filter.since = this.paginator.since;
-            filter.until = this.paginator.until;
-
-        this.paginator.printTimes();
-        return filter;
     }
 
 

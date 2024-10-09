@@ -479,6 +479,7 @@ export class Post {
     shareCount: any;
     commentCount: any;
     comments: any;
+    id: any;
 
     constructor(
         kind: number,
@@ -561,3 +562,4 @@ export class Post {
     }
 }
 
+ 
