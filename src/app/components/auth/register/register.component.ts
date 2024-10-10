@@ -1,3 +1,6 @@
+import { angorAnimations } from '@angor/animations';
+import { AngorAlertComponent, AngorAlertType } from '@angor/components/alert';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import {
     FormsModule,
@@ -14,11 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { angorAnimations } from '@angor/animations';
-import { AngorAlertComponent, AngorAlertType } from '@angor/components/alert';
-import { SecurityService } from 'app/services/security.service';
 import { SignerService } from 'app/services/signer.service';
-import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'auth-register',
@@ -37,7 +36,7 @@ import { CommonModule } from '@angular/common';
         MatIconModule,
         MatCheckboxModule,
         MatProgressSpinnerModule,
-        CommonModule
+        CommonModule,
     ],
 })
 export class RegisterComponent implements OnInit {
@@ -89,7 +88,10 @@ export class RegisterComponent implements OnInit {
         if (!keys) {
             // If key generation failed, enable the form and show an error
             this.registerForm.enable();
-            this.alert = { type: 'error', message: 'Error generating keys. Please try again.' };
+            this.alert = {
+                type: 'error',
+                message: 'Error generating keys. Please try again.',
+            };
             this.showAlert = true;
             return;
         }
@@ -112,11 +114,13 @@ export class RegisterComponent implements OnInit {
         console.log('User Metadata:', userMetadata);
 
         // Display success alert
-        this.alert = { type: 'success', message: 'Account created successfully!' };
+        this.alert = {
+            type: 'success',
+            message: 'Account created successfully!',
+        };
         this.showAlert = true;
 
         // Redirect to home
         this._router.navigateByUrl('/home');
     }
-
 }

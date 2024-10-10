@@ -9,7 +9,12 @@
 <h1>⚡ Send Zap</h1>
 <mat-dialog-content *ngIf="!showInvoiceSection || !lightningInvoice">
     <div class="preset-buttons">
-        <button mat-mini-fab color="primary" *ngFor="let button of zapButtons" (click)="sats = button.value">
+        <button
+            mat-mini-fab
+            color="primary"
+            *ngFor="let button of zapButtons"
+            (click)="sats = button.value"
+        >
             <mat-icon>{{ button.icon }}</mat-icon>
             <span>{{ button.label }}</span>
         </button>
@@ -17,7 +22,12 @@
     <mat-divider></mat-divider>
     <mat-form-field appearance="outline" class="sats-input">
         <mat-label>Zap Amount</mat-label>
-        <input matInput [(ngModel)]="sats" placeholder="e.g., 100" type="number" />
+        <input
+            matInput
+            [(ngModel)]="sats"
+            placeholder="e.g., 100"
+            type="number"
+        />
     </mat-form-field>
 
     <mat-dialog-actions align="end">
@@ -31,16 +41,30 @@
     <div *ngIf="displayQRCode" class="qrcode">
         <span>Scan with phone to pay ({{ invoiceAmount }} sats)</span>
         <mat-divider></mat-divider>
-        <qrcode [qrdata]="lightningInvoice" [matTooltip]="'Lightning Invoice'" [errorCorrectionLevel]="'M'"
-            class="qrcode-image"></qrcode>
+        <qrcode
+            [qrdata]="lightningInvoice"
+            [matTooltip]="'Lightning Invoice'"
+            [errorCorrectionLevel]="'M'"
+            class="qrcode-image"
+        ></qrcode>
     </div>
 
     <mat-dialog-actions align="center">
-        <button mat-icon-button (click)="copyInvoice()" [matTooltip]="'Copy Invoice'">
-            <mat-icon [svgIcon]="'heroicons_outline:clipboard-document'"></mat-icon>
+        <button
+            mat-icon-button
+            (click)="copyInvoice()"
+            [matTooltip]="'Copy Invoice'"
+        >
+            <mat-icon
+                [svgIcon]="'heroicons_outline:clipboard-document'"
+            ></mat-icon>
         </button>
 
-        <button  mat-icon-button (click)="payInvoice()" [matTooltip]="'Pay Invoice'">
+        <button
+            mat-icon-button
+            (click)="payInvoice()"
+            [matTooltip]="'Pay Invoice'"
+        >
             <mat-icon color="#f79318" [svgIcon]="'feather:zap'"></mat-icon>
         </button>
     </mat-dialog-actions>

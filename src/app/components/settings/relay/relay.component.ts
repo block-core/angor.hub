@@ -1,11 +1,11 @@
 import { CommonModule, TitleCasePipe } from '@angular/common';
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
+    NgZone,
     OnInit,
     ViewEncapsulation,
-    ChangeDetectorRef,
-    NgZone,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -52,7 +52,7 @@ export class SettingsRelayComponent implements OnInit {
     ngOnInit(): void {
         // Subscribe to relays observable
         this.subscriptions.add(
-            this.relayService.getRelays().subscribe(relays => {
+            this.relayService.getRelays().subscribe((relays) => {
                 this.zone.run(() => {
                     this.relays = relays;
                     this.cdr.markForCheck(); // Mark the component for check
@@ -65,17 +65,20 @@ export class SettingsRelayComponent implements OnInit {
             {
                 label: 'Read',
                 value: 'read',
-                description: 'Reads only, does not write, unless explicitly specified on publish action.',
+                description:
+                    'Reads only, does not write, unless explicitly specified on publish action.',
             },
             {
                 label: 'Write',
                 value: 'write',
-                description: 'Writes your events, profile, and other metadata updates. Connects on-demand.',
+                description:
+                    'Writes your events, profile, and other metadata updates. Connects on-demand.',
             },
             {
                 label: 'Read and Write',
                 value: 'read-write',
-                description: 'Reads and writes events, profiles, and other metadata. Always connected.',
+                description:
+                    'Reads and writes events, profiles, and other metadata. Always connected.',
             },
         ];
     }
@@ -113,13 +116,14 @@ export class SettingsRelayComponent implements OnInit {
     }
 
     relayFavIcon(url: string): string {
-        let safeUrl = url.replace('wss://', 'https://').replace('ws://', 'https://');
+        let safeUrl = url
+            .replace('wss://', 'https://')
+            .replace('ws://', 'https://');
 
         return safeUrl + '/favicon.ico';
-      }
+    }
 
-      getSafeUrl(url: string): SafeUrl {
+    getSafeUrl(url: string): SafeUrl {
         return this.sanitizer.bypassSecurityTrustUrl(url);
-      }
-
+    }
 }

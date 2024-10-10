@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { NostrEvent, Filter, finalizeEvent } from 'nostr-tools';
-import { RelayService } from './relay.service';
-import { MetadataService } from './metadata.service';
-import { throttleTime, debounceTime } from 'rxjs/operators';
-import { SignerService } from './signer.service';
-import { NewEvent } from 'app/types/NewEvent';
 import { hexToBytes } from '@noble/hashes/utils';
+import { NewEvent } from 'app/types/NewEvent';
+import { Filter, finalizeEvent, NostrEvent } from 'nostr-tools';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { throttleTime } from 'rxjs/operators';
+import { MetadataService } from './metadata.service';
+import { RelayService } from './relay.service';
+import { SignerService } from './signer.service';
 
 interface Job {
     eventId: string;
@@ -24,7 +24,6 @@ export class PaginatedEventService {
     private noMoreEvents = new BehaviorSubject<boolean>(false);
     private seenEventIds = new Set<string>();
 
-
     private likesMap = new Map<string, string[]>();
     private repliesMap = new Map<string, NewEvent[]>();
     private zapsMap = new Map<string, string[]>();
@@ -41,8 +40,7 @@ export class PaginatedEventService {
         private metadataService: MetadataService
     ) {}
 
-
-     async subscribeToEvents(pubkeys:string[]): Promise<void> {
+    async subscribeToEvents(pubkeys: string[]): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -55,19 +53,17 @@ export class PaginatedEventService {
             {
                 kinds: [1],
                 authors: pubkeys,
-                limit: this.pageSize
+                limit: this.pageSize,
             },
             {
                 '#p': pubkeys,
-                limit: 1
-            }
+                limit: 1,
+            },
         ];
-
 
         this.relayService.getPool().subscribeMany(connectedRelays, filters, {
             onevent: (event: NostrEvent) => {
                 if (!this.isReply(event)) {
-
                     this.handleNewOrUpdatedEvent(event);
                 }
 
@@ -75,7 +71,6 @@ export class PaginatedEventService {
                 if (parentEventId) {
                     this.enqueueJob(parentEventId, 'replies');
                 }
-
 
                 switch (event.kind) {
                     case 7:
@@ -94,14 +89,12 @@ export class PaginatedEventService {
                 //console.log('Subscription to relays closed.');
             },
         });
-
     }
 
-private getParentEventId(event: NostrEvent): string | null {
-    const replyTag = event.tags.find(tag => tag[0] === 'e');
-    return replyTag ? replyTag[1] : null;
-}
-
+    private getParentEventId(event: NostrEvent): string | null {
+        const replyTag = event.tags.find((tag) => tag[0] === 'e');
+        return replyTag ? replyTag[1] : null;
+    }
 
     private async handleNewOrUpdatedEvent(event: NostrEvent): Promise<void> {
         switch (event.kind) {
@@ -111,7 +104,9 @@ private getParentEventId(event: NostrEvent): string | null {
                     const newEvent = await this.createNewEvent(event);
                     const currentEvents = this.eventsSubject.getValue();
                     this.eventsSubject.next(
-                        [newEvent, ...currentEvents].sort((a, b) => b.createdAt - a.createdAt)
+                        [newEvent, ...currentEvents].sort(
+                            (a, b) => b.createdAt - a.createdAt
+                        )
                     );
                     this.updateEventInSubject(event.id);
                 }
@@ -134,15 +129,14 @@ private getParentEventId(event: NostrEvent): string | null {
                 break;
 
             default:
-         }
+        }
     }
 
-
     private handleLikeEvent(event: NostrEvent): void {
-        const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
+        const eventId = event.tags.find((tag) => tag[0] === 'e')?.[1];
         if (eventId) {
             const currentEvents = this.eventsSubject.getValue();
-            const updatedEvents = currentEvents.map(e => {
+            const updatedEvents = currentEvents.map((e) => {
                 if (e.id === eventId) {
                     e.likeCount += 1;
                     e.likers = [...(e.likers || []), event.pubkey];
@@ -153,12 +147,11 @@ private getParentEventId(event: NostrEvent): string | null {
         }
     }
 
-
     private handleZapEvent(event: NostrEvent): void {
-        const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
+        const eventId = event.tags.find((tag) => tag[0] === 'e')?.[1];
         if (eventId) {
             const currentEvents = this.eventsSubject.getValue();
-            const updatedEvents = currentEvents.map(e => {
+            const updatedEvents = currentEvents.map((e) => {
                 if (e.id === eventId) {
                     e.zapCount += 1;
                     e.zappers = [...(e.zappers || []), event.pubkey];
@@ -169,12 +162,11 @@ private getParentEventId(event: NostrEvent): string | null {
         }
     }
 
-
     private handleRepostEvent(event: NostrEvent): void {
-        const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
+        const eventId = event.tags.find((tag) => tag[0] === 'e')?.[1];
         if (eventId) {
             const currentEvents = this.eventsSubject.getValue();
-            const updatedEvents = currentEvents.map(e => {
+            const updatedEvents = currentEvents.map((e) => {
                 if (e.id === eventId) {
                     e.repostCount += 1;
                     e.reposters = [...(e.reposters || []), event.pubkey];
@@ -185,13 +177,12 @@ private getParentEventId(event: NostrEvent): string | null {
         }
     }
 
-
     private async handleReplyEvent(event: NostrEvent): Promise<void> {
-        const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
+        const eventId = event.tags.find((tag) => tag[0] === 'e')?.[1];
         if (eventId) {
             const replyEvent = await this.createNewEvent(event);
             const currentEvents = this.eventsSubject.getValue();
-            const updatedEvents = currentEvents.map(e => {
+            const updatedEvents = currentEvents.map((e) => {
                 if (e.id === eventId) {
                     e.replyCount += 1;
                     e.replies = [...(e.replies || []), replyEvent];
@@ -203,10 +194,11 @@ private getParentEventId(event: NostrEvent): string | null {
     }
 
     private isReply(event: NostrEvent): boolean {
-        const replyTags = event.tags.filter(tag => tag[0] === 'e' || tag[0] === 'p');
+        const replyTags = event.tags.filter(
+            (tag) => tag[0] === 'e' || tag[0] === 'p'
+        );
         return replyTags.length > 0;
     }
-
 
     async loadMoreEvents(pubkeys: string[]): Promise<void> {
         if (this.isLoading.value || this.noMoreEvents.value) return;
@@ -230,13 +222,23 @@ private getParentEventId(event: NostrEvent): string | null {
             if (events.length > 0) {
                 this.lastLoadedEventTime = events[events.length - 1].created_at;
 
-                const uniqueEvents = events.filter(event => !this.seenEventIds.has(event.id) && !this.isReply(event));
-                uniqueEvents.forEach(event => this.seenEventIds.add(event.id));
+                const uniqueEvents = events.filter(
+                    (event) =>
+                        !this.seenEventIds.has(event.id) && !this.isReply(event)
+                );
+                uniqueEvents.forEach((event) =>
+                    this.seenEventIds.add(event.id)
+                );
 
-                const newEvents = await Promise.all(uniqueEvents.map(event => this.createNewEvent(event)));
+                const newEvents = await Promise.all(
+                    uniqueEvents.map((event) => this.createNewEvent(event))
+                );
 
-
-                this.eventsSubject.next([...this.eventsSubject.getValue(), ...newEvents].sort((a, b) => b.createdAt - a.createdAt));
+                this.eventsSubject.next(
+                    [...this.eventsSubject.getValue(), ...newEvents].sort(
+                        (a, b) => b.createdAt - a.createdAt
+                    )
+                );
             } else {
                 this.noMoreEvents.next(true);
             }
@@ -246,7 +248,6 @@ private getParentEventId(event: NostrEvent): string | null {
             this.isLoading.next(false);
         }
     }
-
 
     private async fetchFilteredEvents(filter: Filter): Promise<NostrEvent[]> {
         await this.relayService.ensureConnectedRelays();
@@ -262,7 +263,7 @@ private getParentEventId(event: NostrEvent): string | null {
         await Promise.all(
             connectedRelays.map(async (relay) => {
                 const events = await pool.querySync([relay], filter);
-                events.forEach(event => {
+                events.forEach((event) => {
                     if (!eventMap.has(event.id)) {
                         eventMap.set(event.id, event);
                     }
@@ -272,7 +273,6 @@ private getParentEventId(event: NostrEvent): string | null {
 
         return Array.from(eventMap.values());
     }
-
 
     private async createNewEvent(event: NostrEvent): Promise<NewEvent> {
         const newEvent = new NewEvent(
@@ -291,18 +291,27 @@ private getParentEventId(event: NostrEvent): string | null {
         this.enqueueJob(event.id, 'zaps');
         await this.processJobQueue();
 
-        const metadata = await this.metadataService.fetchMetadataWithCache(event.pubkey);
+        const metadata = await this.metadataService.fetchMetadataWithCache(
+            event.pubkey
+        );
         if (metadata) {
             newEvent.username = metadata.name || newEvent.npub;
-            newEvent.picture = metadata.picture || "/images/avatars/avatar-placeholder.png";
+            newEvent.picture =
+                metadata.picture || '/images/avatars/avatar-placeholder.png';
         }
 
         return newEvent;
     }
 
-
-    private enqueueJob(eventId: string, jobType: 'replies' | 'likes' | 'zaps' | 'reposts'): void {
-        if (!this.jobQueue.some(job => job.eventId === eventId && job.jobType === jobType)) {
+    private enqueueJob(
+        eventId: string,
+        jobType: 'replies' | 'likes' | 'zaps' | 'reposts'
+    ): void {
+        if (
+            !this.jobQueue.some(
+                (job) => job.eventId === eventId && job.jobType === jobType
+            )
+        ) {
             this.jobQueue.push({ eventId, jobType });
             if (!this.isProcessingQueue) {
                 this.processJobQueue();
@@ -323,12 +332,14 @@ private getParentEventId(event: NostrEvent): string | null {
                 const jobPromise = this.processJob(job);
                 activeJobs.push(jobPromise);
 
-                jobPromise.then(() => {
-                    activeJobs.splice(activeJobs.indexOf(jobPromise), 1);
-                }).catch((error) => {
-                    console.error('Error processing job:', error);
-                    activeJobs.splice(activeJobs.indexOf(jobPromise), 1);
-                });
+                jobPromise
+                    .then(() => {
+                        activeJobs.splice(activeJobs.indexOf(jobPromise), 1);
+                    })
+                    .catch((error) => {
+                        console.error('Error processing job:', error);
+                        activeJobs.splice(activeJobs.indexOf(jobPromise), 1);
+                    });
             }
             await Promise.race(activeJobs);
         }
@@ -361,7 +372,7 @@ private getParentEventId(event: NostrEvent): string | null {
 
     private updateEventInSubject(eventId: string): void {
         const currentEvents = this.eventsSubject.getValue();
-        const updatedEvents = currentEvents.map(event => {
+        const updatedEvents = currentEvents.map((event) => {
             if (event.id === eventId) {
                 event.replyCount = this.getRepliesCount(eventId);
                 event.replies = this.repliesMap.get(eventId) || [];
@@ -377,58 +388,57 @@ private getParentEventId(event: NostrEvent): string | null {
         this.eventsSubject.next(updatedEvents);
     }
 
-
     private async fetchReplies(eventId: string): Promise<NewEvent[]> {
         const replyFilter: Filter = {
-            "#e": [eventId],
+            '#e': [eventId],
             kinds: [1],
         };
 
         const events = await this.fetchFilteredEvents(replyFilter);
 
         const uniqueEventMap = new Map<string, NostrEvent>();
-        events.forEach(event => {
+        events.forEach((event) => {
             if (!uniqueEventMap.has(event.id)) {
                 uniqueEventMap.set(event.id, event);
             }
         });
 
-        return Promise.all(Array.from(uniqueEventMap.values()).map(event => this.createNewEvent(event)));
+        return Promise.all(
+            Array.from(uniqueEventMap.values()).map((event) =>
+                this.createNewEvent(event)
+            )
+        );
     }
-
 
     private async getLikers(eventId: string): Promise<string[]> {
         const likeFilter: Filter = {
-            "#e": [eventId],
+            '#e': [eventId],
             kinds: [7],
         };
 
         const likeEvents = await this.fetchFilteredEvents(likeFilter);
-        return likeEvents.map(event => event.pubkey);
+        return likeEvents.map((event) => event.pubkey);
     }
-
 
     private async getZappers(eventId: string): Promise<string[]> {
         const zapFilter: Filter = {
-            "#e": [eventId],
+            '#e': [eventId],
             kinds: [9735],
         };
 
         const zapEvents = await this.fetchFilteredEvents(zapFilter);
-        return zapEvents.map(event => event.pubkey);
+        return zapEvents.map((event) => event.pubkey);
     }
-
 
     private async getReposters(eventId: string): Promise<string[]> {
         const repostFilter: Filter = {
-            "#e": [eventId],
+            '#e': [eventId],
             kinds: [6],
         };
 
         const repostEvents = await this.fetchFilteredEvents(repostFilter);
-        return repostEvents.map(event => event.pubkey);
+        return repostEvents.map((event) => event.pubkey);
     }
-
 
     getRepliesCount(eventId: string): number {
         return (this.repliesMap.get(eventId) || []).length;
@@ -446,7 +456,6 @@ private getParentEventId(event: NostrEvent): string | null {
         return (this.repostsMap.get(eventId) || []).length;
     }
 
-
     hasUserLiked(eventId: string): boolean {
         return this.hasLikedMap.get(eventId) || false;
     }
@@ -455,11 +464,9 @@ private getParentEventId(event: NostrEvent): string | null {
         return this.hasRepostedMap.get(eventId) || false;
     }
 
-
     getEventStream(): Observable<NewEvent[]> {
         return this.eventsSubject.asObservable().pipe(throttleTime(3000));
     }
-
 
     hasMoreEvents(): Observable<boolean> {
         return this.noMoreEvents.asObservable();
@@ -469,18 +476,26 @@ private getParentEventId(event: NostrEvent): string | null {
         if (!content) return;
 
         try {
-             const tags: string[][] = [];
+            const tags: string[][] = [];
 
-            const unsignedEvent = this.signerService.getUnsignedEvent(1, tags, content);
+            const unsignedEvent = this.signerService.getUnsignedEvent(
+                1,
+                tags,
+                content
+            );
             let signedEvent: NostrEvent;
 
             if (this.signerService.isUsingSecretKey()) {
-                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKey =
+                    await this.signerService.getDecryptedSecretKey();
                 const privateKeyBytes = hexToBytes(privateKey);
                 signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
             } else {
-                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
-             }
+                signedEvent =
+                    await this.signerService.signEventWithExtension(
+                        unsignedEvent
+                    );
+            }
 
             await this.relayService.publishEventToWriteRelays(signedEvent);
         } catch (error) {
@@ -488,34 +503,41 @@ private getParentEventId(event: NostrEvent): string | null {
         }
     }
 
-
-
-
     async sendLikeEvent(event: NewEvent): Promise<void> {
         if (!event) return;
 
         try {
             const tags = [
-                ["e", event.id],
-                ["p", event.pubkey],
+                ['e', event.id],
+                ['p', event.pubkey],
             ];
             const content = '+';
 
-            const unsignedEvent = this.signerService.getUnsignedEvent(7, tags, content);
+            const unsignedEvent = this.signerService.getUnsignedEvent(
+                7,
+                tags,
+                content
+            );
             let signedEvent: NostrEvent;
 
             if (this.signerService.isUsingSecretKey()) {
-                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKey =
+                    await this.signerService.getDecryptedSecretKey();
                 const privateKeyBytes = hexToBytes(privateKey);
                 signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
             } else {
-                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+                signedEvent =
+                    await this.signerService.signEventWithExtension(
+                        unsignedEvent
+                    );
             }
 
-              await this.relayService.publishEventToWriteRelays(signedEvent);
+            await this.relayService.publishEventToWriteRelays(signedEvent);
 
-
-            this.likesMap.set(event.id, [...(this.likesMap.get(event.id) || []), this.signerService.getPublicKey()]);
+            this.likesMap.set(event.id, [
+                ...(this.likesMap.get(event.id) || []),
+                this.signerService.getPublicKey(),
+            ]);
             this.hasLikedMap.set(event.id, true);
         } catch (error) {
             console.error('Failed to send like event:', error);
@@ -527,21 +549,29 @@ private getParentEventId(event: NostrEvent): string | null {
 
         try {
             const tags = [
-                ["e", event.id],
-                ["p", event.pubkey],
-                ["amount", zapAmount.toString()]
+                ['e', event.id],
+                ['p', event.pubkey],
+                ['amount', zapAmount.toString()],
             ];
             const content = `Zapped with ${zapAmount} sats`;
 
-            const unsignedEvent = this.signerService.getUnsignedEvent(9735, tags, content);
+            const unsignedEvent = this.signerService.getUnsignedEvent(
+                9735,
+                tags,
+                content
+            );
             let signedEvent: NostrEvent;
 
             if (this.signerService.isUsingSecretKey()) {
-                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKey =
+                    await this.signerService.getDecryptedSecretKey();
                 const privateKeyBytes = hexToBytes(privateKey);
                 signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
             } else {
-                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+                signedEvent =
+                    await this.signerService.signEventWithExtension(
+                        unsignedEvent
+                    );
             }
 
             await this.relayService.publishEventToWriteRelays(signedEvent);
@@ -550,24 +580,35 @@ private getParentEventId(event: NostrEvent): string | null {
         }
     }
 
-    async sendReplyEvent(parentEvent: NewEvent, replyContent: string): Promise<void> {
+    async sendReplyEvent(
+        parentEvent: NewEvent,
+        replyContent: string
+    ): Promise<void> {
         if (!parentEvent) return;
 
         try {
             const tags = [
-                ["e", parentEvent.id],
-                ["p", parentEvent.pubkey],
+                ['e', parentEvent.id],
+                ['p', parentEvent.pubkey],
             ];
 
-            const unsignedEvent = this.signerService.getUnsignedEvent(1, tags, replyContent);
+            const unsignedEvent = this.signerService.getUnsignedEvent(
+                1,
+                tags,
+                replyContent
+            );
             let signedEvent: NostrEvent;
 
             if (this.signerService.isUsingSecretKey()) {
-                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKey =
+                    await this.signerService.getDecryptedSecretKey();
                 const privateKeyBytes = hexToBytes(privateKey);
                 signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
             } else {
-                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+                signedEvent =
+                    await this.signerService.signEventWithExtension(
+                        unsignedEvent
+                    );
             }
 
             await this.relayService.publishEventToWriteRelays(signedEvent);
@@ -575,5 +616,4 @@ private getParentEventId(event: NostrEvent): string | null {
             console.error('Failed to send reply event:', error);
         }
     }
-
 }

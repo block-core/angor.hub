@@ -13,17 +13,6 @@ const jsonToSassMap = require(
     path.resolve(__dirname, '../utils/json-to-sass-map')
 );
 
-// -----------------------------------------------------------------------------------------------------
-// @ Utilities
-// -----------------------------------------------------------------------------------------------------
-
-/**
- * Normalizes the provided theme by omitting empty values and values that
- * start with "on" from each palette. Also sets the correct DEFAULT value
- * of each palette.
- *
- * @param theme
- */
 const normalizeTheme = (theme) => {
     return _.fromPairs(
         _.map(
@@ -43,17 +32,10 @@ const normalizeTheme = (theme) => {
     );
 };
 
-// -----------------------------------------------------------------------------------------------------
-// @ ANGOR TailwindCSS Main Plugin
-// -----------------------------------------------------------------------------------------------------
 const theming = plugin.withOptions(
     (options) =>
         ({ addComponents, e, theme }) => {
-            /**
-             * Create user themes object by going through the provided themes and
-             * merging them with the provided "default" so, we can have a complete
-             * set of color palettes for each user theme.
-             */
+
             const userThemes = _.fromPairs(
                 _.map(options.themes, (theme, themeName) => [
                     themeName,
@@ -61,10 +43,6 @@ const theming = plugin.withOptions(
                 ])
             );
 
-            /**
-             * Normalize the themes and assign it to the themes object. This will
-             * be the final object that we create a SASS map from
-             */
             let themes = _.fromPairs(
                 _.map(userThemes, (theme, themeName) => [
                     themeName,
@@ -72,10 +50,6 @@ const theming = plugin.withOptions(
                 ])
             );
 
-            /**
-             * Go through the themes to generate the contrasts and filter the
-             * palettes to only have "primary", "accent" and "warn" objects.
-             */
             themes = _.fromPairs(
                 _.map(themes, (theme, themeName) => [
                     themeName,
@@ -105,10 +79,6 @@ const theming = plugin.withOptions(
                 ])
             );
 
-            /**
-             * Go through the themes and attach appropriate class selectors so,
-             * we can use them to encapsulate each theme.
-             */
             themes = _.fromPairs(
                 _.map(themes, (theme, themeName) => [
                     themeName,
@@ -119,18 +89,15 @@ const theming = plugin.withOptions(
                 ])
             );
 
-            /* Generate the SASS map using the themes object */
             const sassMap = jsonToSassMap(
                 JSON.stringify({ 'user-themes': themes })
             );
 
-            /* Get the file path */
             const filename = path.resolve(
                 __dirname,
                 '../../styles/user-themes.scss'
             );
 
-            /* Read the file and get its data */
             let data;
             try {
                 data = fs.readFileSync(filename, { encoding: 'utf8' });
@@ -138,7 +105,6 @@ const theming = plugin.withOptions(
                 console.error(err);
             }
 
-            /* Write the file if the map has been changed */
             if (data !== sassMap) {
                 try {
                     fs.writeFileSync(filename, sassMap, { encoding: 'utf8' });
@@ -147,11 +113,6 @@ const theming = plugin.withOptions(
                 }
             }
 
-            /**
-             * Iterate through the user's themes and build Tailwind components containing
-             * CSS Custom Properties using the colors from them. This allows switching
-             * themes by simply replacing a class name as well as nesting them.
-             */
             addComponents(
                 _.fromPairs(
                     _.map(options.themes, (theme, themeName) => [
@@ -214,9 +175,7 @@ const theming = plugin.withOptions(
                 )
             );
 
-            /**
-             * Generate scheme based css custom properties and utility classes
-             */
+
             const schemeCustomProps = _.map(
                 ['light', 'dark'],
                 (colorScheme) => {
@@ -234,31 +193,9 @@ const theming = plugin.withOptions(
 
                     return {
                         [isDark ? darkSchemeSelectors : lightSchemeSelectors]: {
-                            /**
-                             * If a custom property is not available, browsers will use
-                             * the fallback value. In this case, we want to use '--is-dark'
-                             * as the indicator of a dark theme so, we can use it like this:
-                             * background-color: var(--is-dark, red);
-                             *
-                             * If we set '--is-dark' as "true" on dark themes, the above rule
-                             * won't work because of the said "fallback value" logic. Therefore,
-                             * we set the '--is-dark' to "false" on light themes and not set it
-                             * at all on dark themes so that the fallback value can be used on
-                             * dark themes.
-                             *
-                             * On light themes, since '--is-dark' exists, the above rule will be
-                             * interpolated as:
-                             * "background-color: false"
-                             *
-                             * On dark themes, since '--is-dark' doesn't exist, the fallback value
-                             * will be used ('red' in this case) and the rule will be interpolated as:
-                             * "background-color: red"
-                             *
-                             * It's easier to understand and remember like this.
-                             */
+
                             ...(!isDark ? { '--is-dark': 'false' } : {}),
 
-                            /* Generate custom properties from customProps */
                             ..._.fromPairs(
                                 _.flatten(
                                     _.map(background, (value, key) => [
@@ -287,7 +224,6 @@ const theming = plugin.withOptions(
             );
 
             const schemeUtilities = (() => {
-                /* Generate general styles & utilities */
                 return {};
             })();
 
@@ -298,11 +234,6 @@ const theming = plugin.withOptions(
         return {
             theme: {
                 extend: {
-                    /**
-                     * Add 'Primary', 'Accent' and 'Warn' palettes as colors so all color utilities
-                     * are generated for them; "bg-primary", "text-on-primary", "bg-accent-600" etc.
-                     * This will also allow using arbitrary values with them such as opacity and such.
-                     */
                     colors: _.fromPairs(
                         _.flatten(
                             _.map(
@@ -398,7 +329,6 @@ const theming = plugin.withOptions(
                         },
                     },
                 },
-
             },
         };
     }

@@ -1,7 +1,7 @@
-import { inject, Injectable } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AngorConfirmationConfig } from '@angor/services/confirmation/confirmation.types';
 import { AngorConfirmationDialogComponent } from '@angor/services/confirmation/dialog/dialog.component';
+import { inject, Injectable } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { merge } from 'lodash-es';
 
 @Injectable({ providedIn: 'root' })

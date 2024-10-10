@@ -1,3 +1,8 @@
+import { AngorHorizontalNavigationBasicItemComponent } from '@angor/components/navigation/horizontal/components/basic/basic.component';
+import { AngorHorizontalNavigationDividerItemComponent } from '@angor/components/navigation/horizontal/components/divider/divider.component';
+import { AngorHorizontalNavigationComponent } from '@angor/components/navigation/horizontal/horizontal.component';
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
 import { BooleanInput } from '@angular/cdk/coercion';
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 import {
@@ -14,11 +19,6 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { AngorHorizontalNavigationBasicItemComponent } from '@angor/components/navigation/horizontal/components/basic/basic.component';
-import { AngorHorizontalNavigationDividerItemComponent } from '@angor/components/navigation/horizontal/components/divider/divider.component';
-import { AngorHorizontalNavigationComponent } from '@angor/components/navigation/horizontal/horizontal.component';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({

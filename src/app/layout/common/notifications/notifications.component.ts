@@ -16,7 +16,10 @@ import { MatButton, MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
- import { NostrNotification, NotificationService } from 'app/services/notification.service';
+import {
+    NostrNotification,
+    NotificationService,
+} from 'app/services/notification.service';
 import { SignerService } from 'app/services/signer.service';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -39,7 +42,8 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
     @ViewChild('notificationsOrigin') private _notificationsOrigin: MatButton;
-    @ViewChild('notificationsPanel') private _notificationsPanel: TemplateRef<any>;
+    @ViewChild('notificationsPanel')
+    private _notificationsPanel: TemplateRef<any>;
 
     notifications: NostrNotification[] = [];
     unreadCount: number = 0;
@@ -51,25 +55,23 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         private _changeDetectorRef: ChangeDetectorRef,
         private _overlay: Overlay,
         private _viewContainerRef: ViewContainerRef,
-        private _signerService: SignerService,
-
+        private _signerService: SignerService
     ) {}
 
     ngOnInit(): void {
+        const pubkey = this._signerService.getPublicKey();
 
-        const pubkey =  this._signerService.getPublicKey();
-
-         this._notificationService.subscribeToNotifications(pubkey).then(() => {
-
-            this._notificationService.getNotificationObservable()
+        this._notificationService.subscribeToNotifications(pubkey).then(() => {
+            this._notificationService
+                .getNotificationObservable()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((notifications: NostrNotification[]) => {
                     this.notifications = notifications;
                     this._changeDetectorRef.markForCheck();
                 });
 
-
-                this._notificationService.getNotificationCount()
+            this._notificationService
+                .getNotificationCount()
                 .pipe(takeUntil(this._unsubscribeAll))
                 .subscribe((count: number) => {
                     this.unreadCount = count;
@@ -79,7 +81,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-         this._unsubscribeAll.next(null);
+        this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
     }
 
@@ -122,12 +124,24 @@ export class NotificationsComponent implements OnInit, OnDestroy {
             scrollStrategy: this._overlay.scrollStrategies.block(),
             positionStrategy: this._overlay
                 .position()
-                .flexibleConnectedTo(this._notificationsOrigin._elementRef.nativeElement)
+                .flexibleConnectedTo(
+                    this._notificationsOrigin._elementRef.nativeElement
+                )
                 .withLockedPosition(true)
                 .withPush(true)
                 .withPositions([
-                    { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top' },
-                    { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom' },
+                    {
+                        originX: 'start',
+                        originY: 'bottom',
+                        overlayX: 'start',
+                        overlayY: 'top',
+                    },
+                    {
+                        originX: 'start',
+                        originY: 'top',
+                        overlayX: 'start',
+                        overlayY: 'bottom',
+                    },
                 ]),
         });
 

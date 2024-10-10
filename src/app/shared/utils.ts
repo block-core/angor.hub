@@ -1,13 +1,11 @@
-
 import { Post } from 'app/types/post';
 import { User } from 'app/types/user';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
 
-
-export function range (start: number, end: number) {
-    return [...Array(1+end-start).keys()].map(v => start+v)
+export function range(start: number, end: number) {
+    return [...Array(1 + end - start).keys()].map((v) => start + v);
 }
 
 export function ellipsis(value: string): string {
@@ -15,13 +13,12 @@ export function ellipsis(value: string): string {
     if (value.length < 40) return value;
     let third: number = value.length / 8;
     let finalThird: number = value.length - third;
-    return value.substring(0, third) + ":" + value.substring(finalThird)
+    return value.substring(0, third) + ':' + value.substring(finalThird);
 }
 
-
 export function humantime(value: number): string {
-    let date = new Date(value*1000)
-    return dayjs(date).fromNow()
+    let date = new Date(value * 1000);
+    return dayjs(date).fromNow();
 }
 
 export class Paginator {
@@ -31,13 +28,17 @@ export class Paginator {
     since: number = 0;
     baseTimeDiff: number;
     originalBaseTimeDiff: number;
-    constructor(until: number = 0, since: number = 0, baseTimeDiff: number = 15) {
+    constructor(
+        until: number = 0,
+        since: number = 0,
+        baseTimeDiff: number = 15
+    ) {
         this.until = until;
         this.setDefaultUntil();
         this.baseTimeDiff = baseTimeDiff;
         this.originalBaseTimeDiff = this.baseTimeDiff;
         if (since === 0) {
-            this.setDefaultSince()
+            this.setDefaultSince();
         } else {
             this.setDefaultSince(since);
         }
@@ -93,11 +94,11 @@ export class Paginator {
     }
 
     getSinceAsDate(): Date {
-        return new Date(this.since*1000);
+        return new Date(this.since * 1000);
     }
 
     getUntilAsDate(): Date {
-        return new Date(this.until*1000);
+        return new Date(this.until * 1000);
     }
 
     getSinceFromNow(): string {
@@ -111,8 +112,11 @@ export class Paginator {
     }
 
     printTimes(): void {
-        const diff = this.getUntilAsDate().getTime() - this.getSinceAsDate().getTime();
-        console.log(`Until: ${this.getUntilFromNow()} | Since: ${this.getSinceFromNow()}`);
+        const diff =
+            this.getUntilAsDate().getTime() - this.getSinceAsDate().getTime();
+        console.log(
+            `Until: ${this.getUntilFromNow()} | Since: ${this.getSinceFromNow()}`
+        );
         console.log(`Diff: ${diff}`);
     }
 
@@ -125,7 +129,11 @@ export class Paginator {
     private setDefaultSince(addedMinutes: number = 0): void {
         // Math.floor(Date.now() / 1000)
         let now = new Date();
-        const sinceDate = Math.floor(now.setMinutes(now.getMinutes() - this.baseTimeDiff - addedMinutes) / 1000);
+        const sinceDate = Math.floor(
+            now.setMinutes(
+                now.getMinutes() - this.baseTimeDiff - addedMinutes
+            ) / 1000
+        );
         this.since = sinceDate;
     }
 
@@ -134,12 +142,16 @@ export class Paginator {
     }
 
     private getNewSince(createdAt: number, addedMinutes: number = 0): number {
-        const now = new Date(createdAt*1000);
-        return Math.floor(now.setMinutes(now.getMinutes() - this.baseTimeDiff - addedMinutes) / 1000);
+        const now = new Date(createdAt * 1000);
+        return Math.floor(
+            now.setMinutes(
+                now.getMinutes() - this.baseTimeDiff - addedMinutes
+            ) / 1000
+        );
     }
 
     private setUntil(createdAt: number): void {
-        this.previousUntil = this.until - (2 * 1000) // minus two minutes;
+        this.previousUntil = this.until - 2 * 1000; // minus two minutes;
         this.until = createdAt;
     }
 

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Filter, NostrEvent, UnsignedEvent, Event } from 'nostr-tools';
+import { Event, Filter, NostrEvent, UnsignedEvent } from 'nostr-tools';
+import { Observable, Subject } from 'rxjs';
 import { RelayService } from './relay.service';
 import { SignerService } from './signer.service';
-import { Subject, Observable } from 'rxjs';
 
 @Injectable({
     providedIn: 'root',
@@ -14,7 +14,7 @@ export class SocialService {
     constructor(
         private relayService: RelayService,
         private signerService: SignerService
-    ) { }
+    ) {}
 
     getFollowersObservable(): Observable<NostrEvent> {
         return this.followersSubject.asObservable();
@@ -95,7 +95,12 @@ export class SocialService {
         const newFollowingList = [...currentFollowing, pubkeyToFollow];
         this.setFollowingList(newFollowingList);
 
-        const unsignedEvent: UnsignedEvent = this.signerService.getUnsignedEvent(3, newFollowingList.map(f => ['p', f]), '');
+        const unsignedEvent: UnsignedEvent =
+            this.signerService.getUnsignedEvent(
+                3,
+                newFollowingList.map((f) => ['p', f]),
+                ''
+            );
 
         // Check if using Nostr extension
         const isUsingExtension = await this.signerService.isUsingExtension();
@@ -103,14 +108,18 @@ export class SocialService {
 
         if (isUsingExtension) {
             // Sign using Nostr extension
-            signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+            signedEvent =
+                await this.signerService.signEventWithExtension(unsignedEvent);
         } else {
             // Sign using private key
             const secretKey = await this.signerService.getDecryptedSecretKey();
             if (!secretKey) {
                 throw new Error('Secret key is missing. Unable to follow.');
             }
-            signedEvent = this.signerService.getSignedEvent(unsignedEvent, secretKey);
+            signedEvent = this.signerService.getSignedEvent(
+                unsignedEvent,
+                secretKey
+            );
         }
 
         // Publish the signed follow event
@@ -128,10 +137,17 @@ export class SocialService {
         }
 
         // Remove the user from the following list
-        const updatedFollowingList = currentFollowing.filter((pubkey) => pubkey !== pubkeyToUnfollow);
+        const updatedFollowingList = currentFollowing.filter(
+            (pubkey) => pubkey !== pubkeyToUnfollow
+        );
         this.setFollowingList(updatedFollowingList);
 
-        const unsignedEvent: UnsignedEvent = this.signerService.getUnsignedEvent(3, updatedFollowingList.map(f => ['p', f]), '');
+        const unsignedEvent: UnsignedEvent =
+            this.signerService.getUnsignedEvent(
+                3,
+                updatedFollowingList.map((f) => ['p', f]),
+                ''
+            );
 
         // Check if using Nostr extension
         const isUsingExtension = await this.signerService.isUsingExtension();
@@ -139,14 +155,18 @@ export class SocialService {
 
         if (isUsingExtension) {
             // Sign using Nostr extension
-            signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+            signedEvent =
+                await this.signerService.signEventWithExtension(unsignedEvent);
         } else {
             // Sign using private key
             const secretKey = await this.signerService.getDecryptedSecretKey();
             if (!secretKey) {
                 throw new Error('Secret key is missing. Unable to unfollow.');
             }
-            signedEvent = this.signerService.getSignedEvent(unsignedEvent, secretKey);
+            signedEvent = this.signerService.getSignedEvent(
+                unsignedEvent,
+                secretKey
+            );
         }
 
         // Publish the signed unfollow event
@@ -169,7 +189,6 @@ export class SocialService {
 
         return tags;
     }
-
 
     setFollowingListFromTags(tags: string[][]): void {
         const following: string[] = [];

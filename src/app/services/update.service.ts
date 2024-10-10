@@ -12,7 +12,7 @@ export class NewVersionCheckerService {
 
     constructor(
         private swUpdate: SwUpdate,
-        private zone: NgZone,
+        private zone: NgZone
     ) {
         this.checkForUpdateOnLoad();
         this.checkForUpdateOnInterval();
@@ -33,16 +33,19 @@ export class NewVersionCheckerService {
         }
 
         this.zone.runOutsideAngular(() => {
-            this.intervalSubscription = this.intervalSource.subscribe(async () => {
-                try {
-                    const updateAvailable = await this.swUpdate.checkForUpdate();
-                    if (updateAvailable) {
-                        this.newVersionAvailableSubject.next(true);
+            this.intervalSubscription = this.intervalSource.subscribe(
+                async () => {
+                    try {
+                        const updateAvailable =
+                            await this.swUpdate.checkForUpdate();
+                        if (updateAvailable) {
+                            this.newVersionAvailableSubject.next(true);
+                        }
+                    } catch (error) {
+                        console.error('Failed to check for updates:', error);
                     }
-                } catch (error) {
-                    console.error('Failed to check for updates:', error);
                 }
-            });
+            );
         });
     }
 
@@ -53,23 +56,25 @@ export class NewVersionCheckerService {
             return;
         }
 
-        this.newVersionSubscription = this.swUpdate.versionUpdates.subscribe((evt: VersionEvent) => {
-            switch (evt.type) {
-                case 'VERSION_DETECTED':
-                    break;
-                case 'VERSION_READY':
-                    this.newVersionAvailableSubject.next(true);
-                    break;
-                case 'VERSION_INSTALLATION_FAILED':
-                    console.error(`Failed to install app version '${evt.version.hash}': ${evt.error}`);
-                    break;
-                default:
+        this.newVersionSubscription = this.swUpdate.versionUpdates.subscribe(
+            (evt: VersionEvent) => {
+                switch (evt.type) {
+                    case 'VERSION_DETECTED':
+                        break;
+                    case 'VERSION_READY':
+                        this.newVersionAvailableSubject.next(true);
+                        break;
+                    case 'VERSION_INSTALLATION_FAILED':
+                        console.error(
+                            `Failed to install app version '${evt.version.hash}': ${evt.error}`
+                        );
+                        break;
+                    default:
                     // console.log('Unknown version event type:', evt.type);
+                }
             }
-        });
-
+        );
     }
-
 
     private unsubscribeInterval(): void {
         if (this.intervalSubscription) {

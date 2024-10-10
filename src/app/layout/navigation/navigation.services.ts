@@ -1,5 +1,3 @@
-import { NavigationApi } from "./api";
+import { NavigationApi } from './api';
 
- export const navigationServices = [
-     NavigationApi,
-];
+export const navigationServices = [NavigationApi];

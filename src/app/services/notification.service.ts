@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Filter, NostrEvent } from 'nostr-tools';
-import { Subject, Observable, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { RelayService } from './relay.service';
 
 export interface NostrNotification {
@@ -17,10 +17,9 @@ export interface NostrNotification {
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class NotificationService {
-
     private notificationSubject = new BehaviorSubject<NostrNotification[]>([]);
     private notificationCount = new BehaviorSubject<number>(0);
     private lastNotificationTimestamp: number | null = null;
@@ -40,7 +39,9 @@ export class NotificationService {
     }
 
     private loadTimestampFromLocalStorage(): number | null {
-        const storedTimestamp = localStorage.getItem('lastNotificationTimestamp');
+        const storedTimestamp = localStorage.getItem(
+            'lastNotificationTimestamp'
+        );
         return storedTimestamp ? parseInt(storedTimestamp, 10) : null;
     }
 
@@ -59,7 +60,9 @@ export class NotificationService {
 
     private loadFilterPreferences(): number[] {
         const storedPreferences = localStorage.getItem('notificationSettings');
-        return storedPreferences ? JSON.parse(storedPreferences) : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
+        return storedPreferences
+            ? JSON.parse(storedPreferences)
+            : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
     }
 
     public async subscribeToNotifications(pubkey: string): Promise<void> {
@@ -81,15 +84,16 @@ export class NotificationService {
             kinds: filterPreferences,
             '#p': [pubkey],
             limit: 50,
-            since: lastNotificationTimestamp || undefined
+            since: lastNotificationTimestamp || undefined,
         };
 
         return new Promise((resolve) => {
             const sub = pool.subscribeMany(connectedRelays, [filter], {
-                onevent: (event: NostrEvent) => this.handleNotificationEvent(event, pubkey),
+                onevent: (event: NostrEvent) =>
+                    this.handleNotificationEvent(event, pubkey),
                 oneose() {
                     resolve();
-                }
+                },
             });
         });
     }
@@ -142,17 +146,19 @@ export class NotificationService {
                 description: notificationDescription,
                 time: formattedDate,
                 kind: event.kind,
-                read: false
+                read: false,
             };
 
             const currentNotifications = this.notificationSubject.value;
-            const updatedNotifications = [notification, ...currentNotifications].slice(0, 50);
+            const updatedNotifications = [
+                notification,
+                ...currentNotifications,
+            ].slice(0, 50);
 
             this.notificationSubject.next(updatedNotifications);
             this.incrementNotificationCount(event.created_at);
         }
     }
-
 
     private incrementNotificationCount(timestamp: number): void {
         const newCount = this.notificationCount.value + 1;
@@ -161,10 +167,12 @@ export class NotificationService {
     }
 
     public markAllAsRead(): void {
-        const updatedNotifications = this.notificationSubject.value.map(notification => ({
-            ...notification,
-            read: true
-        }));
+        const updatedNotifications = this.notificationSubject.value.map(
+            (notification) => ({
+                ...notification,
+                read: true,
+            })
+        );
         this.notificationSubject.next(updatedNotifications);
         this.notificationCount.next(0);
         const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -172,6 +180,6 @@ export class NotificationService {
     }
 
     private isNotificationEvent(event: NostrEvent, pubkey: string): boolean {
-        return event.tags.some(tag => tag[0] === 'p' && tag[1] === pubkey);
+        return event.tags.some((tag) => tag[0] === 'p' && tag[1] === pubkey);
     }
 }

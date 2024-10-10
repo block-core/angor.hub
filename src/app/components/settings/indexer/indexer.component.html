@@ -1,12 +1,23 @@
 <div class="w-full max-w-3xl">
     <!-- Add Mainnet Indexer -->
-    <div class="w-full mb-8">
+    <div class="mb-8 w-full">
         <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
             <mat-label>Add Mainnet Indexer</mat-label>
-            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
-            <input matInput [(ngModel)]="newMainnetIndexerUrl" placeholder="Mainnet Indexer URL" />
+            <mat-icon
+                class="icon-size-5"
+                [svgIcon]="'heroicons_solid:link'"
+                matPrefix
+            ></mat-icon>
+            <input
+                matInput
+                [(ngModel)]="newMainnetIndexerUrl"
+                placeholder="Mainnet Indexer URL"
+            />
             <button mat-icon-button matSuffix (click)="addIndexer('mainnet')">
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
+                <mat-icon
+                    class="icon-size-5"
+                    [svgIcon]="'heroicons_solid:plus-circle'"
+                ></mat-icon>
             </button>
         </mat-form-field>
     </div>
@@ -15,22 +26,43 @@
     <div class="mt-8">
         <h3>Mainnet Indexers</h3>
         <div class="flex flex-col divide-y border-b border-t">
-            <div *ngFor="let indexer of mainnetIndexers; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+            <div
+                *ngFor="let indexer of mainnetIndexers; trackBy: trackByFn"
+                class="flex flex-col py-6 sm:flex-row sm:items-center"
+            >
                 <div class="flex items-center">
                     <div class="ml-4">
                         <div class="font-medium">{{ indexer.url }}</div>
-                        <div class="text-sm text-gray-500">Primary: {{ indexer.primary ? 'Yes' : 'No' }}</div>
+                        <div class="text-sm text-gray-500">
+                            Primary: {{ indexer.primary ? 'Yes' : 'No' }}
+                        </div>
                     </div>
                 </div>
                 <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
-                    <button mat-icon-button (click)="setPrimaryIndexer('mainnet', indexer)">
-                        <mat-icon *ngIf="indexer.primary; else nonPrimaryIcon" class="text-primary" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                    <button
+                        mat-icon-button
+                        (click)="setPrimaryIndexer('mainnet', indexer)"
+                    >
+                        <mat-icon
+                            *ngIf="indexer.primary; else nonPrimaryIcon"
+                            class="text-primary"
+                            [svgIcon]="'heroicons_solid:check-circle'"
+                        ></mat-icon>
                         <ng-template #nonPrimaryIcon>
-                            <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                            <mat-icon
+                                class="text-hint"
+                                [svgIcon]="'heroicons_outline:check-circle'"
+                            ></mat-icon>
                         </ng-template>
                     </button>
-                    <button mat-icon-button (click)="removeIndexer('mainnet', indexer)">
-                        <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <button
+                        mat-icon-button
+                        (click)="removeIndexer('mainnet', indexer)"
+                    >
+                        <mat-icon
+                            class="text-hint"
+                            [svgIcon]="'heroicons_outline:trash'"
+                        ></mat-icon>
                     </button>
                 </div>
             </div>
@@ -38,13 +70,24 @@
     </div>
 
     <!-- Add Testnet Indexer -->
-    <div class="w-full mb-8 mt-10">
+    <div class="mb-8 mt-10 w-full">
         <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
             <mat-label>Add Testnet Indexer</mat-label>
-            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
-            <input matInput [(ngModel)]="newTestnetIndexerUrl" placeholder="Testnet Indexer URL" />
+            <mat-icon
+                class="icon-size-5"
+                [svgIcon]="'heroicons_solid:link'"
+                matPrefix
+            ></mat-icon>
+            <input
+                matInput
+                [(ngModel)]="newTestnetIndexerUrl"
+                placeholder="Testnet Indexer URL"
+            />
             <button mat-icon-button matSuffix (click)="addIndexer('testnet')">
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
+                <mat-icon
+                    class="icon-size-5"
+                    [svgIcon]="'heroicons_solid:plus-circle'"
+                ></mat-icon>
             </button>
         </mat-form-field>
     </div>
@@ -53,22 +96,43 @@
     <div class="mt-8">
         <h3>Testnet Indexers</h3>
         <div class="flex flex-col divide-y border-b border-t">
-            <div *ngFor="let indexer of testnetIndexers; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+            <div
+                *ngFor="let indexer of testnetIndexers; trackBy: trackByFn"
+                class="flex flex-col py-6 sm:flex-row sm:items-center"
+            >
                 <div class="flex items-center">
                     <div class="ml-4">
                         <div class="font-medium">{{ indexer.url }}</div>
-                        <div class="text-sm text-gray-500">Primary: {{ indexer.primary ? 'Yes' : 'No' }}</div>
+                        <div class="text-sm text-gray-500">
+                            Primary: {{ indexer.primary ? 'Yes' : 'No' }}
+                        </div>
                     </div>
                 </div>
                 <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
-                    <button mat-icon-button (click)="setPrimaryIndexer('testnet', indexer)">
-                        <mat-icon *ngIf="indexer.primary; else nonPrimaryIcon" class="text-primary" [svgIcon]="'heroicons_solid:check-circle'"></mat-icon>
+                    <button
+                        mat-icon-button
+                        (click)="setPrimaryIndexer('testnet', indexer)"
+                    >
+                        <mat-icon
+                            *ngIf="indexer.primary; else nonPrimaryIcon"
+                            class="text-primary"
+                            [svgIcon]="'heroicons_solid:check-circle'"
+                        ></mat-icon>
                         <ng-template #nonPrimaryIcon>
-                            <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:check-circle'"></mat-icon>
+                            <mat-icon
+                                class="text-hint"
+                                [svgIcon]="'heroicons_outline:check-circle'"
+                            ></mat-icon>
                         </ng-template>
                     </button>
-                    <button mat-icon-button (click)="removeIndexer('testnet', indexer)">
-                        <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <button
+                        mat-icon-button
+                        (click)="removeIndexer('testnet', indexer)"
+                    >
+                        <mat-icon
+                            class="text-hint"
+                            [svgIcon]="'heroicons_outline:trash'"
+                        ></mat-icon>
                     </button>
                 </div>
             </div>

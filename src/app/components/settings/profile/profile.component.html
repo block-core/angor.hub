@@ -3,7 +3,7 @@
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
         <!-- Section -->
         <div class="w-full">
-             <div class="text-secondary">
+            <div class="text-secondary">
                 Following information is publicly displayed, be careful!
             </div>
         </div>
@@ -13,7 +13,11 @@
             <div class="sm:col-span-4">
                 <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
                     <mat-label>Name</mat-label>
-                    <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:user'" matPrefix></mat-icon>
+                    <mat-icon
+                        class="icon-size-5"
+                        [svgIcon]="'heroicons_solid:user'"
+                        matPrefix
+                    ></mat-icon>
                     <input [formControlName]="'name'" matInput />
                 </mat-form-field>
             </div>
@@ -46,10 +50,16 @@
             <div class="sm:col-span-4">
                 <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
                     <mat-label>About</mat-label>
-                    <textarea matInput [formControlName]="'about'" cdkTextareaAutosize [cdkAutosizeMinRows]="5"></textarea>
+                    <textarea
+                        matInput
+                        [formControlName]="'about'"
+                        cdkTextareaAutosize
+                        [cdkAutosizeMinRows]="5"
+                    ></textarea>
                 </mat-form-field>
                 <div class="text-hint mt-1 text-md">
-                    Brief description for your profile. Basic HTML and Emoji are allowed.
+                    Brief description for your profile. Basic HTML and Emoji are
+                    allowed.
                 </div>
             </div>
 
@@ -69,45 +79,51 @@
                 </mat-form-field>
             </div>
 
-          <!-- LUD06 -->
-<div class="sm:col-span-4">
-    <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-        <mat-label>LUD06</mat-label>
-        <input [formControlName]="'lud06'" matInput />
-        <mat-hint>
-            LUD06 is an LNURL (Lightning Network URL) for receiving Bitcoin payments over the Lightning Network.
-        </mat-hint>
-    </mat-form-field>
-</div>
+            <!-- LUD06 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>LUD06</mat-label>
+                    <input [formControlName]="'lud06'" matInput />
+                    <mat-hint>
+                        LUD06 is an LNURL (Lightning Network URL) for receiving
+                        Bitcoin payments over the Lightning Network.
+                    </mat-hint>
+                </mat-form-field>
+            </div>
 
-<!-- LUD16 -->
-<div class="sm:col-span-4">
-    <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-        <mat-label>LUD16</mat-label>
-        <input [formControlName]="'lud16'" matInput />
-        <mat-hint>
-            LUD16 is a Lightning address, similar to an email format, used to receive Bitcoin payments via the Lightning Network.
-        </mat-hint>
-    </mat-form-field>
-</div>
+            <!-- LUD16 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>LUD16</mat-label>
+                    <input [formControlName]="'lud16'" matInput />
+                    <mat-hint>
+                        LUD16 is a Lightning address, similar to an email
+                        format, used to receive Bitcoin payments via the
+                        Lightning Network.
+                    </mat-hint>
+                </mat-form-field>
+            </div>
 
-<!-- NIP05 -->
-<div class="sm:col-span-4">
-    <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
-        <mat-label>NIP05</mat-label>
-        <input [formControlName]="'nip05'" matInput />
-        <mat-hint>
-            NIP05 provides a user-friendly identifier for Nostr, similar to an email address, to help identify and verify your public identity.
-        </mat-hint>
-    </mat-form-field>
-</div>
-
+            <!-- NIP05 -->
+            <div class="sm:col-span-4">
+                <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
+                    <mat-label>NIP05</mat-label>
+                    <input [formControlName]="'nip05'" matInput />
+                    <mat-hint>
+                        NIP05 provides a user-friendly identifier for Nostr,
+                        similar to an email address, to help identify and verify
+                        your public identity.
+                    </mat-hint>
+                </mat-form-field>
+            </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center justify-end mt-8">
+        <div class="mt-8 flex items-center justify-end">
             <button mat-stroked-button type="button">Cancel</button>
-            <button class="ml-4" mat-flat-button type="submit" color="primary">Save</button>
+            <button class="ml-4" mat-flat-button type="submit" color="primary">
+                Save
+            </button>
         </div>
     </form>
 </div>

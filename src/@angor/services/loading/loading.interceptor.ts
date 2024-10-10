@@ -1,6 +1,6 @@
+import { AngorLoadingService } from '@angor/services/loading/loading.service';
 import { HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AngorLoadingService } from '@angor/services/loading/loading.service';
 import { Observable, finalize, take } from 'rxjs';
 
 export const angorLoadingInterceptor = (

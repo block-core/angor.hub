@@ -1,9 +1,9 @@
+import { AngorConfirmationConfig } from '@angor/services/confirmation/confirmation.types';
 import { NgClass } from '@angular/common';
 import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { AngorConfirmationConfig } from '@angor/services/confirmation/confirmation.types';
 
 @Component({
     selector: 'angor-confirmation-dialog',

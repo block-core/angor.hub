@@ -1,6 +1,6 @@
+import { AngorLoadingBarComponent } from '@angor/components/loading-bar';
 import { Component, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { AngorLoadingBarComponent } from '@angor/components/loading-bar';
 import { Subject } from 'rxjs';
 
 @Component({

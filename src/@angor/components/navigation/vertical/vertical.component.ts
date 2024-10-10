@@ -1,3 +1,19 @@
+import { angorAnimations } from '@angor/animations';
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import {
+    AngorNavigationItem,
+    AngorVerticalNavigationAppearance,
+    AngorVerticalNavigationMode,
+    AngorVerticalNavigationPosition,
+} from '@angor/components/navigation/navigation.types';
+import { AngorVerticalNavigationAsideItemComponent } from '@angor/components/navigation/vertical/components/aside/aside.component';
+import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
+import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
+import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
+import { AngorVerticalNavigationGroupItemComponent } from '@angor/components/navigation/vertical/components/group/group.component';
+import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
+import { AngorScrollbarDirective } from '@angor/directives/scrollbar/scrollbar.directive';
+import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import {
     animate,
     AnimationBuilder,
@@ -30,22 +46,6 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { angorAnimations } from '@angor/animations';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import {
-    AngorNavigationItem,
-    AngorVerticalNavigationAppearance,
-    AngorVerticalNavigationMode,
-    AngorVerticalNavigationPosition,
-} from '@angor/components/navigation/navigation.types';
-import { AngorVerticalNavigationAsideItemComponent } from '@angor/components/navigation/vertical/components/aside/aside.component';
-import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
-import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
-import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
-import { AngorVerticalNavigationGroupItemComponent } from '@angor/components/navigation/vertical/components/group/group.component';
-import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
-import { AngorScrollbarDirective } from '@angor/directives/scrollbar/scrollbar.directive';
-import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import {
     delay,
     filter,

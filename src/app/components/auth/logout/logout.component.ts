@@ -19,7 +19,10 @@ export class LogoutComponent implements OnInit, OnDestroy {
     };
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-    constructor(private _router: Router, private _signerService: SignerService) {}
+    constructor(
+        private _router: Router,
+        private _signerService: SignerService
+    ) {}
 
     ngOnInit(): void {
         timer(1000, 1000)
@@ -35,7 +38,6 @@ export class LogoutComponent implements OnInit, OnDestroy {
             .subscribe();
     }
 
-
     ngOnDestroy(): void {
         this._unsubscribeAll.next(null);
         this._unsubscribeAll.complete();
@@ -44,6 +46,6 @@ export class LogoutComponent implements OnInit, OnDestroy {
     logout(): void {
         this._signerService.clearPassword();
         this._signerService.logout();
-        console.log("User logged out and keys removed from localStorage.");
+        console.log('User logged out and keys removed from localStorage.');
     }
 }

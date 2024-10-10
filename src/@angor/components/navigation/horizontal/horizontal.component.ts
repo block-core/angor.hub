@@ -1,3 +1,7 @@
+import { angorAnimations } from '@angor/animations';
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
+import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -10,10 +14,6 @@ import {
     ViewEncapsulation,
     inject,
 } from '@angular/core';
-import { angorAnimations } from '@angor/animations';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
-import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import { ReplaySubject, Subject } from 'rxjs';
 import { AngorHorizontalNavigationBasicItemComponent } from './components/basic/basic.component';
 import { AngorHorizontalNavigationBranchItemComponent } from './components/branch/branch.component';

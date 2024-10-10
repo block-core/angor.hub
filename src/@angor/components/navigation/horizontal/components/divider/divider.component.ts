@@ -1,3 +1,6 @@
+import { AngorHorizontalNavigationComponent } from '@angor/components/navigation/horizontal/horizontal.component';
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
 import { NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -8,9 +11,6 @@ import {
     OnDestroy,
     OnInit,
 } from '@angular/core';
-import { AngorHorizontalNavigationComponent } from '@angor/components/navigation/horizontal/horizontal.component';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({

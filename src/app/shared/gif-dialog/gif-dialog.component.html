@@ -1,18 +1,39 @@
 <div mat-dialog-content>
     <mat-form-field appearance="outline" class="full-width">
         <mat-label>Search GIF</mat-label>
-        <input matInput [(ngModel)]="gifSearch" placeholder="keyword..." (keyup.enter)="searchGif()">
+        <input
+            matInput
+            [(ngModel)]="gifSearch"
+            placeholder="keyword..."
+            (keyup.enter)="searchGif()"
+        />
 
-        <button class="ml-2 mr-2" mat-icon-button matSuffix (click)="searchGif()">
-            <mat-icon [svgIcon]="'heroicons_outline:magnifying-glass'"></mat-icon>
+        <button
+            class="ml-2 mr-2"
+            mat-icon-button
+            matSuffix
+            (click)="searchGif()"
+        >
+            <mat-icon
+                [svgIcon]="'heroicons_outline:magnifying-glass'"
+            ></mat-icon>
         </button>
 
-        <mat-hint>Enter a keyword like "funny" or "cat" and hit search!</mat-hint>
+        <mat-hint
+            >Enter a keyword like "funny" or "cat" and hit search!</mat-hint
+        >
     </mat-form-field>
 
-    <div *ngIf="gifsFound.length > 0" class="results-container grid grid-cols-3 gap-4 mt-4">
-        <div *ngFor="let gif of gifsFound" (click)="selectGif(gif)" class="gif-preview w-full h-24 cursor-pointer">
-            <img [src]="gif" class="w-full h-full object-cover"/>
+    <div
+        *ngIf="gifsFound.length > 0"
+        class="results-container mt-4 grid grid-cols-3 gap-4"
+    >
+        <div
+            *ngFor="let gif of gifsFound"
+            (click)="selectGif(gif)"
+            class="gif-preview h-24 w-full cursor-pointer"
+        >
+            <img [src]="gif" class="h-full w-full object-cover" />
         </div>
     </div>
 </div>

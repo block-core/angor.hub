@@ -21,7 +21,7 @@ export class AngorScrollResetDirective implements OnInit, OnDestroy {
     ngOnInit(): void {
         this._router.events
             .pipe(
-                filter(event => event instanceof NavigationEnd),
+                filter((event) => event instanceof NavigationEnd),
                 takeUntil(this._unsubscribeAll)
             )
             .subscribe(() => {

@@ -1,3 +1,4 @@
+import { angorAnimations } from '@angor/animations/public-api';
 import { Overlay } from '@angular/cdk/overlay';
 import { CommonModule, NgClass, NgTemplateOutlet } from '@angular/common';
 import {
@@ -29,11 +30,10 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { angorAnimations } from '@angor/animations/public-api';
-import { Subject, debounceTime, filter, map, takeUntil } from 'rxjs';
 import { IndexedDBService } from 'app/services/indexed-db.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Subject, debounceTime, filter, map, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'search',
@@ -54,7 +54,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
         MatFormFieldModule,
         MatInputModule,
         NgClass,
-        CommonModule
+        CommonModule,
     ],
     providers: [
         {
@@ -81,8 +81,7 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
     constructor(
         private _indexedDBService: IndexedDBService,
         private _sanitizer: DomSanitizer
-
-    ) { }
+    ) {}
 
     @ViewChild('barSearchInput')
     set barSearchInput(value: ElementRef) {
@@ -119,28 +118,36 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
                 filter((value) => value && value.length >= this.minLength)
             )
             .subscribe(async (value) => {
-                const results = await this._indexedDBService.searchUsersByMetadata(value);
+                const results =
+                    await this._indexedDBService.searchUsersByMetadata(value);
 
                 this.resultSets = results.map((result) => ({
                     label: 'Project',
                     results: [
                         {
-                            name: result.user.name || result.user.displayName || result.pubkey,
+                            name:
+                                result.user.name ||
+                                result.user.displayName ||
+                                result.pubkey,
                             pubkey: result.pubkey,
                             username: result.user.username || '',
                             website: result.user.website || '',
-                            about: result.user.about ? result.user.about.replace(/<\/?[^>]+(>|$)/g, '') : '',
+                            about: result.user.about
+                                ? result.user.about.replace(
+                                      /<\/?[^>]+(>|$)/g,
+                                      ''
+                                  )
+                                : '',
                             avatar: result.user.picture || null,
                             banner: result.user.banner || null,
-                            link: `/profile/${result.pubkey}`
-                        }
-                    ]
+                            link: `/profile/${result.pubkey}`,
+                        },
+                    ],
                 }));
 
                 this.search.next(this.resultSets);
             });
     }
-
 
     ngOnDestroy(): void {
         this._unsubscribeAll.next(null);
@@ -181,5 +188,4 @@ export class SearchComponent implements OnChanges, OnInit, OnDestroy {
         target.onerror = null;
         target.src = 'images/avatars/avatar-placeholder.png';
     }
-
 }

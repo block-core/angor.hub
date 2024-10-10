@@ -46,11 +46,18 @@
 </div>
 
 <!-- Divider -->
-<div class="mb-10 mt-11 border-t w-full max-w-3xl"></div>
+<div class="mb-10 mt-11 w-full max-w-3xl border-t"></div>
 
 <!-- Actions -->
-<div class="flex items-center justify-end w-full max-w-3xl">
+<div class="flex w-full max-w-3xl items-center justify-end">
     <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
-    <button mat-flat-button class="ml-4" type="button" color="primary" (click)="save()">Save</button>
+    <button
+        mat-flat-button
+        class="ml-4"
+        type="button"
+        color="primary"
+        (click)="save()"
+    >
+        Save
+    </button>
 </div>
-

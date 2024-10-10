@@ -1,3 +1,9 @@
+import { AngorDrawerService } from '@angor/components/drawer/drawer.service';
+import {
+    AngorDrawerMode,
+    AngorDrawerPosition,
+} from '@angor/components/drawer/drawer.types';
+import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import {
     animate,
     AnimationBuilder,
@@ -11,6 +17,7 @@ import {
     EventEmitter,
     HostBinding,
     HostListener,
+    inject,
     Input,
     OnChanges,
     OnDestroy,
@@ -19,14 +26,7 @@ import {
     Renderer2,
     SimpleChanges,
     ViewEncapsulation,
-    inject,
 } from '@angular/core';
-import { AngorDrawerService } from '@angor/components/drawer/drawer.service';
-import {
-    AngorDrawerMode,
-    AngorDrawerPosition,
-} from '@angor/components/drawer/drawer.types';
-import { AngorUtilsService } from '@angor/services/utils/utils.service';
 
 @Component({
     selector: 'angor-drawer',
@@ -56,7 +56,8 @@ export class AngorDrawerComponent implements OnChanges, OnInit, OnDestroy {
     @Output() readonly fixedChanged = new EventEmitter<boolean>();
     @Output() readonly modeChanged = new EventEmitter<AngorDrawerMode>();
     @Output() readonly openedChanged = new EventEmitter<boolean>();
-    @Output() readonly positionChanged = new EventEmitter<AngorDrawerPosition>();
+    @Output() readonly positionChanged =
+        new EventEmitter<AngorDrawerPosition>();
 
     private _animationsEnabled: boolean = false;
     private _hovered: boolean = false;
@@ -107,7 +108,11 @@ export class AngorDrawerComponent implements OnChanges, OnInit, OnDestroy {
                 this._hideOverlay();
             }
 
-            if (previousMode === 'side' && currentMode === 'over' && this.opened) {
+            if (
+                previousMode === 'side' &&
+                currentMode === 'over' &&
+                this.opened
+            ) {
                 this._showOverlay();
             }
 
@@ -125,7 +130,9 @@ export class AngorDrawerComponent implements OnChanges, OnInit, OnDestroy {
         }
 
         if ('transparentOverlay' in changes) {
-            this.transparentOverlay = coerceBooleanProperty(changes.transparentOverlay.currentValue);
+            this.transparentOverlay = coerceBooleanProperty(
+                changes.transparentOverlay.currentValue
+            );
         }
     }
 

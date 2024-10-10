@@ -25,7 +25,8 @@ const conversationResolver = (
     const chatService = inject(ChatService);
     const router = inject(Router);
 
-    let chatId = route.paramMap.get('id') || localStorage.getItem('currentChatId');
+    let chatId =
+        route.paramMap.get('id') || localStorage.getItem('currentChatId');
 
     if (!chatId) {
         const parentUrl = state.url.split('/').slice(0, -1).join('/');
@@ -44,7 +45,6 @@ const conversationResolver = (
         })
     );
 };
-
 
 export default [
     {

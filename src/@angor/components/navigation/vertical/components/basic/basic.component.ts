@@ -1,3 +1,7 @@
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
+import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
+import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -15,10 +19,6 @@ import {
     RouterLink,
     RouterLinkActive,
 } from '@angular/router';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
-import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
-import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -67,7 +67,7 @@ export class AngorVerticalNavigationBasicItemComponent
         // "isActiveMatchOptions" or the equivalent form of
         // item's "exactMatch" option
         this.isActiveMatchOptions =
-            this.item.isActiveMatchOptions ?? this.item.exactMatch
+            (this.item.isActiveMatchOptions ?? this.item.exactMatch)
                 ? this._angorUtilsService.exactMatchOptions
                 : this._angorUtilsService.subsetMatchOptions;
 

@@ -42,7 +42,9 @@ export class SettingsNotificationsComponent implements OnInit {
 
         this.notificationsForm = this._formBuilder.group({
             mention: [savedSettings.includes(this.notificationKinds.mention)],
-            privateMessage: [savedSettings.includes(this.notificationKinds.privateMessage)],
+            privateMessage: [
+                savedSettings.includes(this.notificationKinds.privateMessage),
+            ],
             zap: [savedSettings.includes(this.notificationKinds.zap)],
             follower: [savedSettings.includes(this.notificationKinds.follower)],
         });

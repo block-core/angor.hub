@@ -27,7 +27,8 @@
                 ) {
                     <div
                         class="text-secondary sticky top-0 z-10 -mt-px border-b border-t bg-gray-100 px-6 py-1 font-medium uppercase dark:bg-gray-900 md:px-8"
-                        (click)="openChat(contact)">
+                        (click)="openChat(contact)"
+                    >
                         {{ contact.name.charAt(0) }}
                     </div>
                 }
@@ -35,7 +36,7 @@
                 <div
                     class="z-20 flex cursor-pointer items-center border-b px-6 py-4 dark:hover:bg-hover hover:bg-gray-100 md:px-8"
                     (click)="openChat(contact)"
-                    >
+                >
                     <div
                         class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full"
                     >

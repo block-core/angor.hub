@@ -1,12 +1,14 @@
-import { inject, Injectable } from '@angular/core';
 import { ANGOR_CONFIG } from '@angor/services/config/config.constants';
+import { inject, Injectable } from '@angular/core';
 import { merge } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AngorConfigService {
     private readonly _defaultConfig = inject(ANGOR_CONFIG);
-    private readonly _configSubject = new BehaviorSubject<any>(this._defaultConfig);
+    private readonly _configSubject = new BehaviorSubject<any>(
+        this._defaultConfig
+    );
 
     /**
      * Getter for config as an Observable.

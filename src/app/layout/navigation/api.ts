@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
 import { AngorNavigationItem } from '@angor/components/navigation';
 import { AngorMockApiService } from '@angor/lib/mock-api';
+import { Injectable } from '@angular/core';
 import {
     compactNavigation,
     defaultNavigation,

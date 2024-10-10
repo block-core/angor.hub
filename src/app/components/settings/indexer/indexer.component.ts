@@ -1,3 +1,4 @@
+import { AngorAlertComponent } from '@angor/components/alert';
 import { CommonModule, CurrencyPipe, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -5,12 +6,7 @@ import {
     OnInit,
     ViewEncapsulation,
 } from '@angular/core';
-import {
-    FormsModule,
-    ReactiveFormsModule,
-    UntypedFormBuilder,
-    UntypedFormGroup,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,7 +14,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
-import { AngorAlertComponent } from '@angor/components/alert';
 import { IndexerService } from 'app/services/indexer.service';
 
 @Component({
@@ -40,59 +35,76 @@ import { IndexerService } from 'app/services/indexer.service';
         MatOptionModule,
         MatButtonModule,
         CurrencyPipe,
-        CommonModule
+        CommonModule,
     ],
 })
 export class SettingsIndexerComponent implements OnInit {
-    mainnetIndexers: Array<{ url: string, primary: boolean }> = [];
-  testnetIndexers: Array<{ url: string, primary: boolean }> = [];
-  newMainnetIndexerUrl: string = '';
-  newTestnetIndexerUrl: string = '';
+    mainnetIndexers: Array<{ url: string; primary: boolean }> = [];
+    testnetIndexers: Array<{ url: string; primary: boolean }> = [];
+    newMainnetIndexerUrl: string = '';
+    newTestnetIndexerUrl: string = '';
 
-  constructor(private indexerService: IndexerService) {}
+    constructor(private indexerService: IndexerService) {}
 
-  ngOnInit(): void {
-    this.loadIndexers();
-  }
-
-  loadIndexers(): void {
-    this.mainnetIndexers = this.indexerService.getIndexers('mainnet').map(url => ({
-      url,
-      primary: url === this.indexerService.getPrimaryIndexer('mainnet')
-    }));
-    this.testnetIndexers = this.indexerService.getIndexers('testnet').map(url => ({
-      url,
-      primary: url === this.indexerService.getPrimaryIndexer('testnet')
-    }));
-
-    console.log('Mainnet Indexers:', this.mainnetIndexers);
-    console.log('Testnet Indexers:', this.testnetIndexers);
-  }
-
-
-  addIndexer(network: 'mainnet' | 'testnet'): void {
-    if (network === 'mainnet' && this.newMainnetIndexerUrl) {
-      this.indexerService.addIndexer(this.newMainnetIndexerUrl, 'mainnet');
-      this.loadIndexers();
-      this.newMainnetIndexerUrl = '';
-    } else if (network === 'testnet' && this.newTestnetIndexerUrl) {
-      this.indexerService.addIndexer(this.newTestnetIndexerUrl, 'testnet');
-      this.loadIndexers();
-      this.newTestnetIndexerUrl = '';
+    ngOnInit(): void {
+        this.loadIndexers();
     }
-  }
 
-  removeIndexer(network: 'mainnet' | 'testnet', indexer: { url: string, primary: boolean }): void {
-    this.indexerService.removeIndexer(indexer.url, network);
-    this.loadIndexers();
-  }
+    loadIndexers(): void {
+        this.mainnetIndexers = this.indexerService
+            .getIndexers('mainnet')
+            .map((url) => ({
+                url,
+                primary:
+                    url === this.indexerService.getPrimaryIndexer('mainnet'),
+            }));
+        this.testnetIndexers = this.indexerService
+            .getIndexers('testnet')
+            .map((url) => ({
+                url,
+                primary:
+                    url === this.indexerService.getPrimaryIndexer('testnet'),
+            }));
 
-  setPrimaryIndexer(network: 'mainnet' | 'testnet', indexer: { url: string, primary: boolean }): void {
-    this.indexerService.setPrimaryIndexer(indexer.url, network);
-    this.loadIndexers();
-  }
+        console.log('Mainnet Indexers:', this.mainnetIndexers);
+        console.log('Testnet Indexers:', this.testnetIndexers);
+    }
 
-  trackByFn(index: number, item: any): any {
-    return item.url;
-  }
+    addIndexer(network: 'mainnet' | 'testnet'): void {
+        if (network === 'mainnet' && this.newMainnetIndexerUrl) {
+            this.indexerService.addIndexer(
+                this.newMainnetIndexerUrl,
+                'mainnet'
+            );
+            this.loadIndexers();
+            this.newMainnetIndexerUrl = '';
+        } else if (network === 'testnet' && this.newTestnetIndexerUrl) {
+            this.indexerService.addIndexer(
+                this.newTestnetIndexerUrl,
+                'testnet'
+            );
+            this.loadIndexers();
+            this.newTestnetIndexerUrl = '';
+        }
+    }
+
+    removeIndexer(
+        network: 'mainnet' | 'testnet',
+        indexer: { url: string; primary: boolean }
+    ): void {
+        this.indexerService.removeIndexer(indexer.url, network);
+        this.loadIndexers();
+    }
+
+    setPrimaryIndexer(
+        network: 'mainnet' | 'testnet',
+        indexer: { url: string; primary: boolean }
+    ): void {
+        this.indexerService.setPrimaryIndexer(indexer.url, network);
+        this.loadIndexers();
+    }
+
+    trackByFn(index: number, item: any): any {
+        return item.url;
+    }
 }

@@ -1,20 +1,19 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root',
 })
 export class ImageServiceService {
-
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {}
 
     uploadImage(file: File | Blob): Observable<JSON> {
         // nostrimg
         // returns url of uploaded image
-        let url = "https://nostrimg.com/api/upload";
+        let url = 'https://nostrimg.com/api/upload';
         const fd = new FormData();
-        fd.append("image", file);
+        fd.append('image', file);
         // fd.append("submit", "Upload Image");
         return this.http.post<JSON>(url, fd);
     }
@@ -23,9 +22,9 @@ export class ImageServiceService {
     // not allowed accept from other clients not this
     uploadImageNostrBuild(file: File | Blob): Observable<string> {
         // returns url of uploaded image
-        let url = "https://nostrimg.com/api/upload";
+        let url = 'https://nostrimg.com/api/upload';
         const fd = new FormData();
-        fd.append("fileToUpload", file);
+        fd.append('fileToUpload', file);
         // fd.append("submit", "Upload Image");
         return this.http.post<string>(url, fd);
     }

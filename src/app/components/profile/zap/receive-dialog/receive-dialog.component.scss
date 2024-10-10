@@ -4,9 +4,9 @@
     gap: 15px;
     justify-items: center;
     margin-bottom: 20px;
-  }
+}
 
-  .preset-buttons button {
+.preset-buttons button {
     font-size: 14px;
     font-weight: bold;
     width: 70px;
@@ -16,24 +16,23 @@
     align-items: center;
     justify-content: center;
     max-height: 60px !important;
-  }
+}
 
-  .sats-input {
+.sats-input {
     margin-top: 20px;
     width: 100%;
-  }
+}
 
-   .lightning-buttons {
+.lightning-buttons {
     display: flex;
     justify-content: space-evenly;
     margin: 10px 0;
-  }
+}
 
-
-  .qrcode {
+.qrcode {
     text-align: center;
-   }
+}
 
-  .qrcode-image {
+.qrcode-image {
     width: 100% !important;
-  }
+}

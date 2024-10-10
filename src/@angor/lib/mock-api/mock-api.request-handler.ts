@@ -1,5 +1,5 @@
-import { HttpRequest } from '@angular/common/http';
 import { AngorMockApiReplyCallback } from '@angor/lib/mock-api/mock-api.types';
+import { HttpRequest } from '@angular/common/http';
 import { Observable, of, take, throwError } from 'rxjs';
 
 export class AngorMockApiHandler {
@@ -17,7 +17,10 @@ export class AngorMockApiHandler {
      * @param url - The URL for the mock API handler
      * @param delay - Optional delay for the response
      */
-    constructor(public url: string, public delay?: number) {}
+    constructor(
+        public url: string,
+        public delay?: number
+    ) {}
 
     /**
      * Getter for the response observable.
@@ -27,12 +30,16 @@ export class AngorMockApiHandler {
     get response(): Observable<any> {
         // Check if the execution limit has been reached
         if (this._replyCount > 0 && this._replyCount <= this._replied) {
-            return throwError(() => new Error('Execution limit has been reached!'));
+            return throwError(
+                () => new Error('Execution limit has been reached!')
+            );
         }
 
         // Ensure the response callback exists
         if (!this._reply) {
-            return throwError(() => new Error('Response callback function does not exist!'));
+            return throwError(
+                () => new Error('Response callback function does not exist!')
+            );
         }
 
         // Ensure the request exists

@@ -16,7 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
- import { SignerService } from 'app/services/signer.service';
+import { SignerService } from 'app/services/signer.service';
 
 @Component({
     selector: 'settings-security',
@@ -42,7 +42,7 @@ export class SettingsSecurityComponent implements OnInit {
      */
     constructor(
         private _formBuilder: UntypedFormBuilder,
-         private _signerService: SignerService
+        private _signerService: SignerService
     ) {}
 
     /**
@@ -52,13 +52,7 @@ export class SettingsSecurityComponent implements OnInit {
         // Create the form
         this.securityForm = this._formBuilder.group({
             currentPassword: ['', Validators.required],
-            newPassword: [
-                '',
-                [
-                    Validators.required,
-                    Validators.minLength(3),
-                ],
-            ],
+            newPassword: ['', [Validators.required, Validators.minLength(3)]],
             twoStep: [true],
             askPasswordChange: [false],
             savePassword: [false], // Toggle for saving password

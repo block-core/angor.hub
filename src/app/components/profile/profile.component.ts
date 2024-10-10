@@ -21,6 +21,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -29,30 +30,27 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { bech32 } from '@scure/base';
 import { QRCodeModule } from 'angularx-qrcode';
+import { PaginatedEventService } from 'app/services/event.service';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { LightningService } from 'app/services/lightning.service';
 import { MetadataService } from 'app/services/metadata.service';
 import { SignerService } from 'app/services/signer.service';
 import { SocialService } from 'app/services/social.service';
 import { SafeUrlPipe } from 'app/shared/pipes/safe-url.pipe';
+import { Paginator } from 'app/shared/utils';
 import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
-import { Filter, NostrEvent } from 'nostr-tools';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { NostrEvent } from 'nostr-tools';
 import { Subject, takeUntil } from 'rxjs';
+import { EventListComponent } from '../event-list/event-list.component';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { InfiniteScrollModule } from 'ngx-infinite-scroll';
-import { Paginator } from 'app/shared/utils';
-import { EventListComponent } from '../event-list/event-list.component';
-import { PaginatedEventService } from 'app/services/event.service';
-
 
 interface Chip {
     color?: string;
     selected?: string;
     name: string;
 }
-
 
 @Component({
     selector: 'profile',
@@ -82,11 +80,10 @@ interface Chip {
         SafeUrlPipe,
         MatProgressSpinnerModule,
         InfiniteScrollModule,
-        EventListComponent
+        EventListComponent,
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
-
     @ViewChild('eventInput', { static: false }) eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
 
@@ -96,7 +93,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     metadata: any;
     currentUserMetadata: any;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
-    public currentUserPubKey : string;
+    public currentUserPubKey: string;
     public routePubKey;
     followers: any[] = [];
     following: any[] = [];
@@ -119,11 +116,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     paginator: Paginator;
 
-
     myLikes: NostrEvent[] = [];
     myLikedNoteIds: string[] = [];
-
-
 
     isLoadingPosts: boolean = true;
     noEventsMessage: string = '';
@@ -144,13 +138,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _angorConfirmationService: AngorConfirmationService,
         private eventService: PaginatedEventService
     ) {
-
         let baseTimeDiff = 12000;
         let since = 0;
 
-        this.paginator = new Paginator(0, since, baseTimeDiff=baseTimeDiff);
-
-
+        this.paginator = new Paginator(0, since, (baseTimeDiff = baseTimeDiff));
     }
 
     ngOnInit(): void {
@@ -176,7 +167,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 this.isCurrentUserProfile = true;
             }
             this.loadCurrentUserProfile();
-
 
             this.updateSuggestionList();
         });
@@ -233,14 +223,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
-
-
-
-
-    async onScroll() {
-
-    }
-
+    async onScroll() {}
 
     async loadProfile(publicKey: string): Promise<void> {
         this.isLoading = true;
@@ -294,8 +277,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             this._changeDetectorRef.detectChanges();
         }
-
-
     }
 
     private async loadCurrentUserProfile(): Promise<void> {
@@ -525,20 +506,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.isPreview = !this.isPreview;
     }
 
-
-sendEvent() {
-
-
-    if (this.eventInput.nativeElement.value !="") {
-        console.error('Event input is empty.');
-      this.eventService.sendTextEvent(this.eventInput.nativeElement.value).then(() => {
-
-        this._changeDetectorRef.markForCheck();
-      }).catch(error => {
-        console.error('Failed to send Event:', error);
-      });
+    sendEvent() {
+        if (this.eventInput.nativeElement.value != '') {
+            console.error('Event input is empty.');
+            this.eventService
+                .sendTextEvent(this.eventInput.nativeElement.value)
+                .then(() => {
+                    this._changeDetectorRef.markForCheck();
+                })
+                .catch((error) => {
+                    console.error('Failed to send Event:', error);
+                });
+        }
     }
-   
-}
-
 }
