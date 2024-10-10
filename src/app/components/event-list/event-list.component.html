@@ -1,63 +1,66 @@
 <div *ngIf="isLoading" class="loading-spinner">
-    <div class="spinner"></div> Loading events...
-  </div>
-  <div
-  class="feed-posts"
-  infiniteScroll
-  [infiniteScrollDistance]="2"
-  [infiniteScrollThrottle]="500"
-  (scrolled)="loadMoreEvents()"
-  [scrollWindow]="true"
+    <div class="spinner"></div>
+    Loading events...
+</div>
+<div
+    class="feed-posts"
+    infiniteScroll
+    [infiniteScrollDistance]="2"
+    [infiniteScrollThrottle]="500"
+    (scrolled)="loadMoreEvents()"
+    [scrollWindow]="true"
 >
+    <ul class="event-list w-full" *ngIf="!(isLoading && noMoreEvents)">
+        <li *ngFor="let event of events$ | async" class="event-item">
+            <div class="event-header">
+                <img
+                    [src]="event.picture"
+                    alt="Profile Picture"
+                    class="profile-picture"
+                />
+                <div class="event-info">
+                    <p class="username">{{ event.username }}</p>
+                    <p class="timestamp">{{ getTimeFromNow(event) }}</p>
+                </div>
+            </div>
 
-  <ul class="event-list" *ngIf="!(isLoading && noMoreEvents)">
-    <li *ngFor="let event of (events$ | async)" class="event-item">
-      <div class="event-header">
-        <img [src]="event.picture" alt="Profile Picture" class="profile-picture" />
-        <div class="event-info">
-          <span class="username">{{ event.username }}</span>
-          <span class="timestamp">{{ getTimeFromNow(event) }}</span>
-        </div>
-      </div>
+            <div
+                class="event-content"
+                [innerHTML]="parseContent(event.content)"
+            ></div>
 
+            <div class="event-actions">
+                <button (click)="sendLike(event)" [disabled]="event.likedByMe">
+                    ❤️ {{ event.likeCount }}
+                </button>
+                <button>🔁 {{ event.repostCount }}</button>
+                <button>💬 {{ event.replyCount }}</button>
+                <button>⚡ {{ event.zapCount }}</button>
+            </div>
 
-        <div class="event-content" [innerHTML]="getSanitizedContent(event.content)"></div>
-
-
-
-      <div class="event-actions">
-        <button (click)="sendLike(event)" [disabled]="event.likedByMe">
-          ❤️ {{ event.likeCount }}
-        </button>
-        <button>
-          🔁 {{ event.repostCount }}
-        </button>
-        <button>
-          💬 {{ event.replyCount }}
-        </button>
-        <button>
-          ⚡ {{ event.zapCount }}
-          </button>
-      </div>
-
-      <div class="event-replies" *ngIf="event.replies && event.replies.length > 0">
-        <ul>
-          <li *ngFor="let reply of event.replies" class="reply-item">
-            <span class="reply-username">{{ reply.username }}:</span>
-            <span class="reply-content">{{ reply.content }}</span>
-          </li>
-        </ul>
-      </div>
-    </li>
-  </ul>
-
+            <div
+                class="event-replies"
+                *ngIf="event.replies && event.replies.length > 0"
+            >
+                <ul>
+                    <li *ngFor="let reply of event.replies" class="reply-item">
+                        <span class="reply-username"
+                            >{{ reply.username }}:</span
+                        >
+                        <span class="reply-content">{{ reply.content }}</span>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
 </div>
 
+<div *ngIf="noMoreEvents" class="no-more-events">No more events to load.</div>
 
-  <div *ngIf="noMoreEvents" class="no-more-events">
-    No more events to load.
-  </div>
-
-  <button *ngIf="!noMoreEvents && !isLoading" class="load-more-btn" (click)="loadMoreEvents()">
+<button
+    *ngIf="!noMoreEvents && !isLoading"
+    class="load-more-btn"
+    (click)="loadMoreEvents()"
+>
     Load More Events
-  </button>
+</button>

@@ -95,9 +95,6 @@ export class NotificationService {
     }
 
     private handleNotificationEvent(event: NostrEvent, pubkey: string): void {
-        console.log('Received event:', event);
-
-
         if (this.isNotificationEvent(event, pubkey)) {
             const eventTimestamp = event.created_at * 1000;
             const formattedDate = new Date(eventTimestamp);
@@ -147,9 +144,6 @@ export class NotificationService {
                 kind: event.kind,
                 read: false
             };
-
-            console.log('Generated notification:', notification);
-
 
             const currentNotifications = this.notificationSubject.value;
             const updatedNotifications = [notification, ...currentNotifications].slice(0, 50);

@@ -17,7 +17,7 @@ export class AuthService {
         if (this.signerService.getPublicKey()) {
             return true;
         }
-        this.router.navigate(['/sign-in']);
+        this.router.navigate(['/login']);
         return false;
     }
 }

@@ -44,6 +44,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { Paginator } from 'app/shared/utils';
 import { EventListComponent } from '../event-list/event-list.component';
+import { PaginatedEventService } from 'app/services/event.service';
 
 
 interface Chip {
@@ -88,7 +89,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     @ViewChild('eventInput', { static: false }) eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
- 
+
     darkMode: boolean = false;
     isLoading: boolean = true;
     errorMessage: string | null = null;
@@ -141,6 +142,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
+        private eventService: PaginatedEventService
     ) {
 
         let baseTimeDiff = 12000;
@@ -522,4 +524,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
     togglePreview() {
         this.isPreview = !this.isPreview;
     }
+
+
+sendEvent() {
+
+
+    if (this.eventInput.nativeElement.value !="") {
+        console.error('Event input is empty.');
+      this.eventService.sendTextEvent(this.eventInput.nativeElement.value).then(() => {
+
+        this._changeDetectorRef.markForCheck();
+      }).catch(error => {
+        console.error('Failed to send Event:', error);
+      });
+    }
+   
+}
+
 }

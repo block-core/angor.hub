@@ -29,7 +29,6 @@ export class NewVersionCheckerService {
         this.unsubscribeInterval();
 
         if (!this.swUpdate.isEnabled) {
-            console.log('Service worker updates are disabled.');
             return;
         }
 
@@ -37,7 +36,6 @@ export class NewVersionCheckerService {
             this.intervalSubscription = this.intervalSource.subscribe(async () => {
                 try {
                     const updateAvailable = await this.swUpdate.checkForUpdate();
-                    console.log(updateAvailable ? 'A new version is available.' : 'Already on the latest version.');
                     if (updateAvailable) {
                         this.newVersionAvailableSubject.next(true);
                     }
@@ -52,29 +50,24 @@ export class NewVersionCheckerService {
         this.unsubscribeNewVersion();
 
         if (!this.swUpdate.isEnabled) {
-            console.log('Service worker updates are disabled for this app.');
             return;
         }
 
         this.newVersionSubscription = this.swUpdate.versionUpdates.subscribe((evt: VersionEvent) => {
-            console.log('New version update event:', evt);
             switch (evt.type) {
                 case 'VERSION_DETECTED':
-                    console.log(`Downloading new app version: ${evt.version.hash}`);
                     break;
                 case 'VERSION_READY':
-                    console.log(`New app version is ready for use: ${evt.latestVersion.hash}`);
                     this.newVersionAvailableSubject.next(true);
                     break;
                 case 'VERSION_INSTALLATION_FAILED':
                     console.error(`Failed to install app version '${evt.version.hash}': ${evt.error}`);
                     break;
                 default:
-                    console.log('Unknown version event type:', evt.type);
+                    // console.log('Unknown version event type:', evt.type);
             }
         });
 
-        console.log('Subscribed to new version updates.');
     }
 
 

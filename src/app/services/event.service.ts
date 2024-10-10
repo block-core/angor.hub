@@ -88,11 +88,10 @@ export class PaginatedEventService {
                         this.enqueueJob(parentEventId, 'reposts');
                         break;
                     default:
-                        console.log(`Received event kind: ${event.kind}`);
                 }
             },
             oneose: () => {
-                console.log('Subscription to relays closed.');
+                //console.log('Subscription to relays closed.');
             },
         });
 
@@ -135,8 +134,7 @@ private getParentEventId(event: NostrEvent): string | null {
                 break;
 
             default:
-                console.log('Unhandled event type:', event.kind);
-        }
+         }
     }
 
 
@@ -467,6 +465,31 @@ private getParentEventId(event: NostrEvent): string | null {
         return this.noMoreEvents.asObservable();
     }
 
+    async sendTextEvent(content: string): Promise<void> {
+        if (!content) return;
+
+        try {
+             const tags: string[][] = [];
+
+            const unsignedEvent = this.signerService.getUnsignedEvent(1, tags, content);
+            let signedEvent: NostrEvent;
+
+            if (this.signerService.isUsingSecretKey()) {
+                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKeyBytes = hexToBytes(privateKey);
+                signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
+            } else {
+                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+             }
+
+            await this.relayService.publishEventToWriteRelays(signedEvent);
+        } catch (error) {
+            console.error('Failed to send text event:', error);
+        }
+    }
+
+
+
 
     async sendLikeEvent(event: NewEvent): Promise<void> {
         if (!event) return;
@@ -476,12 +499,10 @@ private getParentEventId(event: NostrEvent): string | null {
                 ["e", event.id],
                 ["p", event.pubkey],
             ];
-            const content = '❤️';
-
+            const content = '+';
 
             const unsignedEvent = this.signerService.getUnsignedEvent(7, tags, content);
             let signedEvent: NostrEvent;
-
 
             if (this.signerService.isUsingSecretKey()) {
                 const privateKey = await this.signerService.getDecryptedSecretKey();
@@ -491,9 +512,7 @@ private getParentEventId(event: NostrEvent): string | null {
                 signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
             }
 
-
-            await this.relayService.publishEventToWriteRelays(signedEvent);
-            console.log('Like event published successfully:', signedEvent);
+              await this.relayService.publishEventToWriteRelays(signedEvent);
 
 
             this.likesMap.set(event.id, [...(this.likesMap.get(event.id) || []), this.signerService.getPublicKey()]);
@@ -502,4 +521,59 @@ private getParentEventId(event: NostrEvent): string | null {
             console.error('Failed to send like event:', error);
         }
     }
+
+    async sendZapEvent(event: NewEvent, zapAmount: number): Promise<void> {
+        if (!event || zapAmount <= 0) return;
+
+        try {
+            const tags = [
+                ["e", event.id],
+                ["p", event.pubkey],
+                ["amount", zapAmount.toString()]
+            ];
+            const content = `Zapped with ${zapAmount} sats`;
+
+            const unsignedEvent = this.signerService.getUnsignedEvent(9735, tags, content);
+            let signedEvent: NostrEvent;
+
+            if (this.signerService.isUsingSecretKey()) {
+                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKeyBytes = hexToBytes(privateKey);
+                signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
+            } else {
+                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+            }
+
+            await this.relayService.publishEventToWriteRelays(signedEvent);
+        } catch (error) {
+            console.error('Failed to send zap event:', error);
+        }
+    }
+
+    async sendReplyEvent(parentEvent: NewEvent, replyContent: string): Promise<void> {
+        if (!parentEvent) return;
+
+        try {
+            const tags = [
+                ["e", parentEvent.id],
+                ["p", parentEvent.pubkey],
+            ];
+
+            const unsignedEvent = this.signerService.getUnsignedEvent(1, tags, replyContent);
+            let signedEvent: NostrEvent;
+
+            if (this.signerService.isUsingSecretKey()) {
+                const privateKey = await this.signerService.getDecryptedSecretKey();
+                const privateKeyBytes = hexToBytes(privateKey);
+                signedEvent = finalizeEvent(unsignedEvent, privateKeyBytes);
+            } else {
+                signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
+            }
+
+            await this.relayService.publishEventToWriteRelays(signedEvent);
+        } catch (error) {
+            console.error('Failed to send reply event:', error);
+        }
+    }
+
 }

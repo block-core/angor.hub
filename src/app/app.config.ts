@@ -22,7 +22,6 @@ import { WebLNProvider } from '@webbtc/webln-types';
 import { NostrWindow } from './types/nostr';
 
 export function initializeApp(hashService: HashService) {
-    console.log('initializeApp. Getting hashService.load.');
     return (): Promise<void> => hashService.load();
 }
 export const appConfig: ApplicationConfig = {
