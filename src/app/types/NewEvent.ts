@@ -1,36 +1,35 @@
-import dayjs from 'dayjs';
-import { NostrEvent } from 'nostr-tools';
-import { NIP10Result } from 'nostr-tools/nip10';
+import { NostrEvent } from "nostr-tools";
+import { NIP10Result } from "nostr-tools/nip10";
 
 export class NewEvent {
     nostrEvent: NostrEvent;
-    kind: number; // Event kind (e.g., post, like, zap)
-    content: string; // Content of the event
-    pubkey: string; // Public key of the event creator
-    npub: string; // Nostr public key (npub)
-    noteId: string; // Unique identifier (ID) for the event
-    createdAt: number; // Timestamp when the event was created
-    date: Date; // Date object for the event creation time
-    fromNow: string; // Human-readable relative time (e.g., "5 minutes ago")
-    username: string = ''; // Username of the event creator
-    picture: string = '/images/avatars/avatar-placeholder.png'; // Profile picture of the event creator
-    replyCount: number = 0; // Number of replies to the event
-    likeCount: number = 0; // Number of likes for the event
-    zapCount: number = 0; // Number of zaps for the event (if applicable)
-    repostCount: number = 0; // Number of reposts/shares for the event
-    likedByMe: boolean = false; // Whether the event is liked by the current user
-    replies: NewEvent[] = []; // Array of replies to this event
-    likers: string[] = []; // List of public keys of users who liked this event
-    reposters: string[] = []; // List of public keys of users who reposted this event
-    zappers: string[] = []; // List of public keys of users who zapped this event
-    relatedEventIds: string[] = []; // Array of related event IDs (e.g., parent event, root event)
-    rootEventId: string = ''; // Root event ID in case of a thread or conversation
-    replyToEventId: string = ''; // Parent event ID if this is a reply to another event
-    mentions: string[] = []; // List of public keys mentioned in the event content
-    hashtags: string[] = []; // List of hashtags used in the event content
-    repostedByMe: boolean = false; // Whether the event is reposted by the current user
+    kind: number;
+    content: string;
+    pubkey: string;
+    npub: string;
+    noteId: string;
+    createdAt: number;
+    date: Date;
+    fromNow: string;
+    username: string = '';
+    picture: string = '/images/avatars/avatar-placeholder.png';
+    replyCount: number = 0;
+    likeCount: number = 0;
+    zapCount: number = 0;
+    repostCount: number = 0;
+    likedByMe: boolean = false;
+    replies: NewEvent[] = [];
+    likers: string[] = [];
+    reposters: string[] = [];
+    zappers: string[] = [];
+    relatedEventIds: string[] = [];
+    rootEventId: string = '';
+    replyToEventId: string = '';
+    mentions: string[] = [];
+    hashtags: string[] = [];
+    repostedByMe: boolean = false;
     nip10Result: NIP10Result;
-    tags: string[][] = []; // Array of tags for the event
+    tags: string[][] = [];
     id: any;
     isAReply: boolean = false;
 
@@ -49,8 +48,32 @@ export class NewEvent {
         this.noteId = noteId;
         this.createdAt = createdAt;
         this.date = new Date(this.createdAt * 1000);
-        this.fromNow = dayjs(this.date).fromNow();
+        this.fromNow = this.calculateTimeFromNow(this.date);
         this.tags = tags;
         this.id = id;
+    }
+
+    calculateTimeFromNow(date: Date): string {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (diffInSeconds < 60) {
+            return `${diffInSeconds} seconds ago`;
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} minutes ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} hours ago`;
+        } else if (diffInSeconds < 2592000) {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} days ago`;
+        } else if (diffInSeconds < 31536000) {
+            const months = Math.floor(diffInSeconds / 2592000);
+            return `${months} months ago`;
+        } else {
+            const years = Math.floor(diffInSeconds / 31536000);
+            return `${years} years ago`;
+        }
     }
 }

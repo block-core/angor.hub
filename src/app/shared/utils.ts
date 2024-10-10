@@ -1,5 +1,4 @@
-import { Post } from 'app/types/post';
-import { User } from 'app/types/user';
+ import { User } from 'app/types/user';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
@@ -9,8 +8,7 @@ export function range(start: number, end: number) {
 }
 
 export function ellipsis(value: string): string {
-    // truncates the middle of the string
-    if (value.length < 40) return value;
+     if (value.length < 40) return value;
     let third: number = value.length / 8;
     let finalThird: number = value.length - third;
     return value.substring(0, third) + ':' + value.substring(finalThird);
@@ -46,20 +44,7 @@ export class Paginator {
         this.previousUntil = until;
     }
 
-    incrementFilterTimes(posts: Post[]): void {
-        const oldestPost = posts.at(-1);
-        if (oldestPost) {
-            this.revertBackToOriginalBaseTimeDiff();
-            this.setUntil(oldestPost.createdAt);
-            this.setSince(oldestPost.createdAt);
-        } else {
-            // posts must be empty so increment more
-            this.updateBaseTimeToFindPosts();
-            this.setDefaultUntil();
-            // expand time until we find something
-            this.setDefaultSince();
-        }
-    }
+
 
     incrementUserTimes(users: User[]): void {
         const oldestPost = users.at(-1);
@@ -68,10 +53,10 @@ export class Paginator {
             this.setUntil(oldestPost.createdAt);
             this.setSince(oldestPost.createdAt);
         } else {
-            // posts must be empty so increment more
+
             this.updateBaseTimeToFindPosts();
             this.setDefaultUntil();
-            // expand time until we find something
+
             this.setDefaultSince();
         }
     }
@@ -89,7 +74,7 @@ export class Paginator {
     }
 
     revertBackToOriginalBaseTimeDiff() {
-        // revert back once we have found posts
+
         this.baseTimeDiff = this.originalBaseTimeDiff;
     }
 
@@ -127,7 +112,7 @@ export class Paginator {
     }
 
     private setDefaultSince(addedMinutes: number = 0): void {
-        // Math.floor(Date.now() / 1000)
+
         let now = new Date();
         const sinceDate = Math.floor(
             now.setMinutes(
@@ -151,7 +136,7 @@ export class Paginator {
     }
 
     private setUntil(createdAt: number): void {
-        this.previousUntil = this.until - 2 * 1000; // minus two minutes;
+        this.previousUntil = this.until - 2 * 1000;
         this.until = createdAt;
     }
 
