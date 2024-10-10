@@ -1,3 +1,5 @@
+import { ANGOR_MOCK_API_DEFAULT_DELAY } from '@angor/lib/mock-api/mock-api.constants';
+import { AngorMockApiService } from '@angor/lib/mock-api/mock-api.service';
 import {
     HttpErrorResponse,
     HttpEvent,
@@ -6,8 +8,6 @@ import {
     HttpResponse,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { ANGOR_MOCK_API_DEFAULT_DELAY } from '@angor/lib/mock-api/mock-api.constants';
-import { AngorMockApiService } from '@angor/lib/mock-api/mock-api.service';
 import { Observable, delay, of, switchMap, throwError } from 'rxjs';
 import { AngorMockApiMethods } from './mock-api.types';
 
@@ -43,11 +43,14 @@ export const mockApiInterceptor = (
         switchMap((response) => {
             // If no response is returned, generate a 404 error
             if (!response) {
-                return throwError(() => new HttpErrorResponse({
-                    error: 'NOT FOUND',
-                    status: 404,
-                    statusText: 'NOT FOUND',
-                }));
+                return throwError(
+                    () =>
+                        new HttpErrorResponse({
+                            error: 'NOT FOUND',
+                            status: 404,
+                            statusText: 'NOT FOUND',
+                        })
+                );
             }
 
             // Parse the response data (status and body)
@@ -58,19 +61,24 @@ export const mockApiInterceptor = (
 
             // If status code is between 200 and 300, return a successful response
             if (data.status >= 200 && data.status < 300) {
-                return of(new HttpResponse({
-                    body: data.body,
-                    status: data.status,
-                    statusText: 'OK',
-                }));
+                return of(
+                    new HttpResponse({
+                        body: data.body,
+                        status: data.status,
+                        statusText: 'OK',
+                    })
+                );
             }
 
             // For other status codes, throw an error response
-            return throwError(() => new HttpErrorResponse({
-                error: data.body?.error,
-                status: data.status,
-                statusText: 'ERROR',
-            }));
+            return throwError(
+                () =>
+                    new HttpErrorResponse({
+                        error: data.body?.error,
+                        status: data.status,
+                        statusText: 'ERROR',
+                    })
+            );
         })
     );
 };

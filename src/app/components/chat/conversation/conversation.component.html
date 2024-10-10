@@ -176,33 +176,44 @@
                                 >
                                     <!-- Bubble -->
                                     <div
-                                    class="relative max-w-3/4 rounded-lg px-2 py-2"
-                                    [ngClass]="{
-                                        'bg-gray-400 text-blue-50': message.isMine,
-                                        'bg-gray-500 text-gray-50': !message.isMine
-                                    }"
-                                >
-                                    <!-- Speech bubble tail -->
-                                    @if (
-                                        last ||
-                                        chat.messages[i + 1].isMine !== message.isMine
-                                    ) {
+                                        class="relative max-w-3/4 rounded-lg px-2 py-2"
+                                        [ngClass]="{
+                                            'bg-gray-400 text-blue-50':
+                                                message.isMine,
+                                            'bg-gray-500 text-gray-50':
+                                                !message.isMine,
+                                        }"
+                                    >
+                                        <!-- Speech bubble tail -->
+                                        @if (
+                                            last ||
+                                            chat.messages[i + 1].isMine !==
+                                                message.isMine
+                                        ) {
+                                            <div
+                                                class="absolute bottom-0 w-3"
+                                                [ngClass]="{
+                                                    '-right-1 -mr-px mb-px text-gray-400':
+                                                        message.isMine,
+                                                    '-left-1 -ml-px mb-px -scale-x-1 text-gray-500':
+                                                        !message.isMine,
+                                                }"
+                                            >
+                                                <ng-container
+                                                    *ngTemplateOutlet="
+                                                        speechBubbleExtension
+                                                    "
+                                                ></ng-container>
+                                            </div>
+                                        }
+                                        <!-- Message -->
                                         <div
-                                            class="absolute bottom-0 w-3"
-                                            [ngClass]="{
-                                                '-right-1 -mr-px mb-px text-gray-400': message.isMine,
-                                                '-left-1 -ml-px mb-px -scale-x-1 text-gray-500': !message.isMine
-                                            }"
-                                        >
-                                            <ng-container *ngTemplateOutlet="speechBubbleExtension"></ng-container>
-                                        </div>
-                                    }
-                                    <!-- Message -->
-                                    <div
-                                        class="min-w-4 leading-5 break-words whitespace-normal"
-                                        [innerHTML]="parseContent(message.value)"
-                                    ></div>
-                                </div>
+                                            class="min-w-4 whitespace-normal break-words leading-5"
+                                            [innerHTML]="
+                                                parseContent(message.value)
+                                            "
+                                        ></div>
+                                    </div>
 
                                     <!-- Time -->
                                     @if (
@@ -237,7 +248,7 @@
                     class="flex items-end border-t bg-gray-50 p-4 dark:bg-transparent"
                 >
                     <div class="my-px flex h-11 items-center">
-                         <button mat-icon-button (click)="openGifDialog()">
+                        <button mat-icon-button (click)="openGifDialog()">
                             <mat-icon
                                 [svgIcon]="'heroicons_outline:gif'"
                             ></mat-icon>

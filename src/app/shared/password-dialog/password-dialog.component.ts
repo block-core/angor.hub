@@ -1,10 +1,20 @@
 import { CommonModule, NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+    FormBuilder,
+    FormGroup,
+    FormsModule,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatOption } from '@angular/material/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormField, MatFormFieldControl, MatFormFieldModule, MatLabel } from '@angular/material/form-field';
+import {
+    MatFormField,
+    MatFormFieldModule,
+    MatLabel,
+} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -38,17 +48,20 @@ import { SettingsSecurityComponent } from 'app/components/settings/security/secu
         MatFormField,
         ReactiveFormsModule,
         CommonModule,
-        MatSelectModule  ,
+        MatSelectModule,
         MatFormFieldModule,
         MatInputModule,
         MatSelectModule,
     ],
-    styles: [`
-    .full-width { width: 100%; }
-  `]
+    styles: [
+        `
+            .full-width {
+                width: 100%;
+            }
+        `,
+    ],
 })
 export class PasswordDialogComponent {
-
     passwordForm: FormGroup;
 
     constructor(
@@ -58,7 +71,7 @@ export class PasswordDialogComponent {
     ) {
         this.passwordForm = this.fb.group({
             password: ['', Validators.required],
-            duration: ['0', Validators.required]  // Default duration is 0 minute
+            duration: ['0', Validators.required], // Default duration is 0 minute
         });
     }
 

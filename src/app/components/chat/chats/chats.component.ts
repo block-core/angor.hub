@@ -14,13 +14,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
-import { catchError, of, Subject, takeUntil } from 'rxjs';
+import { AgoPipe } from 'app/shared/pipes/ago.pipe';
+import { CheckmessagePipe } from 'app/shared/pipes/checkmessage.pipe';
+import { Subject, takeUntil } from 'rxjs';
 import { ChatService } from '../chat.service';
 import { Chat, Profile } from '../chat.types';
 import { NewChatComponent } from '../new-chat/new-chat.component';
 import { ProfileComponent } from '../profile/profile.component';
-import { AgoPipe } from 'app/shared/pipes/ago.pipe';
-import { CheckmessagePipe } from 'app/shared/pipes/checkmessage.pipe';
 
 @Component({
     selector: 'chat-chats',
@@ -42,7 +42,7 @@ import { CheckmessagePipe } from 'app/shared/pipes/checkmessage.pipe';
         RouterOutlet,
         AgoPipe,
         CommonModule,
-        CheckmessagePipe
+        CheckmessagePipe,
     ],
 })
 export class ChatsComponent implements OnInit, OnDestroy {
@@ -67,9 +67,8 @@ export class ChatsComponent implements OnInit, OnDestroy {
     constructor(
         private _chatService: ChatService,
         private _changeDetectorRef: ChangeDetectorRef,
-        private route: ActivatedRoute,
-
-    ) { }
+        private route: ActivatedRoute
+    ) {}
 
     /**
      * Angular lifecycle hook (ngOnInit) for component initialization.
@@ -100,7 +99,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
                 this._markForCheck();
             });
 
-         this._chatService.InitSubscribeToChatList();
+        this._chatService.InitSubscribeToChatList();
 
         const savedChatId = localStorage.getItem('currentChatId');
 
@@ -128,7 +127,7 @@ export class ChatsComponent implements OnInit, OnDestroy {
             this.filteredChats = this.chats;
         } else {
             const lowerCaseQuery = query.toLowerCase();
-            this.filteredChats = this.chats.filter(chat =>
+            this.filteredChats = this.chats.filter((chat) =>
                 chat.contact?.name.toLowerCase().includes(lowerCaseQuery)
             );
         }
@@ -169,6 +168,4 @@ export class ChatsComponent implements OnInit, OnDestroy {
     private _markForCheck(): void {
         this._changeDetectorRef.markForCheck();
     }
-
-
 }

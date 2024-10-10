@@ -1,3 +1,11 @@
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
+import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
+import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
+import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
+import { AngorVerticalNavigationGroupItemComponent } from '@angor/components/navigation/vertical/components/group/group.component';
+import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
+import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
 import { BooleanInput } from '@angular/cdk/coercion';
 import { NgClass } from '@angular/common';
 import {
@@ -14,14 +22,6 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NavigationEnd, Router } from '@angular/router';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
-import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
-import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
-import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
-import { AngorVerticalNavigationGroupItemComponent } from '@angor/components/navigation/vertical/components/group/group.component';
-import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
-import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
 import { Subject, filter, takeUntil } from 'rxjs';
 
 @Component({

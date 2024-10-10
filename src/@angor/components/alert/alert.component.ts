@@ -1,3 +1,10 @@
+import { angorAnimations } from '@angor/animations';
+import { AngorAlertService } from '@angor/components/alert/alert.service';
+import {
+    AngorAlertAppearance,
+    AngorAlertType,
+} from '@angor/components/alert/alert.types';
+import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import { BooleanInput, coerceBooleanProperty } from '@angular/cdk/coercion';
 import {
     ChangeDetectionStrategy,
@@ -16,13 +23,6 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { angorAnimations } from '@angor/animations';
-import { AngorAlertService } from '@angor/components/alert/alert.service';
-import {
-    AngorAlertAppearance,
-    AngorAlertType,
-} from '@angor/components/alert/alert.types';
-import { AngorUtilsService } from '@angor/services/utils/utils.service';
 import { Subject, filter, takeUntil } from 'rxjs';
 
 @Component({
@@ -86,16 +86,22 @@ export class AngorAlertComponent implements OnChanges, OnInit, OnDestroy {
      */
     ngOnChanges(changes: SimpleChanges): void {
         if ('dismissed' in changes) {
-            this.dismissed = coerceBooleanProperty(changes.dismissed.currentValue);
+            this.dismissed = coerceBooleanProperty(
+                changes.dismissed.currentValue
+            );
             this._toggleDismiss(this.dismissed);
         }
 
         if ('dismissible' in changes) {
-            this.dismissible = coerceBooleanProperty(changes.dismissible.currentValue);
+            this.dismissible = coerceBooleanProperty(
+                changes.dismissible.currentValue
+            );
         }
 
         if ('showIcon' in changes) {
-            this.showIcon = coerceBooleanProperty(changes.showIcon.currentValue);
+            this.showIcon = coerceBooleanProperty(
+                changes.showIcon.currentValue
+            );
         }
     }
 

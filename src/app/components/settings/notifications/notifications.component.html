@@ -5,38 +5,78 @@
         <div class="mt-8 grid w-full grid-cols-1 gap-6">
             <!-- Mention -->
             <div class="flex items-center justify-between">
-                <div class="flex-auto cursor-pointer" (click)="mentionToggle.toggle()">
+                <div
+                    class="flex-auto cursor-pointer"
+                    (click)="mentionToggle.toggle()"
+                >
                     <div class="font-medium leading-6">Mention</div>
-                    <div class="text-secondary text-md">Receive notifications when someone mentions you.</div>
+                    <div class="text-secondary text-md">
+                        Receive notifications when someone mentions you.
+                    </div>
                 </div>
-                <mat-slide-toggle class="ml-2" [color]="'primary'" [formControlName]="'mention'" #mentionToggle></mat-slide-toggle>
+                <mat-slide-toggle
+                    class="ml-2"
+                    [color]="'primary'"
+                    [formControlName]="'mention'"
+                    #mentionToggle
+                ></mat-slide-toggle>
             </div>
 
             <!-- Private Message -->
             <div class="flex items-center justify-between">
-                <div class="flex-auto cursor-pointer" (click)="privateMessageToggle.toggle()">
+                <div
+                    class="flex-auto cursor-pointer"
+                    (click)="privateMessageToggle.toggle()"
+                >
                     <div class="font-medium leading-6">Private Message</div>
-                    <div class="text-secondary text-md">Receive notifications for private messages.</div>
+                    <div class="text-secondary text-md">
+                        Receive notifications for private messages.
+                    </div>
                 </div>
-                <mat-slide-toggle class="ml-2" [color]="'primary'" [formControlName]="'privateMessage'" #privateMessageToggle></mat-slide-toggle>
+                <mat-slide-toggle
+                    class="ml-2"
+                    [color]="'primary'"
+                    [formControlName]="'privateMessage'"
+                    #privateMessageToggle
+                ></mat-slide-toggle>
             </div>
 
             <!-- Zap -->
             <div class="flex items-center justify-between">
-                <div class="flex-auto cursor-pointer" (click)="zapToggle.toggle()">
+                <div
+                    class="flex-auto cursor-pointer"
+                    (click)="zapToggle.toggle()"
+                >
                     <div class="font-medium leading-6">Zap</div>
-                    <div class="text-secondary text-md">Receive notifications when you get a zap.</div>
+                    <div class="text-secondary text-md">
+                        Receive notifications when you get a zap.
+                    </div>
                 </div>
-                <mat-slide-toggle class="ml-2" [color]="'primary'" [formControlName]="'zap'" #zapToggle></mat-slide-toggle>
+                <mat-slide-toggle
+                    class="ml-2"
+                    [color]="'primary'"
+                    [formControlName]="'zap'"
+                    #zapToggle
+                ></mat-slide-toggle>
             </div>
 
             <!-- New Follower -->
             <div class="flex items-center justify-between">
-                <div class="flex-auto cursor-pointer" (click)="followerToggle.toggle()">
+                <div
+                    class="flex-auto cursor-pointer"
+                    (click)="followerToggle.toggle()"
+                >
                     <div class="font-medium leading-6">New Follower</div>
-                    <div class="text-secondary text-md">Receive notifications when someone follows you.</div>
+                    <div class="text-secondary text-md">
+                        Receive notifications when someone follows you.
+                    </div>
                 </div>
-                <mat-slide-toggle class="ml-2" [color]="'primary'" [formControlName]="'follower'" #followerToggle></mat-slide-toggle>
+                <mat-slide-toggle
+                    class="ml-2"
+                    [color]="'primary'"
+                    [formControlName]="'follower'"
+                    #followerToggle
+                ></mat-slide-toggle>
             </div>
         </div>
 
@@ -45,7 +85,15 @@
         <!-- Actions -->
         <div class="flex items-center justify-end">
             <button mat-stroked-button type="button">Cancel</button>
-            <button class="ml-4" mat-flat-button type="button" [color]="'primary'" (click)="saveSettings()">Save</button>
+            <button
+                class="ml-4"
+                mat-flat-button
+                type="button"
+                [color]="'primary'"
+                (click)="saveSettings()"
+            >
+                Save
+            </button>
         </div>
     </form>
 </div>

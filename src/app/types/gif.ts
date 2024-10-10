@@ -1,4 +1,3 @@
-
 export interface Gif {
     preview: string;
     size: number;
@@ -12,11 +11,11 @@ export interface TenorGif {
 
 export interface TenorGifResponse {
     bg_color: string;
-    composite?: string
+    composite?: string;
     content_description: string;
     content_rating: string;
     created: number;
-    flags? : string[];
+    flags?: string[];
     h1_title: string;
     hasaudio: boolean;
     hascaption: boolean;

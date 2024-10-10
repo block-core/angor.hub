@@ -9,9 +9,9 @@ export type Themes = Array<{ id: string; name: string }>;
  * This ensures consistency when defining or updating app settings.
  */
 export interface AngorConfig {
-    layout: string;        // Layout type (e.g., 'vertical', 'horizontal')
-    scheme: Scheme;        // Color scheme: 'auto', 'dark', or 'light'
-    screens: Screens;      // Screen breakpoints, e.g., { 'xs': '600px', ... }
-    theme: Theme;          // Active theme identifier, e.g., 'theme-default'
-    themes: Themes;        // List of available themes, each with an id and name
+    layout: string; // Layout type (e.g., 'vertical', 'horizontal')
+    scheme: Scheme; // Color scheme: 'auto', 'dark', or 'light'
+    screens: Screens; // Screen breakpoints, e.g., { 'xs': '600px', ... }
+    theme: Theme; // Active theme identifier, e.g., 'theme-default'
+    themes: Themes; // List of available themes, each with an id and name
 }

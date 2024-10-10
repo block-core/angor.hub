@@ -1,11 +1,6 @@
 const plugin = require('tailwindcss/plugin');
 
 module.exports = plugin(({ addComponents }) => {
-    /*
-     * Add base components. These are very important for everything to look
-     * correct. We are adding these to the 'components' layer because they must
-     * be defined before pretty much everything else.
-     */
     addComponents({
         '.mat-icon': {
             '--tw-text-opacity': '1',

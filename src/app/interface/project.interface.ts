@@ -4,5 +4,5 @@ export interface Project {
     displayName?: string;
     about?: string;
     picture?: string;
-    banner?:string
-  }
+    banner?: string;
+}

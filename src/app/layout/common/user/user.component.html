@@ -1,7 +1,12 @@
 <button mat-icon-button [matMenuTriggerFor]="userActions">
     <span class="relative">
         <ng-container *ngIf="metadata?.picture; else defaultAvatar">
-            <img class="h-7 w-7 rounded-full object-cover" [src]="getSafeUrl(metadata?.picture)" alt="User Avatar" />
+            <img
+                class="h-7 w-7 rounded-full object-cover"
+                [src]="getSafeUrl(metadata?.picture)"
+                alt=""
+                onerror="this.onerror=null; this.src='/images/avatars/avatar-placeholder.png';"
+            />
         </ng-container>
         <ng-template #defaultAvatar>
             <mat-icon [svgIcon]="'heroicons_outline:user-circle'"></mat-icon>
@@ -13,7 +18,9 @@
     <button mat-menu-item>
         <span class="flex flex-col leading-none">
             <span>Logged in as</span>
-            <span class="mt-1.5 text-md font-medium">{{metadata?.display_name || metadata?.name || 'Unknown User'}}</span>
+            <span class="mt-1.5 text-md font-medium">{{
+                metadata?.display_name || metadata?.name || 'Unknown User'
+            }}</span>
         </span>
     </button>
     <mat-divider class="my-2"></mat-divider>
@@ -27,7 +34,9 @@
     </button>
     <mat-divider class="my-2"></mat-divider>
     <button mat-menu-item (click)="logout()">
-        <mat-icon [svgIcon]="'heroicons_outline:arrow-right-on-rectangle'"></mat-icon>
+        <mat-icon
+            [svgIcon]="'heroicons_outline:arrow-right-on-rectangle'"
+        ></mat-icon>
         <span>logout</span>
     </button>
 </mat-menu>

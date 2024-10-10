@@ -1,3 +1,7 @@
+import {
+    ScrollbarGeometry,
+    ScrollbarPosition,
+} from '@angor/directives/scrollbar/scrollbar.types';
 import { BooleanInput, coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Platform } from '@angular/cdk/platform';
 import {
@@ -10,10 +14,6 @@ import {
     SimpleChanges,
     inject,
 } from '@angular/core';
-import {
-    ScrollbarGeometry,
-    ScrollbarPosition,
-} from '@angor/directives/scrollbar/scrollbar.types';
 import { merge } from 'lodash-es';
 import PerfectScrollbar from 'perfect-scrollbar';
 import { Subject, debounceTime, fromEvent, takeUntil } from 'rxjs';
@@ -47,12 +47,20 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
 
     ngOnChanges(changes: SimpleChanges): void {
         if ('angorScrollbar' in changes) {
-            this.angorScrollbar = coerceBooleanProperty(changes.angorScrollbar.currentValue);
-            this.angorScrollbar ? this._initScrollbar() : this._destroyScrollbar();
+            this.angorScrollbar = coerceBooleanProperty(
+                changes.angorScrollbar.currentValue
+            );
+            this.angorScrollbar
+                ? this._initScrollbar()
+                : this._destroyScrollbar();
         }
 
         if ('angorScrollbarOptions' in changes) {
-            this._options = merge({}, this._options, changes.angorScrollbarOptions.currentValue);
+            this._options = merge(
+                {},
+                this._options,
+                changes.angorScrollbarOptions.currentValue
+            );
             this._reinitializeScrollbar();
         }
     }
@@ -92,7 +100,10 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
 
     position(absolute: boolean = false): ScrollbarPosition {
         if (!absolute && this._ps) {
-            return new ScrollbarPosition(this._ps.reach.x || 0, this._ps.reach.y || 0);
+            return new ScrollbarPosition(
+                this._ps.reach.x || 0,
+                this._ps.reach.y || 0
+            );
         } else {
             return new ScrollbarPosition(
                 this._elementRef.nativeElement.scrollLeft,
@@ -115,7 +126,6 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
         }
     }
 
-
     scrollToX(x: number, speed?: number): void {
         this.animateScrolling('scrollLeft', x, speed);
     }
@@ -129,7 +139,9 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
     }
 
     scrollToBottom(offset: number = 0, speed?: number): void {
-        const top = this._elementRef.nativeElement.scrollHeight - this._elementRef.nativeElement.clientHeight;
+        const top =
+            this._elementRef.nativeElement.scrollHeight -
+            this._elementRef.nativeElement.clientHeight;
         this.animateScrolling('scrollTop', top - offset, speed);
     }
 
@@ -138,7 +150,9 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
     }
 
     scrollToRight(offset: number = 0, speed?: number): void {
-        const left = this._elementRef.nativeElement.scrollWidth - this._elementRef.nativeElement.clientWidth;
+        const left =
+            this._elementRef.nativeElement.scrollWidth -
+            this._elementRef.nativeElement.clientWidth;
         this.animateScrolling('scrollLeft', left - offset, speed);
     }
 
@@ -152,14 +166,29 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
         if (!element) return;
 
         const elementPos = element.getBoundingClientRect();
-        const scrollerPos = this._elementRef.nativeElement.getBoundingClientRect();
+        const scrollerPos =
+            this._elementRef.nativeElement.getBoundingClientRect();
 
         if (this._elementRef.nativeElement.classList.contains('ps--active-x')) {
-            this._scrollToInAxis(elementPos.left, scrollerPos.left, 'scrollLeft', offset, ignoreVisible, speed);
+            this._scrollToInAxis(
+                elementPos.left,
+                scrollerPos.left,
+                'scrollLeft',
+                offset,
+                ignoreVisible,
+                speed
+            );
         }
 
         if (this._elementRef.nativeElement.classList.contains('ps--active-y')) {
-            this._scrollToInAxis(elementPos.top, scrollerPos.top, 'scrollTop', offset, ignoreVisible, speed);
+            this._scrollToInAxis(
+                elementPos.top,
+                scrollerPos.top,
+                'scrollTop',
+                offset,
+                ignoreVisible,
+                speed
+            );
         }
     }
 
@@ -176,8 +205,16 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
     }
 
     private _initScrollbar(): void {
-        if (this._ps || this._platform.ANDROID || this._platform.IOS || !this._platform.isBrowser) return;
-        this._ps = new PerfectScrollbar(this._elementRef.nativeElement, { ...this._options });
+        if (
+            this._ps ||
+            this._platform.ANDROID ||
+            this._platform.IOS ||
+            !this._platform.isBrowser
+        )
+            return;
+        this._ps = new PerfectScrollbar(this._elementRef.nativeElement, {
+            ...this._options,
+        });
     }
 
     private _destroyScrollbar(): void {
@@ -198,7 +235,8 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
         ignoreVisible: boolean,
         speed?: number
     ): void {
-        if (ignoreVisible && elementPos <= scrollerPos - Math.abs(offset)) return;
+        if (ignoreVisible && elementPos <= scrollerPos - Math.abs(offset))
+            return;
 
         const currentPos = this._elementRef.nativeElement[target];
         const position = elementPos - scrollerPos + currentPos;
@@ -213,7 +251,9 @@ export class AngorScrollbarDirective implements OnChanges, OnInit, OnDestroy {
 
         const step = (newTimestamp: number) => {
             scrollCount += Math.PI / (speed / (newTimestamp - oldTimestamp));
-            const newValue = Math.round(value + cosParameter + cosParameter * Math.cos(scrollCount));
+            const newValue = Math.round(
+                value + cosParameter + cosParameter * Math.cos(scrollCount)
+            );
 
             if (this._elementRef.nativeElement[target] === oldValue) {
                 if (scrollCount >= Math.PI) {

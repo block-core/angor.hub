@@ -1,14 +1,14 @@
 import {
+    AngorAnimationCurves,
+    AngorAnimationDurations,
+} from '@angor/animations/defaults';
+import {
     animate,
     state,
     style,
     transition,
     trigger,
 } from '@angular/animations';
-import {
-    AngorAnimationCurves,
-    AngorAnimationDurations,
-} from '@angor/animations/defaults';
 
 /**
  * Slide in from top animation trigger

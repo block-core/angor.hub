@@ -1,15 +1,3 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import {
-    APP_INITIALIZER,
-    ENVIRONMENT_INITIALIZER,
-    EnvironmentProviders,
-    Provider,
-    importProvidersFrom,
-    inject,
-} from '@angular/core';
-import { MATERIAL_SANITY_CHECKS } from '@angular/material/core';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import {
     ANGOR_MOCK_API_DEFAULT_DELAY,
     mockApiInterceptor,
@@ -25,6 +13,18 @@ import { AngorMediaWatcherService } from '@angor/services/media-watcher';
 import { AngorPlatformService } from '@angor/services/platform';
 import { AngorSplashScreenService } from '@angor/services/splash-screen';
 import { AngorUtilsService } from '@angor/services/utils';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import {
+    APP_INITIALIZER,
+    ENVIRONMENT_INITIALIZER,
+    EnvironmentProviders,
+    Provider,
+    importProvidersFrom,
+    inject,
+} from '@angular/core';
+import { MATERIAL_SANITY_CHECKS } from '@angular/material/core';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 export type AngorProviderConfig = {
     mockApi?: {
@@ -40,10 +40,8 @@ export type AngorProviderConfig = {
 export const provideAngor = (
     config: AngorProviderConfig
 ): Array<Provider | EnvironmentProviders> => {
-
     const providers: Array<Provider | EnvironmentProviders> = [
         {
-
             provide: MATERIAL_SANITY_CHECKS,
             useValue: {
                 doctype: true,
@@ -52,7 +50,6 @@ export const provideAngor = (
             },
         },
         {
-
             provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
             useValue: {
                 appearance: 'fill',
@@ -103,7 +100,6 @@ export const provideAngor = (
         },
     ];
 
-
     if (config?.mockApi?.services) {
         providers.push(
             provideHttpClient(withInterceptors([mockApiInterceptor])),
@@ -115,7 +111,6 @@ export const provideAngor = (
             }
         );
     }
-
 
     return providers;
 };

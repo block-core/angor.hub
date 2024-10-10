@@ -1,50 +1,71 @@
-<div class="flex w-full min-w-0 flex-col sm:absolute sm:inset-0 sm:overflow-hidden">
+<div
+    class="flex w-full min-w-0 flex-col sm:absolute sm:inset-0 sm:overflow-hidden"
+>
     <mat-drawer-container class="flex-auto sm:h-full">
         <!-- Drawer -->
-        <mat-drawer class="dark:bg-gray-900 sm:w-96" [autoFocus]="false" [mode]="drawerMode" [opened]="drawerOpened"
-            #drawer>
+        <mat-drawer
+            class="dark:bg-gray-900 sm:w-96"
+            [autoFocus]="false"
+            [mode]="drawerMode"
+            [opened]="drawerOpened"
+            #drawer
+        >
             <!-- Header -->
             <div class="m-8 mr-6 flex items-center justify-between sm:my-10">
                 <!-- Title -->
-                <div class="text-4xl font-extrabold leading-none tracking-tight">
+                <div
+                    class="text-4xl font-extrabold leading-none tracking-tight"
+                >
                     Settings
                 </div>
                 <!-- Close button -->
                 <div class="lg:hidden">
                     <button mat-icon-button (click)="drawer.close()">
-                        <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+                        <mat-icon
+                            [svgIcon]="'heroicons_outline:x-mark'"
+                        ></mat-icon>
                     </button>
                 </div>
             </div>
             <!-- Panel links -->
             <div class="flex flex-col divide-y border-b border-t">
                 @for (panel of panels; track trackByFn($index, panel)) {
-                <div class="flex cursor-pointer px-8 py-5" [ngClass]="{
+                    <div
+                        class="flex cursor-pointer px-8 py-5"
+                        [ngClass]="{
                             'dark:hover:bg-hover hover:bg-gray-100':
                                 !selectedPanel || selectedPanel !== panel.id,
                             'bg-primary-50 dark:bg-hover':
                                 selectedPanel && selectedPanel === panel.id,
-                        }" (click)="goToPanel(panel.id)">
-                    <mat-icon [ngClass]="{
+                        }"
+                        (click)="goToPanel(panel.id)"
+                    >
+                        <mat-icon
+                            [ngClass]="{
                                 'text-hint':
                                     !selectedPanel ||
                                     selectedPanel !== panel.id,
                                 'text-primary dark:text-primary-500':
                                     selectedPanel && selectedPanel === panel.id,
-                            }" [svgIcon]="panel.icon"></mat-icon>
-                    <div class="ml-3">
-                        <div class="font-medium leading-6" [ngClass]="{
+                            }"
+                            [svgIcon]="panel.icon"
+                        ></mat-icon>
+                        <div class="ml-3">
+                            <div
+                                class="font-medium leading-6"
+                                [ngClass]="{
                                     'text-primary dark:text-primary-500':
                                         selectedPanel &&
                                         selectedPanel === panel.id,
-                                }">
-                            {{ panel.title }}
-                        </div>
-                        <div class="text-secondary mt-0.5">
-                            {{ panel.description }}
+                                }"
+                            >
+                                {{ panel.title }}
+                            </div>
+                            <div class="text-secondary mt-0.5">
+                                {{ panel.description }}
+                            </div>
                         </div>
                     </div>
-                </div>
                 }
             </div>
         </mat-drawer>
@@ -56,12 +77,20 @@
                 <!-- Panel header -->
                 <div class="flex items-center">
                     <!-- Drawer toggle -->
-                    <button class="-ml-2 lg:hidden" mat-icon-button (click)="drawer.toggle()">
-                        <mat-icon [svgIcon]="'heroicons_outline:bars-3'"></mat-icon>
+                    <button
+                        class="-ml-2 lg:hidden"
+                        mat-icon-button
+                        (click)="drawer.toggle()"
+                    >
+                        <mat-icon
+                            [svgIcon]="'heroicons_outline:bars-3'"
+                        ></mat-icon>
                     </button>
 
                     <!-- Panel title -->
-                    <div class="ml-2 text-3xl font-bold leading-none tracking-tight lg:ml-0">
+                    <div
+                        class="ml-2 text-3xl font-bold leading-none tracking-tight lg:ml-0"
+                    >
                         {{ getPanelInfo(selectedPanel).title }}
                     </div>
                 </div>
@@ -69,31 +98,30 @@
                 <!-- Load settings panel -->
                 <div class="mt-8">
                     @switch (selectedPanel) {
-                    <!-- Relay -->
-                    @case ('relay') {
-                    <settings-relay></settings-relay>
-                    }
-                    <!-- Network -->
-                    @case ('network') {
-                    <settings-network></settings-network>
-                    }
-                    <!-- Indexer -->
-                    @case ('indexer') {
-                    <settings-indexer></settings-indexer>
-                    }
-                    <!-- Profile -->
-                    @case ('profile') {
-                    <settings-profile></settings-profile>
-                    }
-                    <!-- Security -->
-                    @case ('security') {
-                    <settings-security></settings-security>
-                    }
-                    <!-- Notifications -->
-                    @case ('notifications') {
-                    <settings-notifications></settings-notifications>
-                    }
-
+                        <!-- Relay -->
+                        @case ('relay') {
+                            <settings-relay></settings-relay>
+                        }
+                        <!-- Network -->
+                        @case ('network') {
+                            <settings-network></settings-network>
+                        }
+                        <!-- Indexer -->
+                        @case ('indexer') {
+                            <settings-indexer></settings-indexer>
+                        }
+                        <!-- Profile -->
+                        @case ('profile') {
+                            <settings-profile></settings-profile>
+                        }
+                        <!-- Security -->
+                        @case ('security') {
+                            <settings-security></settings-security>
+                        }
+                        <!-- Notifications -->
+                        @case ('notifications') {
+                            <settings-notifications></settings-notifications>
+                        }
                     }
                 </div>
             </div>

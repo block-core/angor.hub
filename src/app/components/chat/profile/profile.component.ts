@@ -13,8 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatDrawer } from '@angular/material/sidenav';
 import { Subject, takeUntil } from 'rxjs';
-import { Profile } from '../chat.types';
 import { ChatService } from '../chat.service';
+import { Profile } from '../chat.types';
 
 @Component({
     selector: 'chat-profile',

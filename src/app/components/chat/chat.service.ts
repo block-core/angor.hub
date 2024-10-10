@@ -1,14 +1,28 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, throwError, of, Subscriber, from } from 'rxjs';
-import { catchError, filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { Chat, Contact, Profile } from 'app/components/chat/chat.types';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { MetadataService } from 'app/services/metadata.service';
-import { SignerService } from 'app/services/signer.service';
-import { Filter, NostrEvent } from 'nostr-tools';
 import { RelayService } from 'app/services/relay.service';
+import { SignerService } from 'app/services/signer.service';
+import { Filter, getEventHash, NostrEvent } from 'nostr-tools';
 import { EncryptedDirectMessage } from 'nostr-tools/kinds';
-import { getEventHash } from 'nostr-tools';
+import {
+    BehaviorSubject,
+    from,
+    Observable,
+    of,
+    Subject,
+    throwError,
+} from 'rxjs';
+import {
+    catchError,
+    filter,
+    map,
+    switchMap,
+    take,
+    takeUntil,
+    tap,
+} from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
@@ -18,22 +32,26 @@ export class ChatService implements OnDestroy {
     private isDecrypting = false;
     private recipientPublicKey: string;
     private message: string;
-    private decryptedPrivateKey: string = "";
+    private decryptedPrivateKey: string = '';
     private _chat: BehaviorSubject<Chat | null> = new BehaviorSubject(null);
     private _chats: BehaviorSubject<Chat[] | null> = new BehaviorSubject(null);
-    private _contact: BehaviorSubject<Contact | null> = new BehaviorSubject(null);
-    private _contacts: BehaviorSubject<Contact[] | null> = new BehaviorSubject(null);
-    private _profile: BehaviorSubject<Profile | null> = new BehaviorSubject(null);
+    private _contact: BehaviorSubject<Contact | null> = new BehaviorSubject(
+        null
+    );
+    private _contacts: BehaviorSubject<Contact[] | null> = new BehaviorSubject(
+        null
+    );
+    private _profile: BehaviorSubject<Profile | null> = new BehaviorSubject(
+        null
+    );
     private _unsubscribeAll: Subject<void> = new Subject<void>();
 
     constructor(
         private _metadataService: MetadataService,
         private _signerService: SignerService,
         private _indexedDBService: IndexedDBService,
-        private _relayService: RelayService,
-
-
-    ) { }
+        private _relayService: RelayService
+    ) {}
     get profile$(): Observable<Profile | null> {
         return this._profile.asObservable();
     }
@@ -54,20 +72,17 @@ export class ChatService implements OnDestroy {
         return this._contacts.asObservable();
     }
 
-
     checkCurrentChatOnPageRefresh(chatIdFromURL: string): void {
         if (chatIdFromURL) {
             const currentChat = this._chat.value;
-            this.getChatById(chatIdFromURL).subscribe(chat => {
+            this.getChatById(chatIdFromURL).subscribe((chat) => {
                 if (chat) {
                     this._chat.next(chat);
                     this.loadChatHistory(chatIdFromURL);
                 }
             });
-
         }
     }
-
 
     async getContact(pubkey: string): Promise<void> {
         try {
@@ -75,25 +90,32 @@ export class ChatService implements OnDestroy {
                 return;
             }
 
-            const metadata = await this._metadataService.fetchMetadataWithCache(pubkey);
+            const metadata =
+                await this._metadataService.fetchMetadataWithCache(pubkey);
             if (metadata) {
                 const contact: Contact = {
                     pubKey: pubkey,
                     displayName: metadata.name ? metadata.name : 'Unknown',
                     picture: metadata.picture,
-                    about: metadata.about
+                    about: metadata.about,
                 };
                 this._contact.next(contact);
 
-                this._indexedDBService.getMetadataStream()
+                this._indexedDBService
+                    .getMetadataStream()
                     .pipe(takeUntil(this._unsubscribeAll))
                     .subscribe((updatedMetadata) => {
-                        if (updatedMetadata && updatedMetadata.pubkey === pubkey) {
+                        if (
+                            updatedMetadata &&
+                            updatedMetadata.pubkey === pubkey
+                        ) {
                             const updatedContact: Contact = {
                                 pubKey: pubkey,
-                                displayName: updatedMetadata.metadata.name ? updatedMetadata.metadata.name : 'Unknown',
+                                displayName: updatedMetadata.metadata.name
+                                    ? updatedMetadata.metadata.name
+                                    : 'Unknown',
                                 picture: updatedMetadata.metadata.picture,
-                                about: updatedMetadata.metadata.about
+                                about: updatedMetadata.metadata.about,
                             };
                             this._contact.next(updatedContact);
                         }
@@ -104,18 +126,23 @@ export class ChatService implements OnDestroy {
         }
     }
 
-
     getContacts(): Observable<Contact[]> {
         return new Observable<Contact[]>((observer) => {
-            this._indexedDBService.getAllUsers()
+            this._indexedDBService
+                .getAllUsers()
                 .then((cachedContacts: Contact[]) => {
                     if (cachedContacts && cachedContacts.length > 0) {
-                        const validatedContacts = cachedContacts.map(contact => {
-                            if (!contact.pubKey) {
-                                console.error('Contact is missing pubKey:', contact);
+                        const validatedContacts = cachedContacts.map(
+                            (contact) => {
+                                if (!contact.pubKey) {
+                                    console.error(
+                                        'Contact is missing pubKey:',
+                                        contact
+                                    );
+                                }
+                                return contact;
                             }
-                            return contact;
-                        });
+                        );
 
                         this._contacts.next(validatedContacts);
                         observer.next(validatedContacts);
@@ -125,33 +152,49 @@ export class ChatService implements OnDestroy {
                     observer.complete();
                 })
                 .catch((error) => {
-                    console.error('Error loading cached contacts from IndexedDB:', error);
+                    console.error(
+                        'Error loading cached contacts from IndexedDB:',
+                        error
+                    );
                     observer.next([]);
                     observer.complete();
                 });
 
-            return { unsubscribe() { } };
+            return { unsubscribe() {} };
         });
     }
 
     async updateChatListMetadata(): Promise<void> {
-        const pubKeys = this.chatList.map(chat => chat.contact?.pubKey).filter(pubKey => pubKey);
+        const pubKeys = this.chatList
+            .map((chat) => chat.contact?.pubKey)
+            .filter((pubKey) => pubKey);
         if (pubKeys.length > 0) {
-            const metadataList = await this._metadataService.fetchMetadataForMultipleKeys(pubKeys);
+            const metadataList =
+                await this._metadataService.fetchMetadataForMultipleKeys(
+                    pubKeys
+                );
 
-            metadataList.forEach(metadata => {
-                const contact = this._contacts.value?.find(contact => contact.pubKey === metadata.pubkey);
+            metadataList.forEach((metadata) => {
+                const contact = this._contacts.value?.find(
+                    (contact) => contact.pubKey === metadata.pubkey
+                );
                 if (contact) {
                     contact.displayName = metadata.metadata.name || 'Unknown';
-                    contact.picture = metadata.metadata.picture || contact.picture;
+                    contact.picture =
+                        metadata.metadata.picture || contact.picture;
                     contact.about = metadata.metadata.about || contact.about;
                 }
 
-                const chat = this.chatList.find(chat => chat.contact?.pubKey === metadata.pubkey);
+                const chat = this.chatList.find(
+                    (chat) => chat.contact?.pubKey === metadata.pubkey
+                );
                 if (chat) {
-                    chat.contact.displayName = metadata.metadata.name || 'Unknown';
-                    chat.contact.picture = metadata.metadata.picture || chat.contact.picture;
-                    chat.contact.about = metadata.metadata.about || chat.contact.about;
+                    chat.contact.displayName =
+                        metadata.metadata.name || 'Unknown';
+                    chat.contact.picture =
+                        metadata.metadata.picture || chat.contact.picture;
+                    chat.contact.about =
+                        metadata.metadata.about || chat.contact.about;
                 }
             });
 
@@ -161,40 +204,60 @@ export class ChatService implements OnDestroy {
     }
 
     private subscribeToRealTimeMetadataUpdates(pubKey: string): void {
-        this._metadataService.getMetadataStream()
-            .pipe(filter(updatedMetadata => updatedMetadata && updatedMetadata.pubkey === pubKey))
-            .subscribe(updatedMetadata => {
-                const chat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
+        this._metadataService
+            .getMetadataStream()
+            .pipe(
+                filter(
+                    (updatedMetadata) =>
+                        updatedMetadata && updatedMetadata.pubkey === pubKey
+                )
+            )
+            .subscribe((updatedMetadata) => {
+                const chat = this.chatList.find(
+                    (chat) => chat.contact?.pubKey === pubKey
+                );
                 if (chat) {
-                    chat.contact.displayName = updatedMetadata.metadata.name || 'Unknown';
-                    chat.contact.picture = updatedMetadata.metadata.picture || chat.contact.picture;
-                    chat.contact.about = updatedMetadata.metadata.about || chat.contact.about;
+                    chat.contact.displayName =
+                        updatedMetadata.metadata.name || 'Unknown';
+                    chat.contact.picture =
+                        updatedMetadata.metadata.picture ||
+                        chat.contact.picture;
+                    chat.contact.about =
+                        updatedMetadata.metadata.about || chat.contact.about;
                     this._chats.next(this.chatList);
                 }
 
-                const contact = this._contacts.value?.find(contact => contact.pubKey === pubKey);
+                const contact = this._contacts.value?.find(
+                    (contact) => contact.pubKey === pubKey
+                );
                 if (contact) {
-                    contact.displayName = updatedMetadata.metadata.name || 'Unknown';
-                    contact.picture = updatedMetadata.metadata.picture || contact.picture;
-                    contact.about = updatedMetadata.metadata.about || contact.about;
+                    contact.displayName =
+                        updatedMetadata.metadata.name || 'Unknown';
+                    contact.picture =
+                        updatedMetadata.metadata.picture || contact.picture;
+                    contact.about =
+                        updatedMetadata.metadata.about || contact.about;
                     this._contacts.next(this._contacts.value || []);
                 }
             });
     }
 
-
     async getProfile(): Promise<void> {
         try {
             const publicKey = this._signerService.getPublicKey();
-            const metadata = await this._metadataService.fetchMetadataWithCache(publicKey);
+            const metadata =
+                await this._metadataService.fetchMetadataWithCache(publicKey);
             if (metadata) {
                 this._profile.next(metadata);
 
-
-                this._indexedDBService.getMetadataStream()
+                this._indexedDBService
+                    .getMetadataStream()
                     .pipe(takeUntil(this._unsubscribeAll))
                     .subscribe((updatedMetadata) => {
-                        if (updatedMetadata && updatedMetadata.pubkey === publicKey) {
+                        if (
+                            updatedMetadata &&
+                            updatedMetadata.pubkey === publicKey
+                        ) {
                             this._profile.next(updatedMetadata.metadata);
                         }
                     });
@@ -206,14 +269,14 @@ export class ChatService implements OnDestroy {
 
     async getChats(): Promise<Observable<Chat[]>> {
         return this.getChatListStream().pipe(
-            tap(chats => {
+            tap((chats) => {
                 if (chats && chats.length === 0) {
                     return;
                 }
 
                 const pubKeys = chats
-                    .filter(chat => chat.contact?.pubKey)
-                    .map(chat => chat.contact!.pubKey);
+                    .filter((chat) => chat.contact?.pubKey)
+                    .map((chat) => chat.contact!.pubKey);
 
                 // Subscribe to all metadata updates in parallel
                 this.subscribeToRealTimeMetadataUpdatesBatch(pubKeys);
@@ -226,12 +289,19 @@ export class ChatService implements OnDestroy {
         const useExtension = await this._signerService.isUsingExtension();
         const useSecretKey = await this._signerService.isUsingSecretKey();
 
-        this.decryptedPrivateKey = useSecretKey ? await this._signerService.getDecryptedSecretKey() : '';
+        this.decryptedPrivateKey = useSecretKey
+            ? await this._signerService.getDecryptedSecretKey()
+            : '';
 
         // Perform metadata and chat loading in parallel for speed
         await Promise.all([
             this.updateChatListMetadata(),
-            this.subscribeToChatList(pubkey, useExtension, useSecretKey, this.decryptedPrivateKey)
+            this.subscribeToChatList(
+                pubkey,
+                useExtension,
+                useSecretKey,
+                this.decryptedPrivateKey
+            ),
         ]);
 
         return this.getChatListStream();
@@ -239,46 +309,80 @@ export class ChatService implements OnDestroy {
 
     private subscribeToRealTimeMetadataUpdatesBatch(pubKeys: string[]): void {
         // Batch subscribe to all pubKeys metadata updates for efficiency
-        pubKeys.forEach(pubKey => {
+        pubKeys.forEach((pubKey) => {
             this.subscribeToRealTimeMetadataUpdates(pubKey);
         });
     }
 
-    subscribeToChatList(pubkey: string, useExtension: boolean, useSecretKey: boolean, decryptedSenderPrivateKey: string): Observable<Chat[]> {
+    subscribeToChatList(
+        pubkey: string,
+        useExtension: boolean,
+        useSecretKey: boolean,
+        decryptedSenderPrivateKey: string
+    ): Observable<Chat[]> {
         this._relayService.ensureConnectedRelays().then(async () => {
             const filters: Filter[] = [
-                { kinds: [EncryptedDirectMessage], authors: [pubkey] , limit:1500},
-                { kinds: [EncryptedDirectMessage], '#p': [pubkey] , limit:1500}
+                {
+                    kinds: [EncryptedDirectMessage],
+                    authors: [pubkey],
+                    limit: 1500,
+                },
+                {
+                    kinds: [EncryptedDirectMessage],
+                    '#p': [pubkey],
+                    limit: 1500,
+                },
             ];
 
-            this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), filters, {
-                onevent: async (event: NostrEvent) => {
-                    const otherPartyPubKey = event.pubkey === pubkey
-                        ? event.tags.find(tag => tag[0] === 'p')?.[1] || ''
-                        : event.pubkey;
+            this._relayService
+                .getPool()
+                .subscribeMany(
+                    this._relayService.getConnectedRelays(),
+                    filters,
+                    {
+                        onevent: async (event: NostrEvent) => {
+                            const otherPartyPubKey =
+                                event.pubkey === pubkey
+                                    ? event.tags.find(
+                                          (tag) => tag[0] === 'p'
+                                      )?.[1] || ''
+                                    : event.pubkey;
 
-                    if (!otherPartyPubKey) return;
+                            if (!otherPartyPubKey) return;
 
-                    const lastTimestamp = this.latestMessageTimestamps[otherPartyPubKey] || 0;
-                    if (event.created_at > lastTimestamp) {
-                        this.messageQueue.push(event);
-                        this.processNextMessage(pubkey, useExtension, useSecretKey, decryptedSenderPrivateKey);
+                            const lastTimestamp =
+                                this.latestMessageTimestamps[
+                                    otherPartyPubKey
+                                ] || 0;
+                            if (event.created_at > lastTimestamp) {
+                                this.messageQueue.push(event);
+                                this.processNextMessage(
+                                    pubkey,
+                                    useExtension,
+                                    useSecretKey,
+                                    decryptedSenderPrivateKey
+                                );
+                            }
+                        },
+                        oneose: () => {
+                            const currentChats = this.chatList || [];
+                            if (currentChats.length > 0) {
+                                this._chats.next(this.chatList);
+                            }
+                        },
                     }
-                },
-                oneose: () => {
-
-                    const currentChats = this.chatList || [];
-                    if (currentChats.length > 0) {
-                        this._chats.next(this.chatList);
-                    }
-                }
-            });
+                );
         });
 
         return this.getChatListStream();
     }
 
-    private async processNextMessage(pubkey: string, useExtension: boolean, useSecretKey: boolean, decryptedSenderPrivateKey: string): Promise<void> {
+    private async processNextMessage(
+        pubkey: string,
+        useExtension: boolean,
+        useSecretKey: boolean,
+        decryptedSenderPrivateKey: string
+    ): Promise<void> {
         if (this.isDecrypting || this.messageQueue.length === 0) return;
 
         this.isDecrypting = true;
@@ -290,7 +394,7 @@ export class ChatService implements OnDestroy {
 
                 const isSentByUser = event.pubkey === pubkey;
                 const otherPartyPubKey = isSentByUser
-                    ? event.tags.find(tag => tag[0] === 'p')?.[1] || ''
+                    ? event.tags.find((tag) => tag[0] === 'p')?.[1] || ''
                     : event.pubkey;
 
                 if (!otherPartyPubKey) continue;
@@ -304,7 +408,12 @@ export class ChatService implements OnDestroy {
                 );
 
                 if (decryptedMessage) {
-                    this.addOrUpdateChatList(otherPartyPubKey, decryptedMessage, event.created_at, isSentByUser);
+                    this.addOrUpdateChatList(
+                        otherPartyPubKey,
+                        decryptedMessage,
+                        event.created_at,
+                        isSentByUser
+                    );
                 }
             }
         } catch (error) {
@@ -314,8 +423,15 @@ export class ChatService implements OnDestroy {
         }
     }
 
-    private addOrUpdateChatList(pubKey: string, message: string, createdAt: number, isMine: boolean): void {
-        const existingChat = this.chatList.find(chat => chat.contact?.pubKey === pubKey);
+    private addOrUpdateChatList(
+        pubKey: string,
+        message: string,
+        createdAt: number,
+        isMine: boolean
+    ): void {
+        const existingChat = this.chatList.find(
+            (chat) => chat.contact?.pubKey === pubKey
+        );
 
         const newMessage = {
             id: `${pubKey}-${createdAt}`,
@@ -327,11 +443,19 @@ export class ChatService implements OnDestroy {
         };
 
         if (existingChat) {
-            const messageExists = existingChat.messages?.some(m => m.id === newMessage.id);
+            const messageExists = existingChat.messages?.some(
+                (m) => m.id === newMessage.id
+            );
 
             if (!messageExists) {
-                existingChat.messages = [...(existingChat.messages || []), newMessage]
-                    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                existingChat.messages = [
+                    ...(existingChat.messages || []),
+                    newMessage,
+                ].sort(
+                    (a, b) =>
+                        new Date(a.createdAt).getTime() -
+                        new Date(b.createdAt).getTime()
+                );
 
                 if (Number(existingChat.lastMessageAt) < createdAt) {
                     existingChat.lastMessage = message;
@@ -339,25 +463,34 @@ export class ChatService implements OnDestroy {
                 }
             }
         } else {
-            const contactInfo = this._contacts.value?.find(contact => contact.pubKey === pubKey) || { pubKey };
+            const contactInfo = this._contacts.value?.find(
+                (contact) => contact.pubKey === pubKey
+            ) || { pubKey };
 
             const newChat: Chat = {
                 id: pubKey,
                 contact: {
                     pubKey: contactInfo.pubKey,
-                    name: contactInfo.name || "Unknown",
-                    picture: contactInfo.picture || "/images/avatars/avatar-placeholder.png",
-                    about: contactInfo.about || "",
-                    displayName: contactInfo.displayName || contactInfo.name || "Unknown"
+                    name: contactInfo.name || 'Unknown',
+                    picture:
+                        contactInfo.picture ||
+                        '/images/avatars/avatar-placeholder.png',
+                    about: contactInfo.about || '',
+                    displayName:
+                        contactInfo.displayName ||
+                        contactInfo.name ||
+                        'Unknown',
                 },
                 lastMessage: message,
                 lastMessageAt: createdAt.toString(),
-                messages: [newMessage]
+                messages: [newMessage],
             };
             this.chatList.push(newChat);
         }
 
-        this.chatList.sort((a, b) => Number(b.lastMessageAt!) - Number(a.lastMessageAt!));
+        this.chatList.sort(
+            (a, b) => Number(b.lastMessageAt!) - Number(a.lastMessageAt!)
+        );
         this._chats.next(this.chatList);
     }
 
@@ -373,9 +506,16 @@ export class ChatService implements OnDestroy {
         recipientPublicKey: string
     ): Promise<string> {
         if (useExtension && !useSecretKey) {
-            return await this._signerService.decryptMessageWithExtension(recipientPublicKey, event.content);
+            return await this._signerService.decryptMessageWithExtension(
+                recipientPublicKey,
+                event.content
+            );
         } else if (useSecretKey && !useExtension) {
-            return await this._signerService.decryptMessage(decryptedSenderPrivateKey, recipientPublicKey, event.content);
+            return await this._signerService.decryptMessage(
+                decryptedSenderPrivateKey,
+                recipientPublicKey,
+                event.content
+            );
         }
     }
 
@@ -383,83 +523,143 @@ export class ChatService implements OnDestroy {
         const myPubKey = this._signerService.getPublicKey();
 
         const historyFilter: Filter[] = [
-            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey], limit: 10 },
-            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey], limit: 10 }
+            {
+                kinds: [EncryptedDirectMessage],
+                authors: [myPubKey],
+                '#p': [pubKey],
+                limit: 10,
+            },
+            {
+                kinds: [EncryptedDirectMessage],
+                authors: [pubKey],
+                '#p': [myPubKey],
+                limit: 10,
+            },
         ];
 
-        this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), historyFilter, {
-            onevent: async (event: NostrEvent) => {
-                const isSentByMe = event.pubkey === myPubKey;
-                const senderOrRecipientPubKey = isSentByMe ? pubKey : event.pubkey;
-                const useExtension = await this._signerService.isUsingExtension();
-                const useSecretKey = await this._signerService.isUsingSecretKey();
-                const decryptedMessage = await this.decryptReceivedMessage(
-                    event,
-                    useExtension,
-                    useSecretKey,
-                    this.decryptedPrivateKey,
-                    senderOrRecipientPubKey
-                );
+        this._relayService
+            .getPool()
+            .subscribeMany(
+                this._relayService.getConnectedRelays(),
+                historyFilter,
+                {
+                    onevent: async (event: NostrEvent) => {
+                        const isSentByMe = event.pubkey === myPubKey;
+                        const senderOrRecipientPubKey = isSentByMe
+                            ? pubKey
+                            : event.pubkey;
+                        const useExtension =
+                            await this._signerService.isUsingExtension();
+                        const useSecretKey =
+                            await this._signerService.isUsingSecretKey();
+                        const decryptedMessage =
+                            await this.decryptReceivedMessage(
+                                event,
+                                useExtension,
+                                useSecretKey,
+                                this.decryptedPrivateKey,
+                                senderOrRecipientPubKey
+                            );
 
-                if (decryptedMessage) {
-                    const messageTimestamp = Math.floor(event.created_at);
+                        if (decryptedMessage) {
+                            const messageTimestamp = Math.floor(
+                                event.created_at
+                            );
 
-                    this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
-                    this._chat.next(this.chatList.find(chat => chat.id === pubKey));
+                            this.addOrUpdateChatList(
+                                pubKey,
+                                decryptedMessage,
+                                messageTimestamp,
+                                isSentByMe
+                            );
+                            this._chat.next(
+                                this.chatList.find((chat) => chat.id === pubKey)
+                            );
+                        }
+                    },
+                    oneose: () => {},
                 }
-            },
-            oneose: () => {
-            }
-        });
+            );
     }
 
     private async fetchChatHistory(pubKey: string): Promise<any[]> {
         const myPubKey = this._signerService.getPublicKey();
 
         const historyFilter: Filter[] = [
-            { kinds: [EncryptedDirectMessage], authors: [myPubKey], '#p': [pubKey], limit: 10 },
-            { kinds: [EncryptedDirectMessage], authors: [pubKey], '#p': [myPubKey], limit: 10 }
+            {
+                kinds: [EncryptedDirectMessage],
+                authors: [myPubKey],
+                '#p': [pubKey],
+                limit: 10,
+            },
+            {
+                kinds: [EncryptedDirectMessage],
+                authors: [pubKey],
+                '#p': [myPubKey],
+                limit: 10,
+            },
         ];
 
         const messages: any[] = [];
 
-        this._relayService.getPool().subscribeMany(this._relayService.getConnectedRelays(), historyFilter, {
-            onevent: async (event: NostrEvent) => {
-                const isSentByMe = event.pubkey === myPubKey;
-                const senderOrRecipientPubKey = isSentByMe ? pubKey : event.pubkey;
-                const useExtension = await this._signerService.isUsingExtension();
-                const useSecretKey = await this._signerService.isUsingSecretKey();
-                const decryptedMessage = await this.decryptReceivedMessage(
-                    event,
-                    useExtension,
-                    useSecretKey,
-                    this.decryptedPrivateKey,
-                    senderOrRecipientPubKey
-                );
+        this._relayService
+            .getPool()
+            .subscribeMany(
+                this._relayService.getConnectedRelays(),
+                historyFilter,
+                {
+                    onevent: async (event: NostrEvent) => {
+                        const isSentByMe = event.pubkey === myPubKey;
+                        const senderOrRecipientPubKey = isSentByMe
+                            ? pubKey
+                            : event.pubkey;
+                        const useExtension =
+                            await this._signerService.isUsingExtension();
+                        const useSecretKey =
+                            await this._signerService.isUsingSecretKey();
+                        const decryptedMessage =
+                            await this.decryptReceivedMessage(
+                                event,
+                                useExtension,
+                                useSecretKey,
+                                this.decryptedPrivateKey,
+                                senderOrRecipientPubKey
+                            );
 
-                if (decryptedMessage) {
-                    const messageTimestamp = Math.floor(event.created_at);
+                        if (decryptedMessage) {
+                            const messageTimestamp = Math.floor(
+                                event.created_at
+                            );
 
-                    const message = {
-                        id: event.id,
-                        chatId: pubKey,
-                        contactId: senderOrRecipientPubKey,
-                        isMine: isSentByMe,
-                        value: decryptedMessage,
-                        createdAt: new Date(messageTimestamp * 1000).toISOString(),
-                    };
+                            const message = {
+                                id: event.id,
+                                chatId: pubKey,
+                                contactId: senderOrRecipientPubKey,
+                                isMine: isSentByMe,
+                                value: decryptedMessage,
+                                createdAt: new Date(
+                                    messageTimestamp * 1000
+                                ).toISOString(),
+                            };
 
-                    messages.push(message);
+                            messages.push(message);
 
-                    this.addOrUpdateChatList(pubKey, decryptedMessage, messageTimestamp, isSentByMe);
-                    this._chat.next(this.chatList.find(chat => chat.id === pubKey));
+                            this.addOrUpdateChatList(
+                                pubKey,
+                                decryptedMessage,
+                                messageTimestamp,
+                                isSentByMe
+                            );
+                            this._chat.next(
+                                this.chatList.find((chat) => chat.id === pubKey)
+                            );
+                        }
+                    },
+                    oneose: () => {},
                 }
-            },
-            oneose: () => {
-            }
-        });
+            );
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         return messages;
     }
@@ -484,10 +684,14 @@ export class ChatService implements OnDestroy {
 
                 event.id = getEventHash(event);
 
-                return from(this._relayService.publishEventToRelays(event)).pipe(
+                return from(
+                    this._relayService.publishEventToRelays(event)
+                ).pipe(
                     map(() => {
                         if (chats) {
-                            const index = chats.findIndex((item) => item.id === id);
+                            const index = chats.findIndex(
+                                (item) => item.id === id
+                            );
                             if (index !== -1) {
                                 chats[index] = chat;
                                 this._chats.next(chats);
@@ -496,7 +700,10 @@ export class ChatService implements OnDestroy {
                         return chat;
                     }),
                     catchError((error) => {
-                        console.error('Failed to update chat via Nostr:', error);
+                        console.error(
+                            'Failed to update chat via Nostr:',
+                            error
+                        );
                         return throwError(error);
                     })
                 );
@@ -516,7 +723,7 @@ export class ChatService implements OnDestroy {
                             return this.createNewChat(id, contact);
                         }
 
-                        const cachedChat = chats.find(chat => chat.id === id);
+                        const cachedChat = chats.find((chat) => chat.id === id);
                         if (cachedChat) {
                             this._chat.next(cachedChat);
                             this.loadChatHistory(this.recipientPublicKey);
@@ -534,8 +741,6 @@ export class ChatService implements OnDestroy {
         );
     }
 
-
-
     createNewChat(id: string, contact: Contact = null): Observable<Chat> {
         // const existingChat = this._chats.value?.find(chat => chat.id === id);
 
@@ -545,11 +750,21 @@ export class ChatService implements OnDestroy {
         const newChat: Chat = {
             id: id || '',
             contact: contact
-                ? { pubKey: contact.pubKey || id, name: contact.name || 'Unknown', picture: contact.picture || '/images/avatars/avatar-placeholder.png' }
-                : { pubKey: id, name: 'Unknown', picture: '/images/avatars/avatar-placeholder.png' },
+                ? {
+                      pubKey: contact.pubKey || id,
+                      name: contact.name || 'Unknown',
+                      picture:
+                          contact.picture ||
+                          '/images/avatars/avatar-placeholder.png',
+                  }
+                : {
+                      pubKey: id,
+                      name: 'Unknown',
+                      picture: '/images/avatars/avatar-placeholder.png',
+                  },
             lastMessage: 'new chat...',
             lastMessageAt: Math.floor(Date.now() / 1000).toString() || '0',
-            messages: []
+            messages: [],
         };
 
         // const updatedChats = this._chats.value ? [...this._chats.value, newChat] : [newChat];
@@ -559,10 +774,13 @@ export class ChatService implements OnDestroy {
             map((metadata: any) => {
                 newChat.contact = {
                     pubKey: id,
-                    name: metadata?.name || "Unknown",
-                    picture: metadata?.picture || "/images/avatars/avatar-placeholder.png",
-                    about: metadata?.about || "",
-                    displayName: metadata?.displayName || metadata?.name || "Unknown"
+                    name: metadata?.name || 'Unknown',
+                    picture:
+                        metadata?.picture ||
+                        '/images/avatars/avatar-placeholder.png',
+                    about: metadata?.about || '',
+                    displayName:
+                        metadata?.displayName || metadata?.name || 'Unknown',
                 };
 
                 return newChat;
@@ -576,8 +794,10 @@ export class ChatService implements OnDestroy {
                                 chatId: id,
                                 contactId: id,
                                 isMine: true,
-                                value: "new chat...",
-                                createdAt: Math.floor(Date.now() / 1000).toString(),
+                                value: 'new chat...',
+                                createdAt: Math.floor(
+                                    Date.now() / 1000
+                                ).toString(),
                             };
 
                             messages.push(testMessage);
@@ -591,7 +811,9 @@ export class ChatService implements OnDestroy {
                             newChat.lastMessageAt = lastMessage.createdAt;
                         }
 
-                        const updatedChatsWithMessages = this._chats.value ? [...this._chats.value, newChat] : [newChat];
+                        const updatedChatsWithMessages = this._chats.value
+                            ? [...this._chats.value, newChat]
+                            : [newChat];
                         this._chats.next(updatedChatsWithMessages);
                         this._chat.next(newChat);
 
@@ -602,13 +824,9 @@ export class ChatService implements OnDestroy {
         );
     }
 
-
-
-
     resetChat(): void {
         this._chat.next(null);
     }
-
 
     public async sendPrivateMessage(message: string): Promise<void> {
         try {
@@ -620,20 +838,31 @@ export class ChatService implements OnDestroy {
                 await this.handleMessageSendingWithExtension();
             } else if (!useExtension && useSecretKey) {
                 if (!this.isValidMessageSetup()) {
-                    console.error('Message, sender private key, or recipient public key is not properly set.');
+                    console.error(
+                        'Message, sender private key, or recipient public key is not properly set.'
+                    );
                     return;
                 }
-                const encryptedMessage = await this._signerService.encryptMessage(
-                    this.decryptedPrivateKey,
-                    this.recipientPublicKey,
-                    this.message
+                const encryptedMessage =
+                    await this._signerService.encryptMessage(
+                        this.decryptedPrivateKey,
+                        this.recipientPublicKey,
+                        this.message
+                    );
+
+                const messageEvent = this._signerService.getUnsignedEvent(
+                    4,
+                    [['p', this.recipientPublicKey]],
+                    encryptedMessage
                 );
 
-                const messageEvent = this._signerService.getUnsignedEvent(4, [['p', this.recipientPublicKey]], encryptedMessage);
+                const signedEvent = this._signerService.getSignedEvent(
+                    messageEvent,
+                    this.decryptedPrivateKey
+                );
 
-                const signedEvent = this._signerService.getSignedEvent(messageEvent, this.decryptedPrivateKey);
-
-                const published = await this._relayService.publishEventToRelays(signedEvent);
+                const published =
+                    await this._relayService.publishEventToRelays(signedEvent);
 
                 if (published) {
                     this.message = '';
@@ -641,7 +870,6 @@ export class ChatService implements OnDestroy {
                     console.error('Failed to send the message.');
                 }
             }
-
         } catch (error) {
             console.error('Error sending private message:', error);
         }
@@ -649,20 +877,23 @@ export class ChatService implements OnDestroy {
 
     private async handleMessageSendingWithExtension(): Promise<void> {
         try {
-            const encryptedMessage = await this._signerService.encryptMessageWithExtension(
-                this.message,
-                this.recipientPublicKey
-            );
+            const encryptedMessage =
+                await this._signerService.encryptMessageWithExtension(
+                    this.message,
+                    this.recipientPublicKey
+                );
 
-            const signedEvent = await this._signerService.signEventWithExtension({
-                kind: 4,
-                pubkey: this._signerService.getPublicKey(),
-                tags: [['p', this.recipientPublicKey]],
-                content: encryptedMessage,
-                created_at: Math.floor(Date.now() / 1000),
-            });
+            const signedEvent =
+                await this._signerService.signEventWithExtension({
+                    kind: 4,
+                    pubkey: this._signerService.getPublicKey(),
+                    tags: [['p', this.recipientPublicKey]],
+                    content: encryptedMessage,
+                    created_at: Math.floor(Date.now() / 1000),
+                });
 
-            const published = await this._relayService.publishEventToRelays(signedEvent);
+            const published =
+                await this._relayService.publishEventToRelays(signedEvent);
 
             if (published) {
                 this.message = '';
@@ -682,6 +913,4 @@ export class ChatService implements OnDestroy {
         this._unsubscribeAll.next();
         this._unsubscribeAll.complete();
     }
-
-
 }

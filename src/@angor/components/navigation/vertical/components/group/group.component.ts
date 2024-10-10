@@ -1,3 +1,10 @@
+import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
+import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
+import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
+import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
+import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
+import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
+import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
 import { BooleanInput } from '@angular/cdk/coercion';
 import { NgClass } from '@angular/common';
 import {
@@ -11,13 +18,6 @@ import {
     inject,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { AngorNavigationService } from '@angor/components/navigation/navigation.service';
-import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
-import { AngorVerticalNavigationBasicItemComponent } from '@angor/components/navigation/vertical/components/basic/basic.component';
-import { AngorVerticalNavigationCollapsableItemComponent } from '@angor/components/navigation/vertical/components/collapsable/collapsable.component';
-import { AngorVerticalNavigationDividerItemComponent } from '@angor/components/navigation/vertical/components/divider/divider.component';
-import { AngorVerticalNavigationSpacerItemComponent } from '@angor/components/navigation/vertical/components/spacer/spacer.component';
-import { AngorVerticalNavigationComponent } from '@angor/components/navigation/vertical/vertical.component';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({

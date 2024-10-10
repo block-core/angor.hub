@@ -1,3 +1,4 @@
+import { AngorHighlightService } from '@angor/components/highlight/highlight.service';
 import { NgClass } from '@angular/common';
 import {
     AfterViewInit,
@@ -16,7 +17,6 @@ import {
     ViewEncapsulation,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { AngorHighlightService } from '@angor/components/highlight/highlight.service';
 
 @Component({
     selector: 'textarea[angor-highlight]',

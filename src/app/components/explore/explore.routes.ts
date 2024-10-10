@@ -3,7 +3,7 @@ import { ExploreComponent } from 'app/components/explore/explore.component';
 
 export default [
     {
-        path     : '',
+        path: '',
         component: ExploreComponent,
     },
 ] as Routes;

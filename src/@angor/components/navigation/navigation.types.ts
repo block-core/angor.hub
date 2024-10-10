@@ -38,6 +38,10 @@ export interface AngorNavigationItem {
     meta?: any;
 }
 
-export type AngorVerticalNavigationAppearance = 'default' | 'compact' | 'dense' | 'thin';
+export type AngorVerticalNavigationAppearance =
+    | 'default'
+    | 'compact'
+    | 'dense'
+    | 'thin';
 export type AngorVerticalNavigationMode = 'over' | 'side';
 export type AngorVerticalNavigationPosition = 'left' | 'right';

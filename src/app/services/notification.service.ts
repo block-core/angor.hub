@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Filter, NostrEvent } from 'nostr-tools';
-import { Subject, Observable, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { RelayService } from './relay.service';
 
 export interface NostrNotification {
@@ -17,10 +17,9 @@ export interface NostrNotification {
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class NotificationService {
-
     private notificationSubject = new BehaviorSubject<NostrNotification[]>([]);
     private notificationCount = new BehaviorSubject<number>(0);
     private lastNotificationTimestamp: number | null = null;
@@ -40,7 +39,9 @@ export class NotificationService {
     }
 
     private loadTimestampFromLocalStorage(): number | null {
-        const storedTimestamp = localStorage.getItem('lastNotificationTimestamp');
+        const storedTimestamp = localStorage.getItem(
+            'lastNotificationTimestamp'
+        );
         return storedTimestamp ? parseInt(storedTimestamp, 10) : null;
     }
 
@@ -59,10 +60,12 @@ export class NotificationService {
 
     private loadFilterPreferences(): number[] {
         const storedPreferences = localStorage.getItem('notificationSettings');
-        return storedPreferences ? JSON.parse(storedPreferences) : [1, 3, 4, 9735]; // Default to all kinds if not set
+        return storedPreferences
+            ? JSON.parse(storedPreferences)
+            : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
     }
 
-     public async subscribeToNotifications(pubkey: string): Promise<void> {
+    public async subscribeToNotifications(pubkey: string): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const pool = this.relayService.getPool();
         const connectedRelays = this.relayService.getConnectedRelays();
@@ -74,30 +77,28 @@ export class NotificationService {
         const filterPreferences = this.loadFilterPreferences();
 
         if (filterPreferences.length === 0) {
-            filterPreferences.push(1, 3, 4, 9735);
+            filterPreferences.push(1, 3, 4, 7, 9735);
         }
 
         const filter: Filter = {
             kinds: filterPreferences,
             '#p': [pubkey],
             limit: 50,
-            since: lastNotificationTimestamp || undefined
+            since: lastNotificationTimestamp || undefined,
         };
 
         return new Promise((resolve) => {
             const sub = pool.subscribeMany(connectedRelays, [filter], {
-                onevent: (event: NostrEvent) => this.handleNotificationEvent(event, pubkey),
+                onevent: (event: NostrEvent) =>
+                    this.handleNotificationEvent(event, pubkey),
                 oneose() {
-                     resolve();
-                }
+                    resolve();
+                },
             });
         });
     }
 
     private handleNotificationEvent(event: NostrEvent, pubkey: string): void {
-        console.log('Received event:', event);
-
-
         if (this.isNotificationEvent(event, pubkey)) {
             const eventTimestamp = event.created_at * 1000;
             const formattedDate = new Date(eventTimestamp);
@@ -127,6 +128,11 @@ export class NotificationService {
                     notificationDescription = 'You have a new follower.';
                     notificationIcon = 'heroicons_outline:user-plus';
                     break;
+                case 7:
+                    notificationTitle = 'New Like';
+                    notificationDescription = 'You have a new Like.';
+                    notificationIcon = 'heroicons_outline:hand-thumb-up';
+                    break;
                 default:
                     notificationTitle = 'Notification';
                     notificationIcon = 'heroicons_outline:bell';
@@ -140,20 +146,19 @@ export class NotificationService {
                 description: notificationDescription,
                 time: formattedDate,
                 kind: event.kind,
-                read: false
+                read: false,
             };
 
-            console.log('Generated notification:', notification);
-
-
             const currentNotifications = this.notificationSubject.value;
-            const updatedNotifications = [notification, ...currentNotifications].slice(0, 50);
+            const updatedNotifications = [
+                notification,
+                ...currentNotifications,
+            ].slice(0, 50);
 
             this.notificationSubject.next(updatedNotifications);
             this.incrementNotificationCount(event.created_at);
         }
     }
-
 
     private incrementNotificationCount(timestamp: number): void {
         const newCount = this.notificationCount.value + 1;
@@ -162,10 +167,12 @@ export class NotificationService {
     }
 
     public markAllAsRead(): void {
-        const updatedNotifications = this.notificationSubject.value.map(notification => ({
-            ...notification,
-            read: true
-        }));
+        const updatedNotifications = this.notificationSubject.value.map(
+            (notification) => ({
+                ...notification,
+                read: true,
+            })
+        );
         this.notificationSubject.next(updatedNotifications);
         this.notificationCount.next(0);
         const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -173,6 +180,6 @@ export class NotificationService {
     }
 
     private isNotificationEvent(event: NostrEvent, pubkey: string): boolean {
-        return event.tags.some(tag => tag[0] === 'p' && tag[1] === pubkey);
+        return event.tags.some((tag) => tag[0] === 'p' && tag[1] === pubkey);
     }
 }

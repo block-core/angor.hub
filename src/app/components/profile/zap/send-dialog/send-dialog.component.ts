@@ -1,29 +1,40 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { LightningService } from 'app/services/lightning.service';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { webln } from '@getalby/sdk';
-import { decode } from '@gandlaf21/bolt11-decode';
-import { bech32 } from '@scure/base';
-import { NgClass, CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
+import { Component, Inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatOption } from '@angular/material/core';
-import { MatLabel, MatFormField, MatFormFieldModule } from '@angular/material/form-field';
+import {
+    MAT_DIALOG_DATA,
+    MatDialogActions,
+    MatDialogClose,
+    MatDialogContent,
+    MatDialogRef,
+    MatDialogTitle,
+} from '@angular/material/dialog';
+import { MatDivider } from '@angular/material/divider';
+import {
+    MatFormField,
+    MatFormFieldModule,
+    MatLabel,
+} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltip } from '@angular/material/tooltip';
+import { decode } from '@gandlaf21/bolt11-decode';
+import { webln } from '@getalby/sdk';
+import { bech32 } from '@scure/base';
+import { QRCodeModule } from 'angularx-qrcode';
 import { SettingsIndexerComponent } from 'app/components/settings/indexer/indexer.component';
 import { SettingsNetworkComponent } from 'app/components/settings/network/network.component';
 import { SettingsNotificationsComponent } from 'app/components/settings/notifications/notifications.component';
 import { SettingsProfileComponent } from 'app/components/settings/profile/profile.component';
 import { SettingsRelayComponent } from 'app/components/settings/relay/relay.component';
 import { SettingsSecurityComponent } from 'app/components/settings/security/security.component';
-import { QRCodeModule } from 'angularx-qrcode';
-import { MatDivider } from '@angular/material/divider';
-import { MatTooltip } from '@angular/material/tooltip';
+import { LightningService } from 'app/services/lightning.service';
 
 @Component({
     selector: 'app-send-dialog',
@@ -54,10 +65,11 @@ import { MatTooltip } from '@angular/material/tooltip';
         QRCodeModule,
         MatDivider,
         MatTooltip,
-        MatDialogTitle
+        MatDialogTitle,
+        MatDialogClose,
     ],
     templateUrl: './send-dialog.component.html',
-    styleUrls: ['./send-dialog.component.scss']
+    styleUrls: ['./send-dialog.component.scss'],
 })
 export class SendDialogComponent {
     sats: string;
@@ -66,7 +78,7 @@ export class SendDialogComponent {
     showInvoiceSection: boolean = false;
     displayQRCode: boolean = false;
     invoiceAmount: string = '?';
-    nwc :any;
+    nwc: any;
     constructor(
         private dialogRef: MatDialogRef<SendDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public metadata: any,
@@ -86,7 +98,7 @@ export class SendDialogComponent {
         { icon: 'rocket', label: '10k', value: 10000 },
         { icon: 'local_fire_department', label: '100k', value: 100000 },
         { icon: 'flash_on', label: '500k', value: 500000 },
-        { icon: 'diamond', label: '1M', value: 1000000 }
+        { icon: 'diamond', label: '1M', value: 1000000 },
     ];
 
     getLightningInfo(): void {
@@ -100,20 +112,30 @@ export class SendDialogComponent {
             const data = new Uint8Array(bech32.fromWords(words));
             lightningAddress = new TextDecoder().decode(Uint8Array.from(data));
         } else if (this.metadata?.lud16) {
-            lightningAddress = this.lightning.getLightningAddress(this.metadata.lud16);
+            lightningAddress = this.lightning.getLightningAddress(
+                this.metadata.lud16
+            );
         }
 
         if (lightningAddress !== '') {
-            this.lightning.getLightning(lightningAddress).subscribe((response) => {
-                this.lightningResponse = response;
-                if (this.lightningResponse.status === 'Failed') {
-                    this.openSnackBar('Failed to lookup lightning address', 'dismiss');
-                } else if (this.lightningResponse.callback) {
-                    this.showInvoiceSection = true;
-                } else {
-                    this.openSnackBar("Couldn't find user's lightning address", 'dismiss');
-                }
-            });
+            this.lightning
+                .getLightning(lightningAddress)
+                .subscribe((response) => {
+                    this.lightningResponse = response;
+                    if (this.lightningResponse.status === 'Failed') {
+                        this.openSnackBar(
+                            'Failed to lookup lightning address',
+                            'dismiss'
+                        );
+                    } else if (this.lightningResponse.callback) {
+                        this.showInvoiceSection = true;
+                    } else {
+                        this.openSnackBar(
+                            "Couldn't find user's lightning address",
+                            'dismiss'
+                        );
+                    }
+                });
         } else {
             this.openSnackBar('No lightning address found', 'dismiss');
         }
@@ -121,8 +143,9 @@ export class SendDialogComponent {
 
     getLightningInvoice(amount: string): void {
         if (this.lightningResponse && this.lightningResponse.callback) {
-            this.lightning.getLightningInvoice(this.lightningResponse.callback, amount)
-                .subscribe(async response => {
+            this.lightning
+                .getLightningInvoice(this.lightningResponse.callback, amount)
+                .subscribe(async (response) => {
                     this.lightningInvoice = response.pr;
                     this.setInvoiceAmount(this.lightningInvoice);
                     this.showInvoiceSection = true;
@@ -134,7 +157,9 @@ export class SendDialogComponent {
     setInvoiceAmount(invoice: string): void {
         if (invoice) {
             const decodedInvoice = decode(invoice);
-            const amountSection = decodedInvoice.sections.find((s) => s.name === 'amount');
+            const amountSection = decodedInvoice.sections.find(
+                (s) => s.name === 'amount'
+            );
             if (amountSection) {
                 this.invoiceAmount = String(Number(amountSection.value) / 1000);
             }
@@ -149,29 +174,32 @@ export class SendDialogComponent {
         this.getLightningInvoice(String(Number(this.sats) * 1000));
     }
 
-
     async payInvoice(): Promise<void> {
         if (!this.lightningInvoice) {
             console.error('Lightning invoice is not set');
             return;
         }
 
-        const nwc = new webln.NostrWebLNProvider({ nostrWalletConnectUrl: await this.loadNWCUrl() });
+        const nwc = new webln.NostrWebLNProvider({
+            nostrWalletConnectUrl: await this.loadNWCUrl(),
+        });
 
         nwc.enable()
             .then(() => {
                 return nwc.sendPayment(this.lightningInvoice);
             })
-            .then(response => {
+            .then((response) => {
                 if (response && response.preimage) {
-                    console.log(`Payment successful, preimage: ${response.preimage}`);
+                    console.log(
+                        `Payment successful, preimage: ${response.preimage}`
+                    );
                     this.openSnackBar('Zapped!', 'dismiss');
                     this.dialogRef.close();
                 } else {
                     this.listenForPaymentStatus(nwc);
                 }
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('Payment failed:', error);
                 this.openSnackBar('Failed to pay invoice', 'dismiss');
                 this.listenForPaymentStatus(nwc);
@@ -179,13 +207,14 @@ export class SendDialogComponent {
     }
 
     loadNWCUrl(): Promise<string> {
-         const nwc = webln.NostrWebLNProvider.withNewSecret();
+        const nwc = webln.NostrWebLNProvider.withNewSecret();
 
-         return nwc.initNWC({ name: 'Angor Hub' })
+        return nwc
+            .initNWC({ name: 'Angor Hub' })
             .then(() => {
                 return nwc.getNostrWalletConnectUrl();
             })
-            .catch(error => {
+            .catch((error) => {
                 console.error('Error initializing NWC:', error);
                 throw error;
             });
@@ -194,16 +223,19 @@ export class SendDialogComponent {
     listenForPaymentStatus(nwc): void {
         const checkPaymentStatus = () => {
             nwc.sendPayment(this.lightningInvoice)
-                .then(response => {
+                .then((response) => {
                     if (response && response.preimage) {
-                        console.log('Payment confirmed, preimage:', response.preimage);
+                        console.log(
+                            'Payment confirmed, preimage:',
+                            response.preimage
+                        );
                         this.openSnackBar('Payment confirmed!', 'dismiss');
                         this.dialogRef.close();
                     } else {
                         setTimeout(checkPaymentStatus, 5000);
                     }
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error checking payment status:', error);
                     setTimeout(checkPaymentStatus, 5000);
                 });
@@ -228,5 +260,4 @@ export class SendDialogComponent {
     closeDialog(): void {
         this.dialogRef.close();
     }
-
 }

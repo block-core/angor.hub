@@ -1,3 +1,4 @@
+import { angorAnimations } from '@angor/animations';
 import { NgTemplateOutlet } from '@angular/common';
 import {
     AfterViewInit,
@@ -8,7 +9,6 @@ import {
     TemplateRef,
     ViewEncapsulation,
 } from '@angular/core';
-import { angorAnimations } from '@angor/animations';
 
 @Component({
     selector: 'angor-masonry',

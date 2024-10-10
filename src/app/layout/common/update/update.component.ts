@@ -1,9 +1,13 @@
-import { CommonModule, DatePipe, NgClass, NgTemplateOutlet } from '@angular/common';
+import {
+    CommonModule,
+    DatePipe,
+    NgClass,
+    NgTemplateOutlet,
+} from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    inject,
     Input,
     ViewEncapsulation,
 } from '@angular/core';
@@ -28,7 +32,7 @@ import { NewVersionCheckerService } from 'app/services/update.service';
         NgTemplateOutlet,
         RouterLink,
         DatePipe,
-        CommonModule
+        CommonModule,
     ],
 })
 export class UpdateComponent {

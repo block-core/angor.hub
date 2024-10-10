@@ -2,8 +2,8 @@ interface SendPaymentResponse {
     paymentHash?: string;
     preimage: string;
     route?: {
-      total_amt: number;
-      total_fees: number;
+        total_amt: number;
+        total_fees: number;
     };
 }
 
@@ -21,9 +21,9 @@ interface RequestInvoiceResponse {
 
 interface GetInfoResponse {
     node: {
-      alias: string;
-      pubkey: string;
-      color?: string;
+        alias: string;
+        pubkey: string;
+        color?: string;
     };
 }
 

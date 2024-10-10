@@ -11,8 +11,11 @@ body {
     position: absolute;
     bottom: 60px;
     left: 0;
-    z-index: 1000;
-  }
-  input, textarea, select, button {
+    z-index: 100000;
+}
+input,
+textarea,
+select,
+button {
     font-size: 16px;
 }

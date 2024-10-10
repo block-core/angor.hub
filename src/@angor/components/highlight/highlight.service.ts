@@ -3,7 +3,6 @@ import hljs from 'highlight.js';
 
 @Injectable({ providedIn: 'root' })
 export class AngorHighlightService {
-
     /**
      * Highlights the provided code using the specified language.
      */
@@ -28,15 +27,17 @@ export class AngorHighlightService {
         }
 
         // Determine the smallest indentation
-        lines.filter(line => line.length).forEach((line, index) => {
-            if (index === 0) {
-                indentation = line.search(/\S|$/);
-            } else {
-                indentation = Math.min(line.search(/\S|$/), indentation);
-            }
-        });
+        lines
+            .filter((line) => line.length)
+            .forEach((line, index) => {
+                if (index === 0) {
+                    indentation = line.search(/\S|$/);
+                } else {
+                    indentation = Math.min(line.search(/\S|$/), indentation);
+                }
+            });
 
         // Remove extra indentation and return formatted code
-        return lines.map(line => line.substring(indentation)).join('\n');
+        return lines.map((line) => line.substring(indentation)).join('\n');
     }
 }

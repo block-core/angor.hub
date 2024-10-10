@@ -42,7 +42,9 @@ export class SettingsNotificationsComponent implements OnInit {
 
         this.notificationsForm = this._formBuilder.group({
             mention: [savedSettings.includes(this.notificationKinds.mention)],
-            privateMessage: [savedSettings.includes(this.notificationKinds.privateMessage)],
+            privateMessage: [
+                savedSettings.includes(this.notificationKinds.privateMessage),
+            ],
             zap: [savedSettings.includes(this.notificationKinds.zap)],
             follower: [savedSettings.includes(this.notificationKinds.follower)],
         });
@@ -75,6 +77,6 @@ export class SettingsNotificationsComponent implements OnInit {
 
     private loadNotificationSettings(): number[] {
         const storedSettings = localStorage.getItem('notificationSettings');
-        return storedSettings ? JSON.parse(storedSettings) : [1, 3, 4, 9735]; // Default to all kinds if not set
+        return storedSettings ? JSON.parse(storedSettings) : [1, 3, 4, 7, 9735]; // Default to all kinds if not set
     }
 }

@@ -1,9 +1,3 @@
-import { NgClass } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { Router } from '@angular/router';
 import { AngorDrawerComponent } from '@angor/components/drawer';
 import {
     AngorConfig,
@@ -12,6 +6,12 @@ import {
     Theme,
     Themes,
 } from '@angor/services/config';
+import { NgClass } from '@angular/common';
+import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
 
 import { Subject, takeUntil } from 'rxjs';
 
@@ -52,12 +52,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     themes: Themes;
     private _unsubscribeAll: Subject<any> = new Subject<any>();
 
-
     constructor(
         private _router: Router,
         private _angorConfigService: AngorConfigService
     ) {}
-
 
     ngOnInit(): void {
         // Subscribe to config changes
@@ -76,7 +74,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this._unsubscribeAll.complete();
     }
 
-
     setLayout(layout: string): void {
         // Clear the 'layout' query param to allow layout changes
         this._router
@@ -92,12 +89,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
             });
     }
 
-
     setScheme(scheme: Scheme): void {
         this._angorConfigService.config = { scheme };
     }
 
- 
     setTheme(theme: Theme): void {
         this._angorConfigService.config = { theme };
     }

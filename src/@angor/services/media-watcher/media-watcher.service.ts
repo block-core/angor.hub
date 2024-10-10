@@ -1,6 +1,6 @@
+import { AngorConfigService } from '@angor/services/config';
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { Injectable, inject } from '@angular/core';
-import { AngorConfigService } from '@angor/services/config';
 import { fromPairs } from 'lodash-es';
 import { Observable, ReplaySubject, map, switchMap } from 'rxjs';
 

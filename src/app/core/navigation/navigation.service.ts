@@ -9,11 +9,9 @@ export class NavigationService {
     private _navigation: ReplaySubject<Navigation> =
         new ReplaySubject<Navigation>(1);
 
-
     get navigation$(): Observable<Navigation> {
         return this._navigation.asObservable();
     }
-
 
     get(): Observable<Navigation> {
         return this._httpClient.get<Navigation>('api/navigation').pipe(

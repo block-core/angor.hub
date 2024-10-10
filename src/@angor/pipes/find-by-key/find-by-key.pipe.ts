@@ -18,7 +18,11 @@ export class AngorFindByKeyPipe implements PipeTransform {
      * @param source The array of objects to search within.
      * @returns A single object if `value` is a string, or an array of objects if `value` is an array.
      */
-    transform(value: string | string[], key: string, source: any[]): any | any[] {
+    transform(
+        value: string | string[],
+        key: string,
+        source: any[]
+    ): any | any[] {
         // If value is an array of strings, map each to its corresponding object in the source.
         if (Array.isArray(value)) {
             return value.map((item) =>

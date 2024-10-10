@@ -1,3 +1,5 @@
+import { angorAnimations } from '@angor/animations';
+import { AngorCardFace } from '@angor/components/card/card.types';
 import { BooleanInput, coerceBooleanProperty } from '@angular/cdk/coercion';
 import {
     Component,
@@ -7,8 +9,6 @@ import {
     SimpleChanges,
     ViewEncapsulation,
 } from '@angular/core';
-import { angorAnimations } from '@angor/animations';
-import { AngorCardFace } from '@angor/components/card/card.types';
 
 @Component({
     selector: 'angor-card',
@@ -47,11 +47,15 @@ export class AngorCardComponent implements OnChanges {
      */
     ngOnChanges(changes: SimpleChanges): void {
         if ('expanded' in changes) {
-            this.expanded = coerceBooleanProperty(changes.expanded.currentValue);
+            this.expanded = coerceBooleanProperty(
+                changes.expanded.currentValue
+            );
         }
 
         if ('flippable' in changes) {
-            this.flippable = coerceBooleanProperty(changes.flippable.currentValue);
+            this.flippable = coerceBooleanProperty(
+                changes.flippable.currentValue
+            );
         }
     }
 }

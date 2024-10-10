@@ -3,42 +3,72 @@
     <div class="w-full">
         <mat-form-field class="w-full" [subscriptSizing]="'dynamic'">
             <mat-label>Add Relay</mat-label>
-            <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:link'" matPrefix></mat-icon>
+            <mat-icon
+                class="icon-size-5"
+                [svgIcon]="'heroicons_solid:link'"
+                matPrefix
+            ></mat-icon>
             <input matInput [(ngModel)]="newRelayUrl" placeholder="Relay URL" />
             <button mat-icon-button matSuffix (click)="addRelay()">
-                <mat-icon class="icon-size-5" [svgIcon]="'heroicons_solid:plus-circle'"></mat-icon>
+                <mat-icon
+                    class="icon-size-5"
+                    [svgIcon]="'heroicons_solid:plus-circle'"
+                ></mat-icon>
             </button>
         </mat-form-field>
     </div>
 
     <!-- Relays -->
     <div class="mt-8 flex flex-col divide-y border-b border-t">
-        <div *ngFor="let relay of relays; trackBy: trackByFn" class="flex flex-col py-6 sm:flex-row sm:items-center">
+        <div
+            *ngFor="let relay of relays; trackBy: trackByFn"
+            class="flex flex-col py-6 sm:flex-row sm:items-center"
+        >
             <div class="flex items-center">
-                <div class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full">
-                    <img class="h-full w-full object-cover" [src]="getSafeUrl(relayFavIcon(relay.url))"
-                        onerror="this.src='/images/avatars/avatar-placeholder.png'" alt="relay avatar" />
-
+                <div
+                    class="flex h-10 w-10 flex-0 items-center justify-center overflow-hidden rounded-full"
+                >
+                    <img
+                        class="h-full w-full object-cover"
+                        [src]="getSafeUrl(relayFavIcon(relay.url))"
+                        onerror="this.src='/images/avatars/avatar-placeholder.png'"
+                        alt="relay avatar"
+                    />
                 </div>
                 <div class="ml-4">
                     <div class="font-medium">{{ relay.url }}</div>
-                    <div class="text-sm" [ngClass]="getRelayStatusClass(relay)">Status: {{ getRelayStatus(relay) }}
+                    <div class="text-sm" [ngClass]="getRelayStatusClass(relay)">
+                        Status: {{ getRelayStatus(relay) }}
                     </div>
                 </div>
             </div>
             <div class="mt-4 flex items-center sm:ml-auto sm:mt-0">
-                <mat-form-field class="angor-mat-dense w-50" [subscriptSizing]="'dynamic'">
-                    <mat-select [(ngModel)]="relay.accessType" (selectionChange)="updateRelayAccess(relay)">
+                <mat-form-field
+                    class="angor-mat-dense w-50"
+                    [subscriptSizing]="'dynamic'"
+                >
+                    <mat-select
+                        [(ngModel)]="relay.accessType"
+                        (selectionChange)="updateRelayAccess(relay)"
+                    >
                         <mat-select-trigger class="text-md">
-                            <span class="ml-1 font-medium">{{ relay.accessType | titlecase }}</span>
+                            <span class="ml-1 font-medium">{{
+                                relay.accessType | titlecase
+                            }}</span>
                         </mat-select-trigger>
-                        <mat-option *ngFor="let option of accessOptions" [value]="option.value">
+                        <mat-option
+                            *ngFor="let option of accessOptions"
+                            [value]="option.value"
+                        >
                             <div class="font-medium">{{ option.label }}</div>
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
                 <button mat-icon-button (click)="removeRelay(relay.url)">
-                    <mat-icon class="text-hint" [svgIcon]="'heroicons_outline:trash'"></mat-icon>
+                    <mat-icon
+                        class="text-hint"
+                        [svgIcon]="'heroicons_outline:trash'"
+                    ></mat-icon>
                 </button>
             </div>
         </div>

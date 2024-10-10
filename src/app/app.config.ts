@@ -1,5 +1,11 @@
+import { provideAngor } from '@angor';
 import { provideHttpClient } from '@angular/common/http';
-import { APP_INITIALIZER, ApplicationConfig, inject, isDevMode } from '@angular/core';
+import {
+    APP_INITIALIZER,
+    ApplicationConfig,
+    inject,
+    isDevMode,
+} from '@angular/core';
 import { LuxonDateAdapter } from '@angular/material-luxon-adapter';
 import { DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -9,20 +15,18 @@ import {
     withInMemoryScrolling,
     withPreloading,
 } from '@angular/router';
-import { provideAngor } from '@angor';
+import { provideServiceWorker } from '@angular/service-worker';
 import { TranslocoService, provideTransloco } from '@ngneat/transloco';
+import { WebLNProvider } from '@webbtc/webln-types';
 import { appRoutes } from 'app/app.routes';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
-import { provideServiceWorker } from '@angular/service-worker';
-import { HashService } from './services/hash.service';
 import { navigationServices } from './layout/navigation/navigation.services';
-import { WebLNProvider } from '@webbtc/webln-types';
+import { HashService } from './services/hash.service';
 import { NostrWindow } from './types/nostr';
 
 export function initializeApp(hashService: HashService) {
-    console.log('initializeApp. Getting hashService.load.');
     return (): Promise<void> => hashService.load();
 }
 export const appConfig: ApplicationConfig = {
@@ -31,7 +35,7 @@ export const appConfig: ApplicationConfig = {
         provideHttpClient(),
         provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
+            registrationStrategy: 'registerWhenStable:30000',
         }),
         {
             provide: APP_INITIALIZER,
@@ -54,12 +58,12 @@ export const appConfig: ApplicationConfig = {
             provide: MAT_DATE_FORMATS,
             useValue: {
                 parse: {
-                    dateInput: 'D',  // Date format for parsing
+                    dateInput: 'D', // Date format for parsing
                 },
                 display: {
-                    dateInput: 'DDD',             // Date format for input display
-                    monthYearLabel: 'LLL yyyy',   // Format for month-year labels
-                    dateA11yLabel: 'DD',          // Accessible format for dates
+                    dateInput: 'DDD', // Date format for input display
+                    monthYearLabel: 'LLL yyyy', // Format for month-year labels
+                    dateA11yLabel: 'DD', // Accessible format for dates
                     monthYearA11yLabel: 'LLLL yyyy', // Accessible format for month-year
                 },
             },
@@ -72,7 +76,7 @@ export const appConfig: ApplicationConfig = {
                     {
                         id: 'en',
                         label: 'English',
-                    }
+                    },
                 ],
                 defaultLang: 'en',
                 fallbackLang: 'en',
@@ -121,13 +125,11 @@ export const appConfig: ApplicationConfig = {
                 ],
             },
         }),
-
     ],
 };
 declare global {
     interface Window {
-      webln?: WebLNProvider;
-      nostr?: NostrWindow;
+        webln?: WebLNProvider;
+        nostr?: NostrWindow;
     }
-  }
-
+}

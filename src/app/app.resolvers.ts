@@ -9,11 +9,11 @@ import { forkJoin } from 'rxjs';
  */
 export const initialDataResolver = () => {
     const navigationService = inject(NavigationService);
-     const quickChatService = inject(QuickChatService);
+    const quickChatService = inject(QuickChatService);
 
     // Combine API calls into a single observable
     return forkJoin([
-        navigationService.get(),         // Fetch navigation data
+        navigationService.get(), // Fetch navigation data
         //  quickChatService.getChats(),     // Fetch chat data
     ]);
 };

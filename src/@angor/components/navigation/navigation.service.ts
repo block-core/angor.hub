@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { AngorNavigationItem } from '@angor/components/navigation/navigation.types';
+import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class AngorNavigationService {
@@ -93,7 +93,10 @@ export class AngorNavigationService {
      * @param id
      * @param navigation
      */
-    getItem(id: string, navigation: AngorNavigationItem[]): AngorNavigationItem | null {
+    getItem(
+        id: string,
+        navigation: AngorNavigationItem[]
+    ): AngorNavigationItem | null {
         for (const item of navigation) {
             if (item.id === id) return item;
             if (item.children) {
