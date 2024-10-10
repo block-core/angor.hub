@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, V
 import { PaginatedEventService } from 'app/services/event.service';
 import { NewEvent } from 'app/types/NewEvent';
 import { Observable } from 'rxjs';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser'; // Import DomSanitizer for HTML sanitization
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 @Component({
@@ -13,44 +13,45 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   standalone: true,
-  imports: [CommonModule,InfiniteScrollModule],
+  imports: [CommonModule, InfiniteScrollModule],
 })
 export class EventListComponent implements OnInit {
-  @Input() pubkeys: string[] = []; // Define input for pubkeys
+  @Input() pubkeys: string[] = [];
 
-  events$: Observable<NewEvent[]>; // Observable for the event stream
+  events$: Observable<NewEvent[]>;
   isLoading: boolean = false;
   noMoreEvents: boolean = false;
 
   constructor(
     private paginatedEventService: PaginatedEventService,
-    private changeDetectorRef: ChangeDetectorRef, // Inject ChangeDetectorRef
-    private sanitizer: DomSanitizer // Inject DomSanitizer for HTML sanitization
+    private changeDetectorRef: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {
-    this.events$ = this.paginatedEventService.getEventStream(); // Subscribe to event stream
+    this.events$ = this.paginatedEventService.getEventStream();
   }
 
   ngOnInit(): void {
-    // Subscribe to the event stream and update UI when events are received
-    this.events$.subscribe(events => {
-      // Sort events by creation date, newest first
-      const sortedEvents = events.sort((a, b) => b.createdAt - a.createdAt);
-
-      console.log('Received and sorted events:', sortedEvents); // Log the sorted list of events
-      this.changeDetectorRef.markForCheck(); // Ensure the UI updates with new events
+    // Subscribe to real-time events
+    this.paginatedEventService.subscribeToEvents(this.pubkeys).then(() => {
+      console.log('Subscribed to real-time events.');
+    }).catch(error => {
+      console.error('Error subscribing to events:', error);
     });
 
-    // Load initial events on component initialization
+    // Subscribe to events stream
+    this.events$.subscribe(events => {
+      const sortedEvents = events.sort((a, b) => b.createdAt - a.createdAt);
+      this.changeDetectorRef.markForCheck(); // Trigger change detection
+    });
+
     this.loadInitialEvents();
 
-    // Check if there are more events to load
     this.paginatedEventService.hasMoreEvents().subscribe(noMore => {
       this.noMoreEvents = noMore;
-      this.changeDetectorRef.markForCheck(); // Update UI when more events are loaded
+      this.changeDetectorRef.markForCheck();
     });
   }
 
-  // Load initial events when the component initializes
   loadInitialEvents(): void {
     if (this.pubkeys.length === 0) {
       console.warn('No pubkeys provided to EventListComponent');
@@ -60,46 +61,41 @@ export class EventListComponent implements OnInit {
     this.isLoading = true;
     this.paginatedEventService.loadMoreEvents(this.pubkeys).finally(() => {
       this.isLoading = false;
-      this.changeDetectorRef.markForCheck(); // Ensure the UI updates after loading
+      this.changeDetectorRef.markForCheck();
     });
   }
 
-  // Load more events when the user scrolls to the bottom
   loadMoreEvents(): void {
     if (!this.isLoading && !this.noMoreEvents) {
       this.isLoading = true;
       this.paginatedEventService.loadMoreEvents(this.pubkeys).finally(() => {
         this.isLoading = false;
-        this.changeDetectorRef.markForCheck(); // Update UI after more events are loaded
+        this.changeDetectorRef.markForCheck();
       });
     }
   }
 
-  // Sanitize the event content to safely display it in the UI
   getSanitizedContent(content: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(content);
   }
 
-  // Send a like event
   sendLike(event: NewEvent): void {
     if (!event.likedByMe) {
       this.paginatedEventService.sendLikeEvent(event).then(() => {
         event.likedByMe = true;
         event.likeCount++;
-        this.changeDetectorRef.markForCheck(); // Update UI after liking an event
+        this.changeDetectorRef.markForCheck();
       }).catch(error => {
         console.error('Failed to send like:', error);
       });
     }
   }
 
-  // Utility to display time in a human-readable format (e.g., "5 minutes ago")
   getTimeFromNow(event: NewEvent): string {
     return event.fromNow;
   }
 
-   // Define the trackById function for ngFor
-   trackById(index: number, item: NewEvent): string {
-    return item.id; // Assuming each event has a unique 'id' field
+  trackById(index: number, item: NewEvent): string {
+    return item.id;
   }
 }

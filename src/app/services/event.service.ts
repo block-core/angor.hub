@@ -20,11 +20,11 @@ export class PaginatedEventService {
     private eventsSubject = new BehaviorSubject<NewEvent[]>([]);
     private isLoading = new BehaviorSubject<boolean>(false);
     private lastLoadedEventTime: number | null = null;
-    private pageSize = 10;
+    private pageSize = 20;
     private noMoreEvents = new BehaviorSubject<boolean>(false);
     private seenEventIds = new Set<string>();
 
-    // Interaction maps
+
     private likesMap = new Map<string, string[]>();
     private repliesMap = new Map<string, NewEvent[]>();
     private zapsMap = new Map<string, string[]>();
@@ -41,8 +41,8 @@ export class PaginatedEventService {
         private metadataService: MetadataService
     ) {}
 
-    // Subscribe to events and update UI in real-time
-    private async subscribeToEvents(): Promise<void> {
+
+     async subscribeToEvents(pubkeys:string[]): Promise<void> {
         await this.relayService.ensureConnectedRelays();
         const connectedRelays = this.relayService.getConnectedRelays();
 
@@ -51,24 +51,62 @@ export class PaginatedEventService {
             return;
         }
 
-        const filter: Filter = {
-            kinds: [1], // Subscribe to type 1 events (posts)
-        };
+        const filters: Filter[] = [
+            {
+                kinds: [1],
+                authors: pubkeys,
+                limit: this.pageSize
+            },
+            {
+                '#p': pubkeys,
+                limit: 1
+            }
+        ];
 
-        this.relayService.getPool().subscribeMany(connectedRelays, [filter], {
+
+        this.relayService.getPool().subscribeMany(connectedRelays, filters, {
             onevent: (event: NostrEvent) => {
-                this.handleNewOrUpdatedEvent(event);
+                if (!this.isReply(event)) {
+
+                    this.handleNewOrUpdatedEvent(event);
+                }
+
+                const parentEventId = this.getParentEventId(event);
+                if (parentEventId) {
+                    this.enqueueJob(parentEventId, 'replies');
+                }
+
+
+                switch (event.kind) {
+                    case 7:
+                        this.enqueueJob(parentEventId, 'likes');
+                        break;
+                    case 9735:
+                        this.enqueueJob(parentEventId, 'zaps');
+                        break;
+                    case 6:
+                        this.enqueueJob(parentEventId, 'reposts');
+                        break;
+                    default:
+                        console.log(`Received event kind: ${event.kind}`);
+                }
             },
             oneose: () => {
                 console.log('Subscription to relays closed.');
             },
         });
+
     }
 
-    // Handle the new or updated event and update the UI
+private getParentEventId(event: NostrEvent): string | null {
+    const replyTag = event.tags.find(tag => tag[0] === 'e');
+    return replyTag ? replyTag[1] : null;
+}
+
+
     private async handleNewOrUpdatedEvent(event: NostrEvent): Promise<void> {
         switch (event.kind) {
-            case 1: // New post event
+            case 1:
                 if (!this.seenEventIds.has(event.id)) {
                     this.seenEventIds.add(event.id);
                     const newEvent = await this.createNewEvent(event);
@@ -80,19 +118,19 @@ export class PaginatedEventService {
                 }
                 break;
 
-            case 7: // Like event
+            case 7:
                 this.handleLikeEvent(event);
                 break;
 
-            case 9735: // Zap event
+            case 9735:
                 this.handleZapEvent(event);
                 break;
 
-            case 6: // Repost event
+            case 6:
                 this.handleRepostEvent(event);
                 break;
 
-            case 4: // Reply event
+            case 4:
                 this.handleReplyEvent(event);
                 break;
 
@@ -101,7 +139,7 @@ export class PaginatedEventService {
         }
     }
 
-    // Handle like events
+
     private handleLikeEvent(event: NostrEvent): void {
         const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
         if (eventId) {
@@ -117,7 +155,7 @@ export class PaginatedEventService {
         }
     }
 
-    // Handle zap events
+
     private handleZapEvent(event: NostrEvent): void {
         const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
         if (eventId) {
@@ -133,7 +171,7 @@ export class PaginatedEventService {
         }
     }
 
-    // Handle repost events
+
     private handleRepostEvent(event: NostrEvent): void {
         const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
         if (eventId) {
@@ -149,7 +187,7 @@ export class PaginatedEventService {
         }
     }
 
-    // Handle reply events
+
     private async handleReplyEvent(event: NostrEvent): Promise<void> {
         const eventId = event.tags.find(tag => tag[0] === 'e')?.[1];
         if (eventId) {
@@ -171,7 +209,7 @@ export class PaginatedEventService {
         return replyTags.length > 0;
     }
 
-    // Load more events based on provided public keys
+
     async loadMoreEvents(pubkeys: string[]): Promise<void> {
         if (this.isLoading.value || this.noMoreEvents.value) return;
 
@@ -179,7 +217,7 @@ export class PaginatedEventService {
 
         const filter: Filter = {
             authors: pubkeys,
-            kinds: [1], // Only load type 1 events (posts)
+            kinds: [1],
             until: this.lastLoadedEventTime || Math.floor(Date.now() / 1000),
             limit: this.pageSize,
         };
@@ -199,7 +237,7 @@ export class PaginatedEventService {
 
                 const newEvents = await Promise.all(uniqueEvents.map(event => this.createNewEvent(event)));
 
-                // Merge events and sort by date
+
                 this.eventsSubject.next([...this.eventsSubject.getValue(), ...newEvents].sort((a, b) => b.createdAt - a.createdAt));
             } else {
                 this.noMoreEvents.next(true);
@@ -211,7 +249,7 @@ export class PaginatedEventService {
         }
     }
 
-    // Fetch filtered events from relays, ensuring duplicates are removed
+
     private async fetchFilteredEvents(filter: Filter): Promise<NostrEvent[]> {
         await this.relayService.ensureConnectedRelays();
         const connectedRelays = this.relayService.getConnectedRelays();
@@ -237,7 +275,7 @@ export class PaginatedEventService {
         return Array.from(eventMap.values());
     }
 
-    // Create a NewEvent object
+
     private async createNewEvent(event: NostrEvent): Promise<NewEvent> {
         const newEvent = new NewEvent(
             event.id,
@@ -264,7 +302,7 @@ export class PaginatedEventService {
         return newEvent;
     }
 
-    // Queue handling for job processing (likes, replies, zaps, reposts)
+
     private enqueueJob(eventId: string, jobType: 'replies' | 'likes' | 'zaps' | 'reposts'): void {
         if (!this.jobQueue.some(job => job.eventId === eventId && job.jobType === jobType)) {
             this.jobQueue.push({ eventId, jobType });
@@ -341,11 +379,11 @@ export class PaginatedEventService {
         this.eventsSubject.next(updatedEvents);
     }
 
-    // Fetch replies for a given event and remove duplicates
+
     private async fetchReplies(eventId: string): Promise<NewEvent[]> {
         const replyFilter: Filter = {
             "#e": [eventId],
-            kinds: [1], // Event kind
+            kinds: [1],
         };
 
         const events = await this.fetchFilteredEvents(replyFilter);
@@ -360,40 +398,40 @@ export class PaginatedEventService {
         return Promise.all(Array.from(uniqueEventMap.values()).map(event => this.createNewEvent(event)));
     }
 
-    // Fetch list of users who liked a given event
+
     private async getLikers(eventId: string): Promise<string[]> {
         const likeFilter: Filter = {
             "#e": [eventId],
-            kinds: [7], // Like kind
+            kinds: [7],
         };
 
         const likeEvents = await this.fetchFilteredEvents(likeFilter);
         return likeEvents.map(event => event.pubkey);
     }
 
-    // Fetch list of users who zapped a given event
+
     private async getZappers(eventId: string): Promise<string[]> {
         const zapFilter: Filter = {
             "#e": [eventId],
-            kinds: [9735], // Zap kind
+            kinds: [9735],
         };
 
         const zapEvents = await this.fetchFilteredEvents(zapFilter);
         return zapEvents.map(event => event.pubkey);
     }
 
-    // Fetch list of users who reposted a given event
+
     private async getReposters(eventId: string): Promise<string[]> {
         const repostFilter: Filter = {
             "#e": [eventId],
-            kinds: [6], // Repost kind
+            kinds: [6],
         };
 
         const repostEvents = await this.fetchFilteredEvents(repostFilter);
         return repostEvents.map(event => event.pubkey);
     }
 
-    // Count methods for replies, likes, zaps, reposts
+
     getRepliesCount(eventId: string): number {
         return (this.repliesMap.get(eventId) || []).length;
     }
@@ -410,7 +448,7 @@ export class PaginatedEventService {
         return (this.repostsMap.get(eventId) || []).length;
     }
 
-    // Helper methods to check if a user has liked or reposted
+
     hasUserLiked(eventId: string): boolean {
         return this.hasLikedMap.get(eventId) || false;
     }
@@ -419,32 +457,32 @@ export class PaginatedEventService {
         return this.hasRepostedMap.get(eventId) || false;
     }
 
-    // Get the event stream as an observable for subscription
+
     getEventStream(): Observable<NewEvent[]> {
-        return this.eventsSubject.asObservable().pipe(throttleTime(2000));
+        return this.eventsSubject.asObservable().pipe(throttleTime(3000));
     }
 
-    // Determine if more events are available
+
     hasMoreEvents(): Observable<boolean> {
         return this.noMoreEvents.asObservable();
     }
 
-    // Send like event
+
     async sendLikeEvent(event: NewEvent): Promise<void> {
         if (!event) return;
 
         try {
             const tags = [
-                ["e", event.id], // Reference the original event ID being liked
-                ["p", event.pubkey], // Reference the public key of the event creator
+                ["e", event.id],
+                ["p", event.pubkey],
             ];
-            const content = '❤️'; // Default content for like events
+            const content = '❤️';
 
-            // Create an unsigned like event
+
             const unsignedEvent = this.signerService.getUnsignedEvent(7, tags, content);
             let signedEvent: NostrEvent;
 
-            // Sign the event using either the private key or browser extension
+
             if (this.signerService.isUsingSecretKey()) {
                 const privateKey = await this.signerService.getDecryptedSecretKey();
                 const privateKeyBytes = hexToBytes(privateKey);
@@ -453,11 +491,11 @@ export class PaginatedEventService {
                 signedEvent = await this.signerService.signEventWithExtension(unsignedEvent);
             }
 
-            // Publish the like event to the relays
+
             await this.relayService.publishEventToWriteRelays(signedEvent);
             console.log('Like event published successfully:', signedEvent);
 
-            // Update the like count and mark it as liked by the user
+
             this.likesMap.set(event.id, [...(this.likesMap.get(event.id) || []), this.signerService.getPublicKey()]);
             this.hasLikedMap.set(event.id, true);
         } catch (error) {

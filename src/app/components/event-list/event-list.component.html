@@ -20,7 +20,7 @@
         </div>
       </div>
 
-  
+
         <div class="event-content" [innerHTML]="getSanitizedContent(event.content)"></div>
 
 
@@ -35,6 +35,9 @@
         <button>
           💬 {{ event.replyCount }}
         </button>
+        <button>
+          ⚡ {{ event.zapCount }}
+          </button>
       </div>
 
       <div class="event-replies" *ngIf="event.replies && event.replies.length > 0">

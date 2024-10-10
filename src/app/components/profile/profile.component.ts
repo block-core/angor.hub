@@ -29,7 +29,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { bech32 } from '@scure/base';
 import { QRCodeModule } from 'angularx-qrcode';
-import { Event1Service } from 'app/services/event1.service';
 import { IndexedDBService } from 'app/services/indexed-db.service';
 import { LightningService } from 'app/services/lightning.service';
 import { MetadataService } from 'app/services/metadata.service';
@@ -39,7 +38,6 @@ import { SafeUrlPipe } from 'app/shared/pipes/safe-url.pipe';
 import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
 import { Filter, NostrEvent } from 'nostr-tools';
 import { Subject, takeUntil } from 'rxjs';
-import { EventBoxComponent } from '../event-box/event-box.component';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -79,7 +77,7 @@ interface Chip {
         QRCodeModule,
         PickerComponent,
         MatSlideToggle,
-        EventBoxComponent,
+
         SafeUrlPipe,
         MatProgressSpinnerModule,
         InfiniteScrollModule,
@@ -90,8 +88,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     @ViewChild('eventInput', { static: false }) eventInput: ElementRef;
     @ViewChild('commentInput') commentInput: ElementRef;
-    @ViewChild(EventBoxComponent) childComponent!: EventBoxComponent;
-
+ 
     darkMode: boolean = false;
     isLoading: boolean = true;
     errorMessage: string | null = null;
@@ -144,7 +141,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
-        private _eventService: Event1Service
     ) {
 
         let baseTimeDiff = 12000;
