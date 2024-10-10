@@ -1,4 +1,6 @@
-import { CommonModule } from '@angular/common';
+import { AngorCardComponent } from '@angor/components/card';
+import { TextFieldModule } from '@angular/cdk/text-field';
+import { CommonModule, NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -7,8 +9,22 @@ import {
     OnInit,
     ViewEncapsulation,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
+import { PickerComponent } from '@ctrl/ngx-emoji-mart';
+import { QRCodeModule } from 'angularx-qrcode';
 import { PaginatedEventService } from 'app/services/event.service';
+import { SafeUrlPipe } from 'app/shared/pipes/safe-url.pipe';
 import { NewEvent } from 'app/types/NewEvent';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { Observable } from 'rxjs';
@@ -20,14 +36,39 @@ import { Observable } from 'rxjs';
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
     standalone: true,
-    imports: [CommonModule, InfiniteScrollModule],
+    imports: [
+        RouterLink,
+        AngorCardComponent,
+        MatIconModule,
+        MatButtonModule,
+        MatMenuModule,
+        MatFormFieldModule,
+        MatInputModule,
+        TextFieldModule,
+        MatDividerModule,
+        MatTooltipModule,
+        NgClass,
+        CommonModule,
+        FormsModule,
+        QRCodeModule,
+        PickerComponent,
+        MatSlideToggle,
+
+        SafeUrlPipe,
+        MatProgressSpinnerModule,
+        InfiniteScrollModule,
+        EventListComponent,],
 })
 export class EventListComponent implements OnInit {
     @Input() pubkeys: string[] = [];
+    @Input() currentUserMetadata :any;
+    eventInput
 
     events$: Observable<NewEvent[]>;
     isLoading: boolean = false;
     noMoreEvents: boolean = false;
+    isLiked = false;
+    showCommentEmojiPicker = false;
 
     constructor(
         private paginatedEventService: PaginatedEventService,
@@ -144,4 +185,26 @@ export class EventListComponent implements OnInit {
 
         return this.sanitizer.bypassSecurityTrustHtml(parsedContent);
     }
+
+
+
+
+
+    toggleLike (event: NewEvent): void {
+        this.isLiked = !this.isLiked;
+
+        if (this.isLiked) {
+            this.sendLike(event);
+            setTimeout(() => {
+                this.isLiked = false;
+                this.isLiked = true;
+            }, 300);
+        }
+    }
+
+    toggleCommentEmojiPicker() {
+         this.showCommentEmojiPicker = !this.showCommentEmojiPicker;
+    }
+
+
 }

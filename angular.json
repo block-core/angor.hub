@@ -31,7 +31,12 @@
                             "quill-delta",
                             "buffer",
                             "localforage",
-                            "moment"
+                            "moment",
+                            "bech32",
+                            "bn.js",
+                            "qrcode",
+                            "dayjs",
+                            "dayjs/plugin/relativeTime"
                         ],
                         "assets": [
                             {

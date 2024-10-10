@@ -508,8 +508,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     sendEvent() {
         if (this.eventInput.nativeElement.value != '') {
-            console.error('Event input is empty.');
-            this.eventService
+             this.eventService
                 .sendTextEvent(this.eventInput.nativeElement.value)
                 .then(() => {
                     this._changeDetectorRef.markForCheck();
