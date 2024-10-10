@@ -147,15 +147,46 @@ export class RelayService {
         return this.relaysSubject.asObservable();
     }
 
-    public publishEventToWriteRelays(event: NostrEvent): void {
-        const writeRelays = this.relays.filter(relay => relay.accessType === 'write' || relay.accessType === 'read-write');
-        writeRelays.forEach((relay) => {
-            if (relay.connected && relay.ws?.readyState === WebSocket.OPEN) {
-                relay.ws.send(JSON.stringify(event));
+
+    async publishEventToWriteRelays(event: NostrEvent): Promise<NostrEvent> {
+        const pool = this.getPool();
+
+         const connectedRelays = this.getConnectedRelays();
+        console.log('Connected relays:', connectedRelays);
+
+         const writeRelays = this.relays.filter(relay => relay.accessType === 'write' || relay.accessType === 'read-write');
+        console.log('Write relays:', writeRelays);
+
+         const allowedRelays = writeRelays
+            .map(relay => relay.url)
+            .filter(url => connectedRelays.includes(url));
+
+        if (allowedRelays.length === 0) {
+            throw new Error('No connected write relays available');
+        }
+
+        console.log('Allowed relays for publishing:', allowedRelays);
+
+         const publishPromises = allowedRelays.map(async (relayUrl) => {
+            try {
+                await pool.publish([relayUrl], event);
+                this.eventSubject.next(event);
+                return event;
+            } catch (error) {
+                console.error(`Failed to publish event to relay: ${relayUrl}`, error);
+                throw error;
             }
         });
-    }
 
+        try {
+             await Promise.any(publishPromises);
+            return event;
+        } catch (aggregateError) {
+            console.error('Failed to publish event: AggregateError', aggregateError);
+            this.handlePublishFailure(aggregateError);
+            throw aggregateError;
+        }
+    }
 
     async publishEventToRelays(event: NostrEvent): Promise<NostrEvent> {
          const pool = this.getPool();
