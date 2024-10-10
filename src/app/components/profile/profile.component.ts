@@ -25,7 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
 import { bech32 } from '@scure/base';
@@ -37,14 +37,13 @@ import { MetadataService } from 'app/services/metadata.service';
 import { SignerService } from 'app/services/signer.service';
 import { SocialService } from 'app/services/social.service';
 import { SafeUrlPipe } from 'app/shared/pipes/safe-url.pipe';
-import { Paginator } from 'app/shared/utils';
-import { LightningInvoice, LightningResponse, Post } from 'app/types/post';
+import { LightningInvoice, LightningResponse, } from 'app/types/post';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { NostrEvent } from 'nostr-tools';
-import { Subject, takeUntil } from 'rxjs';
-import { EventListComponent } from '../event-list/event-list.component';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { ReceiveDialogComponent } from './zap/receive-dialog/receive-dialog.component';
 import { SendDialogComponent } from './zap/send-dialog/send-dialog.component';
+import { NewEvent } from 'app/types/NewEvent';
 
 interface Chip {
     color?: string;
@@ -80,7 +79,6 @@ interface Chip {
         SafeUrlPipe,
         MatProgressSpinnerModule,
         InfiniteScrollModule,
-        EventListComponent,
     ],
 })
 export class ProfileComponent implements OnInit, OnDestroy {
@@ -111,10 +109,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     invoiceAmount: string = '?';
     isLiked = false;
     isPreview = false;
-    posts: Post[] = [];
-    likes: any[] = [];
 
-    paginator: Paginator;
 
     myLikes: NostrEvent[] = [];
     myLikedNoteIds: string[] = [];
@@ -122,8 +117,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     isLoadingPosts: boolean = true;
     noEventsMessage: string = '';
     loadingTimeout: any;
+    events$: Observable<NewEvent[]>;
+    events: NewEvent[] = [];
+    noMoreEvents: boolean = false;
 
-    constructor(
+
+     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _metadataService: MetadataService,
         private _signerService: SignerService,
@@ -136,15 +135,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
         private _dialog: MatDialog,
         private _angorConfigService: AngorConfigService,
         private _angorConfirmationService: AngorConfirmationService,
-        private eventService: PaginatedEventService
+        private paginatedEventService: PaginatedEventService,
+        private changeDetectorRef: ChangeDetectorRef,
+        private sanitizer: DomSanitizer
     ) {
-        let baseTimeDiff = 12000;
-        let since = 0;
-
-        this.paginator = new Paginator(0, since, (baseTimeDiff = baseTimeDiff));
-    }
+        this.events$ = this.paginatedEventService.getEventStream();
+     }
 
     ngOnInit(): void {
+
+
+
+
+
         this._angorConfigService.config$.subscribe((config) => {
             if (config.scheme === 'auto') {
                 this.detectSystemTheme();
@@ -216,6 +219,44 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 });
                 this._changeDetectorRef.detectChanges();
             });
+
+
+
+// Subscribe to real-time events
+this.paginatedEventService
+  .subscribeToEvents([this.routePubKey])
+  .then(() => {
+      console.log('Subscribed to real-time events');
+  })
+  .catch((error) => {
+      console.error('Error subscribing to events:', error);
+  });
+
+// Subscribe to events stream with real-time update
+this.paginatedEventService.getEventStream().subscribe((events) => {
+  // Sort events by creation time
+  const sortedEvents = events.sort((a, b) => b.createdAt - a.createdAt);
+
+  // Update the events in the component
+  this.events = sortedEvents;  // Make sure `this.events` is used in the template
+
+  // Detect changes in UI
+  this.changeDetectorRef.detectChanges(); // Force change detection to update the UI
+});
+
+// Load initial events
+this.loadInitialEvents();
+
+// Check if there are more events to load
+this.paginatedEventService.hasMoreEvents().subscribe((noMore) => {
+  this.noMoreEvents = noMore;
+
+  // Detect changes when the end of events list is reached
+  this.changeDetectorRef.detectChanges();
+});
+
+
+
     }
 
     ngOnDestroy(): void {
@@ -431,16 +472,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         });
     }
 
-    toggleLike() {
-        this.isLiked = !this.isLiked;
-
-        if (this.isLiked) {
-            setTimeout(() => {
-                this.isLiked = false;
-                this.isLiked = true;
-            }, 300);
-        }
-    }
 
     addEmoji(event: any) {
         this.eventInput.nativeElement.value += event.emoji.native;
@@ -508,7 +539,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     sendEvent() {
         if (this.eventInput.nativeElement.value != '') {
-             this.eventService
+             this.paginatedEventService
                 .sendTextEvent(this.eventInput.nativeElement.value)
                 .then(() => {
                     this._changeDetectorRef.markForCheck();
@@ -518,4 +549,106 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 });
         }
     }
+
+
+
+
+    loadInitialEvents(): void {
+        if (this.routePubKey.length === 0) {
+            console.warn('No pubkeys provided to EventListComponent');
+            return;
+        }
+
+        this.isLoading = true;
+        this.paginatedEventService.loadMoreEvents(this.routePubKey).finally(() => {
+            this.isLoading = false;
+            this.changeDetectorRef.markForCheck();
+        });
+    }
+
+    loadMoreEvents(): void {
+        if (!this.isLoading && !this.noMoreEvents) {
+            this.isLoading = true;
+            this.paginatedEventService
+                .loadMoreEvents(this.routePubKey)
+                .finally(() => {
+                    this.isLoading = false;
+                    this.changeDetectorRef.markForCheck();
+                });
+        }
+    }
+
+    getSanitizedContent(content: string): SafeHtml {
+        return this.sanitizer.bypassSecurityTrustHtml(content);
+    }
+
+
+
+    getTimeFromNow(event: NewEvent): string {
+        return event.fromNow;
+    }
+
+    trackById(index: number, item: NewEvent): string {
+        return item.id;
+    }
+
+    parseContent(content: string): SafeHtml {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const cleanedContent = content.replace(/["]+/g, '');
+        const parsedContent = cleanedContent
+            .replace(urlRegex, (url) => {
+                if (
+                    url.match(/\.(jpeg|jpg|gif|png|bmp|svg|webp|tiff)$/) != null
+                ) {
+                    return `<img src="${url}" alt="Image" width="100%" class="c-img">`;
+                } else if (url.match(/\.(mp4|webm)$/) != null) {
+                    return `<video controls width="100%" class="c-video"><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+                } else if (url.match(/(youtu\.be\/|youtube\.com\/watch\?v=)/)) {
+                    let videoId;
+                    if (url.includes('youtu.be/')) {
+                        videoId = url.split('youtu.be/')[1];
+                    } else if (url.includes('watch?v=')) {
+                        const urlParams = new URLSearchParams(
+                            url.split('?')[1]
+                        );
+                        videoId = urlParams.get('v');
+                    }
+                    return `<iframe width="100%" class="c-video" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                } else {
+                    return `<a href="${url}" target="_blank">${url}</a>`;
+                }
+            })
+            .replace(/\n/g, '<br>');
+
+        return this.sanitizer.bypassSecurityTrustHtml(parsedContent);
+    }
+
+
+    sendLike(event: NewEvent): void {
+        if (!event.likedByMe) {
+            this.paginatedEventService
+                .sendLikeEvent(event)
+                .then(() => {
+                    event.likedByMe = true;
+                    event.likeCount++;
+                    this.changeDetectorRef.markForCheck();
+                })
+                .catch((error) => {
+                    console.error('Failed to send like:', error);
+                });
+        }
+    }
+
+
+    toggleLike(event: NewEvent): void {
+         if (!event.likedByMe) {
+            this.sendLike(event);  // لایک کردن ایونت
+        }
+        this._changeDetectorRef.detectChanges();
+    }
+
+
+
+
+
 }

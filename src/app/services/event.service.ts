@@ -34,11 +34,22 @@ export class PaginatedEventService {
     private jobQueue: Job[] = [];
     private isProcessingQueue = false;
 
+    myLikedNoteIds: string[] = [];
+
+
     constructor(
         private relayService: RelayService,
         private signerService: SignerService,
         private metadataService: MetadataService
-    ) {}
+    ) {
+
+        this.getMyLikes().then(() => {
+            // console.log('User likes loaded:', this.myLikedNoteIds);
+        }).catch(error => {
+            console.error('Failed to load user likes:', error);
+        });
+
+    }
 
     async subscribeToEvents(pubkeys: string[]): Promise<void> {
         await this.relayService.ensureConnectedRelays();
@@ -290,10 +301,12 @@ export class PaginatedEventService {
         this.enqueueJob(event.id, 'reposts');
         this.enqueueJob(event.id, 'zaps');
         await this.processJobQueue();
+        newEvent.likedByMe = this.myLikedNoteIds.includes(event.id);
 
         const metadata = await this.metadataService.fetchMetadataWithCache(
             event.pubkey
         );
+
         if (metadata) {
             newEvent.username = metadata.name || newEvent.npub;
             newEvent.picture =
@@ -420,6 +433,35 @@ export class PaginatedEventService {
         return likeEvents.map((event) => event.pubkey);
     }
 
+    private async getMyLikes(): Promise<string[]> {
+        const myLikesFilter: Filter = {
+            kinds: [7], // نوع ایونت لایک
+            authors: [this.signerService.getPublicKey()] // فقط لایک‌های نوشته شده توسط کاربر جاری
+        };
+
+        try {
+            // گرفتن لایک‌های کاربر جاری
+            const likeEvents = await this.fetchFilteredEvents(myLikesFilter);
+
+            // استخراج ایونت‌هایی که کاربر لایک کرده و اضافه کردن آنها به myLikedNoteIds
+            likeEvents.forEach((like) => {
+                const eventIdTag = like.tags.find(tag => tag[0] === 'e');
+                if (eventIdTag) {
+                    const eventId = eventIdTag[1];
+                    this.myLikedNoteIds.push(eventId); // ذخیره ID ایونت در myLikedNoteIds
+                }
+            });
+
+            return this.myLikedNoteIds; // برگرداندن لیست ایونت‌های لایک‌شده
+
+        } catch (error) {
+            console.error('Failed to get user likes:', error);
+            return [];
+        }
+    }
+
+
+
     private async getZappers(eventId: string): Promise<string[]> {
         const zapFilter: Filter = {
             '#e': [eventId],
@@ -511,7 +553,7 @@ export class PaginatedEventService {
                 ['e', event.id],
                 ['p', event.pubkey],
             ];
-            const content = '+';
+            const content = '❤️';
 
             const unsignedEvent = this.signerService.getUnsignedEvent(
                 7,
